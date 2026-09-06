@@ -1,0 +1,1551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI-Enabled Real-Time Digital Twin System | MALE UAV Propulsion</title>
+  <meta name="description" content="AI-Enabled Real-Time Digital Twin System for Health Monitoring, Fault Prediction and Mission Reliability Enhancement of Aero Piston Engines used in MALE UAVs.">
+  <link rel="stylesheet" href="./src/index.css">
+  <!-- Google Fonts: Orbitron, Inter, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <!-- Material Symbols -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+  
+</head>
+<body>
+  <!-- ==========================================================================
+       AERIS-TWIN LANDING PAGE ROOT
+       ========================================================================== -->
+  <div id="landing-page-root">
+    <!-- Ambient Cursor-Follower Glow (Canvas Theory Fluid Lighting) -->
+    <div class="landing-ambient-glow" id="landing-cursor-glow" aria-hidden="true"></div>
+
+    <!-- Landing Header Navigation -->
+    <header class="landing-header">
+      <div class="landing-container">
+        <nav class="landing-nav">
+          <a href="/" class="landing-brand" data-route="/">
+            <svg class="landing-brand-logo" viewBox="0 0 100 60">
+              <path d="M50 5 L55 25 L95 38 L95 44 L56 40 L54 55 L65 58 L65 60 L35 60 L35 58 L46 55 L44 40 L5 44 L5 38 L45 25 Z" fill="currentColor"/>
+            </svg>
+            <div>
+              <div class="landing-brand-title">AERIS-TWIN</div>
+              <div class="landing-brand-sub">Aero Engine Reliability &amp; Intelligence System</div>
+            </div>
+          </a>
+
+          <ul class="landing-nav-links">
+            <li><a href="#capabilities-section" class="landing-nav-link">Capabilities</a></li>
+            <li><a href="#pipeline-section" class="landing-nav-link">Pipeline</a></li>
+          </ul>
+
+          <div class="landing-nav-actions">
+            <a href="/overview" class="landing-btn landing-btn-primary" data-route="/overview">
+              <span>ENTER GROUND STATION</span>
+              <span class="material-symbols-outlined" style="font-size: 16px;">arrow_forward</span>
+            </a>
+          </div>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Landing Main Content -->
+    <main>
+      <!-- Hero Section -->
+      <section class="landing-hero" id="landing-hero-section">
+        <div class="landing-container">
+          <div class="landing-hero-grid">
+            <div class="landing-hero-content">
+              <h1 class="landing-hero-title hero-parallax-layer" data-depth="0.02">
+                AERIS-TWIN <br>
+                <span class="highlight-cyan">Intelligent Digital Twin</span> <br>
+                <span class="highlight-teal">for UAV Aero Engines</span>
+              </h1>
+
+              <p class="landing-hero-subtitle hero-parallax-layer" data-depth="0.03">
+                Monitor engine health, detect faults and predict degradation before failure.
+              </p>
+
+              <div class="landing-hero-buttons hero-parallax-layer" data-depth="0.05">
+                <a href="/overview" class="landing-btn landing-btn-primary landing-btn-lg" data-route="/overview">
+                  <span>ENTER GROUND STATION</span>
+                  <span class="material-symbols-outlined" style="font-size: 18px;">arrow_forward</span>
+                </a>
+                <a href="/twin" class="landing-btn landing-btn-secondary landing-btn-lg" data-route="/twin">
+                  <span class="material-symbols-outlined" style="font-size: 18px;">deployed_code</span>
+                  <span>EXPLORE DIGITAL TWIN</span>
+                </a>
+              </div>
+            </div>
+
+            <!-- Hero Right Visual Card with 3D Depth -->
+            <div class="landing-hero-card hero-parallax-layer" id="landing-hero-card" data-depth="0.06">
+              <div class="hero-card-header">
+                <div class="hero-card-title">
+                  <span class="material-symbols-outlined" style="font-size: 16px; color: var(--primary);">memory</span>
+                  <span>ROTAX 914 DIGITAL TWIN</span>
+                </div>
+                <div class="hero-card-status">
+                  <span class="live-pulse-dot" style="width: 6px; height: 6px;"></span>
+                  <span>NOMINAL SYNC</span>
+                </div>
+              </div>
+
+              <div class="hero-card-body">
+                <div class="schematic-scan-line"></div>
+                <svg class="hero-uav-blueprint" viewBox="0 0 100 80">
+                  <rect x="25" y="25" width="50" height="30" rx="4" stroke="currentColor" fill="rgba(56, 189, 248, 0.08)" stroke-width="1.5"/>
+                  <circle cx="50" cy="40" r="10" stroke="currentColor" stroke-dasharray="3,3" fill="none"/>
+                  <line x1="10" y1="40" x2="25" y2="40" stroke="currentColor" stroke-width="2.5"/>
+                  <line x1="75" y1="40" x2="90" y2="40" stroke="currentColor" stroke-width="2.5"/>
+                  <rect x="30" y="10" width="10" height="15" stroke="currentColor" fill="none"/>
+                  <rect x="60" y="10" width="10" height="15" stroke="currentColor" fill="none"/>
+                  <path d="M 50 15 L 50 25 M 35 55 L 65 55" stroke="var(--secondary)" stroke-width="1.5"/>
+                </svg>
+              </div>
+
+              <div class="hero-telemetry-tags" style="margin-bottom: 0; justify-content: center;">
+                <div class="telemetry-status-tag" title="Real-time 3D kinematic model lock">
+                  <span class="pulse-dot"></span>
+                  <span>PHYSICS-INFORMED STATE LOCK</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Core Capabilities Section -->
+      <section class="landing-section" id="capabilities-section">
+        <div class="landing-container">
+          <div class="landing-section-header landing-reveal">
+            <span class="landing-section-tag">CAPABILITIES</span>
+            <h2 class="landing-section-title">Core Capabilities</h2>
+            <p class="landing-section-desc">
+              Three autonomous intelligence layers engineered for aero piston propulsion.
+            </p>
+          </div>
+
+          <div class="landing-capabilities-grid">
+            <!-- 1. Digital Twin -->
+            <div class="capability-card landing-reveal stagger-1" tabindex="0" role="button" aria-label="Digital Twin">
+              <div class="capability-icon-wrap">
+                <span class="material-symbols-outlined">deployed_code</span>
+              </div>
+              <h3 class="capability-card-title">DIGITAL TWIN</h3>
+              <p class="capability-card-desc">
+                Virtual representation of engine behaviour.
+              </p>
+              <div class="capability-card-tag">
+                <span class="material-symbols-outlined" style="font-size: 14px;">check_circle</span>
+                <span>Physics &amp; Kinematics</span>
+              </div>
+            </div>
+
+            <!-- 2. AI Diagnostics -->
+            <div class="capability-card landing-reveal stagger-2" tabindex="0" role="button" aria-label="AI Diagnostics">
+              <div class="capability-icon-wrap">
+                <span class="material-symbols-outlined">psychology</span>
+              </div>
+              <h3 class="capability-card-title">AI DIAGNOSTICS</h3>
+              <p class="capability-card-desc">
+                Detect abnormal behaviour and emerging faults.
+              </p>
+              <div class="capability-card-tag">
+                <span class="material-symbols-outlined" style="font-size: 14px;">check_circle</span>
+                <span>Anomaly Detection</span>
+              </div>
+            </div>
+
+            <!-- 3. Predictive Maintenance -->
+            <div class="capability-card landing-reveal stagger-3" tabindex="0" role="button" aria-label="Predictive Maintenance">
+              <div class="capability-icon-wrap">
+                <span class="material-symbols-outlined">ecg_heart</span>
+              </div>
+              <h3 class="capability-card-title">PREDICTIVE MAINTENANCE</h3>
+              <p class="capability-card-desc">
+                Track degradation and anticipate maintenance needs.
+              </p>
+              <div class="capability-card-tag">
+                <span class="material-symbols-outlined" style="font-size: 14px;">check_circle</span>
+                <span>Prognostics &amp; RUL</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Pipeline Section -->
+      <section class="landing-section" id="pipeline-section">
+        <div class="landing-container">
+          <div class="landing-section-header landing-reveal">
+            <span class="landing-section-tag">INTELLIGENCE PIPELINE</span>
+            <h2 class="landing-section-title">How It Works</h2>
+            <p class="landing-section-desc">
+              Continuous end-to-end data flow from avionics telemetry to predictive action.
+            </p>
+          </div>
+
+          <div class="landing-pipeline-flow landing-reveal" id="landing-pipeline-grid">
+            <!-- Node 1 -->
+            <div class="pipeline-node-card landing-reveal stagger-1" data-stage="1" tabindex="0" role="button" aria-label="Stage 1 Telemetry">
+              <span class="pipeline-node-num">01</span>
+              <span class="material-symbols-outlined pipeline-node-icon">sensors</span>
+              <span class="pipeline-node-title">TELEMETRY</span>
+              <span class="pipeline-node-sub">Avionics Ingestion</span>
+            </div>
+
+            <!-- Node 2 -->
+            <div class="pipeline-node-card landing-reveal stagger-2" data-stage="2" tabindex="0" role="button" aria-label="Stage 2 Digital Twin">
+              <span class="pipeline-node-num">02</span>
+              <span class="material-symbols-outlined pipeline-node-icon">deployed_code</span>
+              <span class="pipeline-node-title">DIGITAL TWIN</span>
+              <span class="pipeline-node-sub">Physics &amp; State Model</span>
+            </div>
+
+            <!-- Node 3 -->
+            <div class="pipeline-node-card landing-reveal stagger-3" data-stage="3" tabindex="0" role="button" aria-label="Stage 3 AI Analysis">
+              <span class="pipeline-node-num">03</span>
+              <span class="material-symbols-outlined pipeline-node-icon">psychology</span>
+              <span class="pipeline-node-title">AI ANALYSIS</span>
+              <span class="pipeline-node-sub">Fault Diagnostics</span>
+            </div>
+
+            <!-- Node 4 -->
+            <div class="pipeline-node-card landing-reveal stagger-4" data-stage="4" tabindex="0" role="button" aria-label="Stage 4 Prediction">
+              <span class="pipeline-node-num">04</span>
+              <span class="material-symbols-outlined pipeline-node-icon">shield</span>
+              <span class="pipeline-node-title">PREDICTION</span>
+              <span class="pipeline-node-sub">Action &amp; RUL</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Final CTA Section -->
+      <section class="landing-section" style="padding-bottom: 4.5rem;">
+        <div class="landing-container">
+          <div class="landing-cta-banner landing-reveal">
+            <h2 class="landing-cta-title">ENGINE INTELLIGENCE, BEFORE FAILURE.</h2>
+            <p class="landing-cta-desc">
+              Explore the AERIS-TWIN Ground Station.
+            </p>
+            <a href="/overview" class="landing-btn landing-btn-primary landing-btn-lg" data-route="/overview">
+              <span>ENTER GROUND STATION</span>
+              <span class="material-symbols-outlined" style="font-size: 20px;">arrow_forward</span>
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Landing Footer -->
+    <footer class="landing-footer">
+      <div class="landing-container">
+        <div class="landing-footer-grid">
+          <div class="landing-footer-left">
+            <span class="landing-footer-title">AERIS-TWIN</span>
+            <span class="landing-footer-meta">Aero Engine Reliability &amp; Intelligence System · Research Prototype</span>
+          </div>
+          <div style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-dim);">
+            MALE UAV PROPULSION GCS
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ==========================================================================
+       EXISTING DASHBOARD ROOT (Intact Layout, Navigation, and Components)
+       ========================================================================== -->
+  <div id="dashboard-root" style="display: none;">
+    <!-- Top Avionics Flight Command Bar -->
+    <header class="app-header">
+    <div class="header-top">
+      <div class="header-left">
+        <button id="sidebar-toggle-btn" class="sidebar-toggle-btn" title="Toggle Navigation Drawer">
+          <span class="material-symbols-outlined">menu_open</span>
+        </button>
+        <div class="uav-logo-badge" data-route="/" title="Return to AERIS-TWIN Home" style="cursor: pointer;">
+          <svg class="uav-silhouette" viewBox="0 0 100 60">
+            <path d="M50 5 L55 25 L95 38 L95 44 L56 40 L54 55 L65 58 L65 60 L35 60 L35 58 L46 55 L44 40 L5 44 L5 38 L45 25 Z" fill="currentColor"/>
+          </svg>
+          <div>
+            <div class="brand-title">MALE UAV</div>
+            <div class="brand-subtitle">PROPULSION DIGITAL TWIN GCS</div>
+          </div>
+        </div>
+
+        <!-- Mode Switcher: LIVE MODE vs SIMULATION/TEST MODE -->
+        <div class="mode-switch-container" style="margin-left: 0.75rem;">
+          <button id="btn-mode-live" class="mode-btn active live" title="Continuous Real-Time Telemetry Evaluation Mode">
+            <span class="live-pulse-dot" style="width: 6px; height: 6px;"></span>
+            <span>LIVE MODE</span>
+          </button>
+          <button id="btn-mode-sim" class="mode-btn" title="Synthetic Telemetry & Failure Injection Test Mode">
+            <span class="material-symbols-outlined" style="font-size: 13px;">science</span>
+            <span>SIM / TEST MODE</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="header-center">
+        <!-- Live Stream Real-Time Readout Pill -->
+        <div class="telemetry-stream-pill" id="header-stream-pill">
+          <span class="live-pulse-dot" id="hdr-pulse-dot"></span>
+          <span id="hdr-mode-tag" style="font-weight: 700; color: var(--status-normal);">LIVE ●</span>
+          <span class="pill-divider">|</span>
+          <span>Update: <strong id="hdr-last-update" style="color: #fff;">--:--:--</strong></span>
+          <span class="pill-divider">|</span>
+          <span>Age: <strong id="hdr-data-age" style="color: var(--accent-cyan);">-- ms</strong></span>
+          <span class="pill-divider">|</span>
+          <span>Latency: <strong id="hdr-latency" style="color: var(--secondary);">-- ms</strong></span>
+          <span class="pill-divider">|</span>
+          <button class="mission-clock-display" id="header-mission-clock" title="Click to Reset Mission Flight Time to 00:00:00" style="background: none; border: none; cursor: pointer; color: inherit; font-family: inherit; font-size: inherit; font-weight: inherit; padding: 0;">T+ 00:00:00</button>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <!-- Frequency Target Selector -->
+        <div class="rate-btn-group" title="Target Evaluation Frequency">
+          <button class="rate-btn" data-rate="1">1 Hz</button>
+          <button class="rate-btn" data-rate="5">5 Hz</button>
+          <button class="rate-btn active" data-rate="10">10 Hz</button>
+          <button class="rate-btn" data-rate="20">20 Hz</button>
+        </div>
+
+        <div class="scenario-picker-box" id="scenario-picker-container" style="display: none;">
+          <span class="material-symbols-outlined" style="font-size: 16px; color: var(--accent-cyan);">tune</span>
+          <select id="scenario-dropdown" class="scenario-select" title="Simulate flight condition / anomaly preset (Test Mode)">
+            <option value="cruise">[SIM] Normal Cruise (Nominal Power)</option>
+            <option value="lubrication_degradation">[SIM] Lubrication Pressure Loss</option>
+            <option value="vibration_bearing">[SIM] Crankshaft Bearing Wear</option>
+            <option value="thermal_overheat">[SIM] Cylinder Head Overheat</option>
+            <option value="spark_misfire">[SIM] Spark Plug Ignition Misfire</option>
+            <option value="high_altitude_climb">[SIM] Max Power Climb (High Altitude)</option>
+          </select>
+        </div>
+
+        <div class="header-quick-controls">
+          <button id="audio-toggle-btn" class="hud-btn" title="Toggle Synthetic Audio Avionics">
+            <div class="audio-equalizer" id="audio-eq-bars">
+              <span class="eq-bar"></span>
+              <span class="eq-bar"></span>
+              <span class="eq-bar"></span>
+            </div>
+            <span class="material-symbols-outlined" id="audio-icon">volume_off</span>
+            <span id="audio-text">Audio: Off</span>
+          </button>
+          <button id="pause-sim-btn" class="hud-btn" title="Pause / Resume Live Telemetry Stream">
+            <span class="material-symbols-outlined" id="sim-icon">play_arrow</span>
+            <span id="sim-text">Running</span>
+          </button>
+          <button id="quick-mitigate-btn" class="hud-btn hud-btn-danger" title="Trigger Automated In-Flight Mitigation">
+            <span class="material-symbols-outlined">gpp_maybe</span>
+            <span>Auto-Mitigate</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- App Workspace Body -->
+  <div class="app-container">
+    <!-- Left Navigation Drawer -->
+    <aside class="sidebar" id="app-sidebar">
+      <div class="sidebar-top">
+        <div class="sidebar-section-label">MISSION MODULES</div>
+        <ul class="sidebar-nav">
+          <li class="nav-item active" data-view="dashboard" title="Operator Ground Station Dashboard">
+            <span class="material-symbols-outlined">dashboard</span>
+            <span class="nav-label">Dashboard</span>
+            <span class="nav-badge alert-count" id="sidebar-alert-badge">0</span>
+          </li>
+          <li class="nav-item" data-view="realtime" title="Real-Time 6-Channel Telemetry Monitor">
+            <span class="material-symbols-outlined">show_chart</span>
+            <span class="nav-label">6-Ch Telemetry</span>
+          </li>
+          <li class="nav-item" data-view="threed" title="Interactive 3D Digital Twin Engine Model">
+            <span class="material-symbols-outlined">inventory_2</span>
+            <span class="nav-label">3D Engine Twin</span>
+          </li>
+          <li class="nav-item" data-view="ai-lab" title="AI & Machine Learning Diagnostics Lab">
+            <span class="material-symbols-outlined">psychology</span>
+            <span class="nav-label">AI Prognostics</span>
+          </li>
+          <li class="nav-item" data-view="pipeline" title="End-to-End 10-Stage Continuous Digital Twin Pipeline">
+            <span class="material-symbols-outlined">hub</span>
+            <span class="nav-label">Architecture</span>
+          </li>
+          <li class="nav-item" data-view="history" title="Telemetry History, Event Timeline & Component Logs">
+            <span class="material-symbols-outlined">description</span>
+            <span class="nav-label">History & Logs</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="status-indicator">
+          <div class="status-dot" id="ws-status-dot"></div>
+          <span id="comm-link-status" class="nav-label">Live Backend (Active)</span>
+        </div>
+        <div class="sidebar-meta-info">
+          <div>Target Rate: <span id="sb-target-rate" style="color: var(--accent-cyan);">10 Hz Target</span></div>
+          <div>Backend: <span id="backend-status-text" style="color: var(--status-normal);">FastAPI / WS Ready</span></div>
+          <div>Mode: <span id="sb-mode-badge" style="color: var(--status-normal); font-weight:700;">LIVE STREAM</span></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Dynamic Views Container -->
+    <main class="main-view-container">
+
+      <!-- ================= VIEW 1: OPERATOR GROUND STATION DASHBOARD ================= -->
+      <section id="view-dashboard" class="dashboard-grid">
+
+        <!-- Live Mode Disconnected Warning Banner -->
+        <div id="live-not-connected-banner" class="live-not-connected-banner" style="display: none;">
+          <div style="display:flex; align-items:center; gap: 8px;">
+            <span class="material-symbols-outlined" style="color: #EF4444; font-size: 20px;">wifi_off</span>
+            <span><strong>LIVE DATA: NOT CONNECTED</strong> — Waiting for incoming continuous telemetry packet stream on <code>/api/telemetry/live</code> or WebSocket...</span>
+          </div>
+          <button class="rate-btn" id="btn-switch-to-sim" style="background: rgba(245, 158, 11, 0.2); color: var(--status-warning); border-color: var(--status-warning);">Switch to Test / Sim Mode</button>
+        </div>
+
+        <!-- Simulation Test Mode Active Banner -->
+        <div id="sim-mode-banner" class="sim-mode-banner" style="display: none;">
+          <div style="display:flex; align-items:center; gap: 8px;">
+            <span class="material-symbols-outlined" style="color: var(--status-warning); font-size: 18px;">science</span>
+            <span><strong>SIMULATION / TEST MODE ACTIVE</strong> — Evaluating synthetic engine dynamics and controlled fault injections. <strong style="color:#fff;">[SIMULATED DATA]</strong></span>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button class="rate-btn" id="btn-quick-inject-bearing" style="color: #F87171;">Inject Bearing Fault</button>
+            <button class="rate-btn" id="btn-quick-inject-thermal" style="color: #FBBF24;">Inject Overheat</button>
+            <button class="rate-btn" id="btn-quick-reset-sim">Reset Sim</button>
+          </div>
+        </div>
+
+        <!-- 10-Stage Pipeline Flow Strip -->
+        <div class="evaluator-pipeline-strip" id="evaluator-pipeline-strip">
+          <div class="evaluator-pipeline-header">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span class="material-symbols-outlined" style="font-size: 14px; color: var(--accent-cyan);">hub</span>
+              <span style="font-weight: 700; color: #fff;">10-STAGE REAL-TIME CONTINUOUS EVALUATION PIPELINE</span>
+            </div>
+            <div style="display: flex; gap: 12px;">
+              <span>Processed: <strong id="pipeline-total-frames" style="color: var(--accent-cyan);">0</strong> samples</span>
+              <span>Pipeline Health: <strong id="pipeline-health-badge" style="color: var(--status-normal);">NOMINAL</strong></span>
+            </div>
+          </div>
+          <div class="pipeline-flow-track">
+            <div class="pipeline-flow-step active" id="pipe-step-1"><span class="step-num">1</span><span class="step-name">Source</span></div>
+            <div class="pipeline-flow-step active" id="pipe-step-2"><span class="step-num">2</span><span class="step-name">Ingest</span></div>
+            <div class="pipeline-flow-step active" id="pipe-step-3"><span class="step-num">3</span><span class="step-name">Validation</span></div>
+            <div class="pipeline-flow-step active" id="pipe-step-4"><span class="step-num">4</span><span class="step-name">Sensor Trust</span></div>
+            <div class="pipeline-flow-step active" id="pipe-step-5"><span class="step-num">5</span><span class="step-name">Physics Twin</span></div>
+            <div class="pipeline-flow-step active" id="pipe-step-6"><span class="step-num">6</span><span class="step-name">Residuals</span></div>
+            <div class="pipeline-flow-step active" id="pipe-step-7"><span class="step-num">7</span><span class="step-name">Anomaly IF</span></div>
+            <div class="pipeline-flow-step active" id="pipe-step-8"><span class="step-num">8</span><span class="step-name">Fault Risk</span></div>
+            <div class="pipeline-flow-step active" id="pipe-step-9"><span class="step-num">9</span><span class="step-name">Health Calc</span></div>
+            <div class="pipeline-flow-step active" id="pipe-step-10"><span class="step-num">10</span><span class="step-name">Alert &amp; Ev</span></div>
+          </div>
+        </div>
+
+        <!-- Real-Time Stream Performance Metrics Strip -->
+        <div class="stream-metrics-bar">
+          <div class="stream-metric-box">
+            <span class="stream-metric-label">INGESTION RATE</span>
+            <span class="stream-metric-val" id="metric-ingest-rate">10.0 Hz</span>
+          </div>
+          <div class="stream-metric-box">
+            <span class="stream-metric-label">PROCESSING RATE</span>
+            <span class="stream-metric-val" id="metric-proc-rate">450 Hz</span>
+          </div>
+          <div class="stream-metric-box">
+            <span class="stream-metric-label">EVALUATION LATENCY</span>
+            <span class="stream-metric-val" id="metric-eval-latency" style="color: var(--secondary);">2.4 ms</span>
+          </div>
+          <div class="stream-metric-box">
+            <span class="stream-metric-label">DATA AGE</span>
+            <span class="stream-metric-val" id="metric-data-age" style="color: var(--accent-cyan);">18 ms</span>
+          </div>
+          <div class="stream-metric-box">
+            <span class="stream-metric-label">DROPPED SAMPLES</span>
+            <span class="stream-metric-val" id="metric-dropped-count">0</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 0.68rem; font-family: var(--font-mono); color: var(--text-dim);">ROLLING WINDOW:</span>
+            <div class="rate-btn-group">
+              <button class="rate-btn active" data-window="30">30s</button>
+              <button class="rate-btn" data-window="60">60s</button>
+              <button class="rate-btn" data-window="120">120s</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Row 4 KPI Hero Cards -->
+        <div class="kpi-row">
+          <!-- Propulsion Health -->
+          <div class="kpi-card" id="kpi-health-card">
+            <span class="kpi-title">PROPULSION HEALTH</span>
+            <div class="health-gauge-container">
+              <svg class="health-gauge-svg" viewBox="0 0 100 100">
+                <circle class="gauge-bg" cx="50" cy="50" r="40" stroke-dasharray="251.2" stroke-dashoffset="0"/>
+                <circle id="health-gauge-circle" class="gauge-progress" cx="50" cy="50" r="40"/>
+              </svg>
+              <div class="health-gauge-value">
+                <div class="val" id="kpi-health-val">92%</div>
+                <div class="sub" id="kpi-health-sub">GOOD</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Engine Flight Status -->
+          <div class="kpi-card">
+            <span class="kpi-title">ENGINE STATE &amp; ANOMALY</span>
+            <div class="status-kpi-badge" id="kpi-status-badge">
+              <span class="material-symbols-outlined" id="status-badge-icon">check_circle</span>
+              <span id="kpi-status-val">NORMAL</span>
+            </div>
+            <span class="status-kpi-sub" id="kpi-status-sub">Anomaly score: 0.024 (Nominal)</span>
+          </div>
+
+          <!-- Mission Flight Time -->
+          <div class="kpi-card">
+            <span class="kpi-title">MISSION FLIGHT TIME</span>
+            <div class="flight-time-val" id="kpi-flight-time">02:45:18</div>
+            <span class="flight-time-sub">ACTIVE SORTIE CLOCK</span>
+          </div>
+
+          <!-- Mission Reliability -->
+          <div class="kpi-card">
+            <span class="kpi-title">MISSION RISK &amp; TRUST</span>
+            <div class="reliability-val" id="kpi-reliability-val">94%</div>
+            <span class="reliability-sub" id="kpi-reliability-sub">SENSOR TRUST: 98%</span>
+          </div>
+        </div>
+
+        <!-- Cockpit Main 2-Column Balanced Layout -->
+        <div class="cockpit-main-layout">
+          
+          <!-- LEFT COLUMN: Live Trends Chart + Core Parameter Tiles + Residuals Table -->
+          <div class="cockpit-telemetry-col">
+            <!-- Real-Time Trends Chart -->
+            <div class="trends-panel">
+              <div class="panel-header">
+                <span class="panel-title"><span class="material-symbols-outlined">ssid_chart</span> REAL-TIME TELEMETRY &amp; DIGITAL TWIN TRENDS</span>
+                <div class="chart-legend">
+                  <div class="legend-item"><span class="legend-color" style="background: #2DD4BF;"></span> RPM</div>
+                  <div class="legend-item"><span class="legend-color" style="background: #EF4444;"></span> CHT (°C)</div>
+                  <div class="legend-item"><span class="legend-color" style="background: #38BDF8;"></span> Oil (Bar)</div>
+                  <div class="legend-item"><span class="legend-color" style="background: #F59E0B;"></span> Vib (mm/s)</div>
+                </div>
+              </div>
+              <div class="chart-wrapper">
+                <canvas id="telemetry-chart"></canvas>
+              </div>
+            </div>
+
+            <!-- Digital Twin vs Measured Residuals Table Card -->
+            <div class="info-card" id="residuals-table-card" style="margin-top: 1rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <h3 style="margin: 0;"><span class="material-symbols-outlined" style="color: var(--accent-cyan); font-size: 16px;">compare_arrows</span> DIGITAL TWIN MEASURED VS PREDICTED RESIDUALS</h3>
+                <span style="font-size: 0.68rem; font-family: var(--font-mono); color: var(--text-dim);">Live Mean-Value Physics Comparison</span>
+              </div>
+              <table class="residuals-table">
+                <thead>
+                  <tr>
+                    <th>Sensor Channel</th>
+                    <th>Measured</th>
+                    <th>Twin Expected</th>
+                    <th>Residual (Δ)</th>
+                    <th>Residual (σ)</th>
+                    <th>Trend Slope</th>
+                    <th>Sensor Trust</th>
+                  </tr>
+                </thead>
+                <tbody id="residuals-table-body">
+                  <tr>
+                    <td><strong>Propeller RPM</strong></td>
+                    <td id="res-val-rpm">4,215</td>
+                    <td id="res-exp-rpm">4,215</td>
+                    <td id="res-delta-rpm">0.0</td>
+                    <td id="res-sigma-rpm" style="color: var(--status-normal);">+0.00σ</td>
+                    <td id="res-slope-rpm">0.00/s</td>
+                    <td><span id="res-trust-rpm" style="color: var(--status-normal);">99%</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Cylinder CHT (°C)</strong></td>
+                    <td id="res-val-temp">78.4</td>
+                    <td id="res-exp-temp">78.0</td>
+                    <td id="res-delta-temp">+0.4</td>
+                    <td id="res-sigma-temp" style="color: var(--status-normal);">+0.15σ</td>
+                    <td id="res-slope-temp">0.00/s</td>
+                    <td><span id="res-trust-temp" style="color: var(--status-normal);">96%</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Oil Pressure (Bar)</strong></td>
+                    <td id="res-val-oil">4.30</td>
+                    <td id="res-exp-oil">4.30</td>
+                    <td id="res-delta-oil">0.00</td>
+                    <td id="res-sigma-oil" style="color: var(--status-normal);">+0.00σ</td>
+                    <td id="res-slope-oil">0.00/s</td>
+                    <td><span id="res-trust-oil" style="color: var(--status-normal);">98%</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Vibration RMS (mm/s)</strong></td>
+                    <td id="res-val-vib">1.60</td>
+                    <td id="res-exp-vib">1.50</td>
+                    <td id="res-delta-vib">+0.10</td>
+                    <td id="res-sigma-vib" style="color: var(--status-normal);">+0.12σ</td>
+                    <td id="res-slope-vib">0.00/s</td>
+                    <td><span id="res-trust-vib" style="color: var(--status-normal);">98%</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Fuel Flow (L/h)</strong></td>
+                    <td id="res-val-fuel">5.20</td>
+                    <td id="res-exp-fuel">5.10</td>
+                    <td id="res-delta-fuel">+0.10</td>
+                    <td id="res-sigma-fuel" style="color: var(--status-normal);">+0.08σ</td>
+                    <td id="res-slope-fuel">0.00/s</td>
+                    <td><span id="res-trust-fuel" style="color: var(--status-normal);">97%</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- RIGHT COLUMN: Explainable Primary Evidence & Active Debounced Alerts -->
+          <div class="cockpit-ai-col">
+            <!-- Explainable Primary Evidence Card -->
+            <div class="evidence-card" id="primary-evidence-card">
+              <div class="panel-header" style="margin-bottom: 6px;">
+                <span class="panel-title"><span class="material-symbols-outlined" style="color: var(--accent-cyan);">psychology</span> REAL-TIME AI EVIDENCE &amp; REASONING</span>
+                <span class="ai-header-badge" id="ai-evidence-badge">EVIDENCE VERIFIED</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin: 4px 0 8px 0; font-size:0.75rem; font-family:var(--font-mono);">
+                <span>FAULT RISK: <strong id="evidence-risk-label" style="color: var(--status-normal);">LOW</strong></span>
+                <span>TWIN CONFIDENCE: <strong id="evidence-conf-val" style="color: var(--accent-cyan);">94%</strong></span>
+                <span>SENSOR TRUST: <strong id="evidence-trust-val" style="color: var(--secondary);">98%</strong></span>
+              </div>
+              <div style="font-size:0.70rem; color:var(--text-dim); font-family:var(--font-mono);">PRIMARY EVIDENCE CHAIN:</div>
+              <ul class="evidence-bullet-list" id="primary-evidence-list">
+                <li>Operating within nominal thermodynamic and kinematic envelope</li>
+                <li>Isolation Forest score: 0.024 (Within 95% nominal cluster)</li>
+                <li>Sensor trust score: 98% (Transducer quality check)</li>
+                <li>Digital twin consensus confidence: 94%</li>
+              </ul>
+            </div>
+
+            <!-- AI Prognostics & Mitigation Card -->
+            <div class="ai-prediction-panel">
+              <div class="panel-header">
+                <span class="panel-title"><span class="material-symbols-outlined">auto_awesome</span> PROGNOSTICS &amp; RUL</span>
+                <span class="ai-header-badge" id="ai-header-badge-mode">CONTINUOUS EVALUATION</span>
+              </div>
+
+              <div class="prediction-block">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span class="prediction-label">Detected Operating State</span>
+                  <span class="risk-badge low" id="ai-risk-badge">LOW RISK</span>
+                </div>
+                <span class="prediction-issue" id="ai-possible-issue">Nominal Cruise Operation</span>
+              </div>
+
+              <div class="confidence-container">
+                <div class="confidence-header">
+                  <span>Inference Confidence Level</span>
+                  <span id="ai-confidence-val" style="color: var(--accent-cyan); font-weight: 700;">94%</span>
+                </div>
+                <div class="progress-bar-bg">
+                  <div class="progress-bar-fill" id="ai-confidence-bar" style="width: 94%;"></div>
+                </div>
+              </div>
+
+              <div class="time-to-fault-block">
+                <div>
+                  <div class="prediction-label">Remaining Useful Life (RUL)</div>
+                  <div style="font-size: 0.68rem; color: var(--text-dim);" id="ai-rul-interval-label">Interval: [1000h, 1400h] · D_fail=0.75</div>
+                </div>
+                <div class="time-to-fault-val" id="ai-time-to-fault">1200.0 h</div>
+              </div>
+
+              <div class="recommended-actions-block">
+                <span class="prediction-label">Recommended Action</span>
+                <ul class="action-list" id="ai-action-list">
+                  <li>Maintain nominal flight trajectory</li>
+                  <li>Continuous 10Hz telemetry monitoring</li>
+                </ul>
+              </div>
+
+              <div class="action-btn-group">
+                <button class="action-btn action-btn-primary" id="btn-execute-mitigation">
+                  <span class="material-symbols-outlined">send</span>
+                  <span>Execute Mitigation Command</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Active Debounced Alerts Panel -->
+            <div class="alerts-panel">
+              <div class="panel-header">
+                <span class="panel-title"><span class="material-symbols-outlined" style="color: var(--status-warning);">warning</span> ACTIVE DEBOUNCED ALERTS</span>
+                <span id="alert-counter-badge" style="font-size: 0.7rem; font-family: var(--font-mono); color: var(--status-warning); background: rgba(245, 158, 11, 0.15); padding: 2px 8px; border-radius: 10px;">0 ACTIVE</span>
+              </div>
+              <div class="alert-stream" id="alerts-container">
+                <div class="alert-item ok" style="color: var(--text-dim); font-size: 0.75rem; padding: 8px;">
+                  <span><span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle; margin-right: 4px; color: var(--status-normal);">check_circle</span> No active fault alerts. All subsystems nominal.</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ================= VIEW 2: FULL 6-STAGE SYSTEM ARCHITECTURE ================= -->
+      <section id="view-pipeline" class="pipeline-view-container" style="display: none;">
+        <div class="panel-header">
+          <div>
+            <span class="panel-title" style="font-size: 1.3rem;"><span class="material-symbols-outlined">hub</span> END-TO-END DIGITAL TWIN PIPELINE</span>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">From physical UAV propulsion hardware to Edge Data Acquisition, Virtual Twin Model, ML Prognostics, and Ground Station Decision Closed-Loop</p>
+          </div>
+        </div>
+
+        <div class="pipeline-diagram">
+          <!-- Stage 1: Real UAV Engine -->
+          <div class="pipeline-stage-card" data-stage="1">
+            <span class="stage-badge">STAGE 1</span>
+            <div class="stage-title">1. REAL UAV ENGINE</div>
+            <div class="stage-sub">Electric Propulsion System</div>
+            <div class="stage-visual">
+              <svg viewBox="0 0 100 80" style="width: 80%; height: 80%; stroke: var(--accent-cyan); fill: none;">
+                <rect x="25" y="25" width="50" height="30" rx="4" stroke-width="2"/>
+                <circle cx="50" cy="40" r="10" stroke-dasharray="3,3"/>
+                <line x1="10" y1="40" x2="25" y2="40" stroke-width="3"/>
+                <line x1="75" y1="40" x2="90" y2="40" stroke-width="3"/>
+                <rect x="30" y="10" width="10" height="15"/>
+                <rect x="60" y="10" width="10" height="15"/>
+              </svg>
+            </div>
+            <ul class="stage-details-list">
+              <li><span class="material-symbols-outlined">chevron_right</span> Cylinder & Piston</li>
+              <li><span class="material-symbols-outlined">chevron_right</span> Crankshaft Assembly</li>
+              <li><span class="material-symbols-outlined">chevron_right</span> Intake / Exhaust Valves</li>
+              <li><span class="material-symbols-outlined">chevron_right</span> Spark Ignition Plugs</li>
+              <li><span class="material-symbols-outlined">chevron_right</span> Fuel Injection System</li>
+              <li><span class="material-symbols-outlined">chevron_right</span> Lubrication & Cooling</li>
+            </ul>
+          </div>
+
+          <!-- Stage 2: Sensors -->
+          <div class="pipeline-stage-card" data-stage="2">
+            <span class="stage-badge">STAGE 2</span>
+            <div class="stage-title">2. SENSORS</div>
+            <div class="stage-sub">Real-time Telemetry Collection</div>
+            <div class="stage-visual">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 6px; width: 100%;">
+                <div style="background: rgba(56, 189, 248, 0.1); font-size: 0.65rem; border-radius: 4px; padding: 2px;"><span class="material-symbols-outlined" style="font-size: 12px;display:inline-block;vertical-align:middle;margin-right:2px;margin-top:-2px;">thermostat</span>Temp (°C)</div>
+                <div style="background: rgba(16, 185, 129, 0.1); font-size: 0.65rem; border-radius: 4px; padding: 2px;"><span class="material-symbols-outlined" style="font-size: 12px;display:inline-block;vertical-align:middle;margin-right:2px;margin-top:-2px;">speed</span>RPM</div>
+                <div style="background: rgba(56, 189, 248, 0.1); font-size: 0.65rem; border-radius: 4px; padding: 2px;"><span class="material-symbols-outlined" style="font-size: 12px;display:inline-block;vertical-align:middle;margin-right:2px;margin-top:-2px;">bolt</span>Current (A)</div>
+                <div style="background: rgba(168, 85, 247, 0.1); font-size: 0.65rem; border-radius: 4px; padding: 2px;"><span class="material-symbols-outlined" style="font-size: 12px;display:inline-block;vertical-align:middle;margin-right:2px;margin-top:-2px;">show_chart</span>Vib (mm/s)</div>
+              </div>
+            </div>
+            <ul class="stage-details-list">
+              <li><span class="material-symbols-outlined">chevron_right</span> Temperature Sensor (°C)</li>
+              <li><span class="material-symbols-outlined">chevron_right</span> Optical RPM Sensor</li>
+              <li><span class="material-symbols-outlined">chevron_right</span> Current Sensor (A)</li>
+              <li><span class="material-symbols-outlined">chevron_right</span> Voltage Sensor (V)</li>
+              <li><span class="material-symbols-outlined">chevron_right</span> Engine Load & MAP (%)</li>
+            </ul>
+          </div>
+
+          <!-- Stage 3: Data Acquisition -->
+          <div class="pipeline-stage-card" data-stage="3">
+            <span class="stage-badge">STAGE 3</span>
+            <div class="stage-title">3. DATA ACQUISITION</div>
+            <div class="stage-sub">Edge Computing & InfluxDB</div>
+            <div class="stage-visual">
+              <svg viewBox="0 0 100 80" style="width: 80%; height: 80%; stroke: var(--accent-cyan); fill: none;">
+                <rect x="20" y="15" width="60" height="25" rx="3" stroke-width="1.5"/>
+                <line x1="30" y1="15" x2="25" y2="5"/>
+                <line x1="70" y1="15" x2="75" y2="5"/>
+                <path d="M50 40 L50 55 M45 50 L50 55 L55 50" stroke-width="2"/>
+                <ellipse cx="50" cy="65" rx="20" ry="7" stroke-width="1.5"/>
+              </svg>
+            </div>
+            <ul class="stage-details-list">
+              <li><span class="material-symbols-outlined">chevron_right</span> IoT Gateway / Edge Device</li>
+              <li><span class="material-symbols-outlined">chevron_right</span> 50Hz CAN-bus Ingestion</li>
+              <li><span class="material-symbols-outlined">chevron_right</span> High-Speed Time-Series DB</li>
+              <li><span class="material-symbols-outlined">chevron_right</span> Edge Noise Filtering & FFT</li>
+              <li><span class="material-symbols-outlined">chevron_right</span> Lossless Telemetry Buffer</li>
+            </ul>
+          </div>
+
+          <!-- Stage 4: Digital Twin -->
+          <div class="pipeline-stage-card" data-stage="4">
+            <span class="stage-badge">STAGE 4</span>
+            <div class="stage-title">4. DIGITAL TWIN</div>
+            <div class="stage-sub">Virtual Engine Physics Replica</div>
+            <div class="stage-visual">
+              <svg viewBox="0 0 100 80" style="width: 80%; height: 80%; stroke: #00f0ff; fill: rgba(0, 240, 255, 0.1);">
+                <polygon points="50,15 85,35 85,65 50,75 15,65 15,35" stroke-width="1.5"/>
+                <line x1="50" y1="15" x2="50" y2="75"/>
+                <line x1="15" y1="35" x2="50" y2="45"/>
+                <line x1="85" y1="35" x2="50" y2="45"/>
+              </svg>
+            </div>
+            <ul class="stage-details-list">
+              <li><span class="material-symbols-outlined">check</span> Real-time data mapping</li>
+              <li><span class="material-symbols-outlined">check</span> Engine state update</li>
+              <li><span class="material-symbols-outlined">check</span> Parameter estimation</li>
+              <li><span class="material-symbols-outlined">check</span> Behavior & wear simulation</li>
+              <li><span class="material-symbols-outlined">check</span> Dynamic 3D kinematic model</li>
+            </ul>
+          </div>
+
+          <!-- Stage 5: AI / ML Module -->
+          <div class="pipeline-stage-card" data-stage="5">
+            <span class="stage-badge">STAGE 5</span>
+            <div class="stage-title">5. AI / ML MODULE</div>
+            <div class="stage-sub">Intelligence & Prediction</div>
+            <div class="stage-visual">
+              <div style="font-size: 0.65rem; color: #a5b4fc; text-align: left; padding: 6px; width: 100%;">
+                <div>• Autoencoder Anomaly</div>
+                <div>• XGBoost Classifier</div>
+                <div>• LSTM RUL Estimator</div>
+                <div>• Action Recommender</div>
+              </div>
+            </div>
+            <ul class="stage-details-list">
+              <li><span class="material-symbols-outlined">chevron_right</span> Anomaly Detection (Abnormal?)</li>
+              <li><span class="material-symbols-outlined">chevron_right</span> Fault Detection (Fault type?)</li>
+              <li><span class="material-symbols-outlined">chevron_right</span> Fault Prediction (What next?)</li>
+              <li><span class="material-symbols-outlined">chevron_right</span> Remaining Useful Life (RUL)</li>
+              <li><span class="material-symbols-outlined">chevron_right</span> Continuous Learning loop</li>
+            </ul>
+          </div>
+
+          <!-- Stage 6: Dashboard & Alerts -->
+          <div class="pipeline-stage-card" data-stage="6">
+            <span class="stage-badge">STAGE 6</span>
+            <div class="stage-title">6. DASHBOARD & ALERTS</div>
+            <div class="stage-sub">Real-Time Operator GCS</div>
+            <div class="stage-visual">
+              <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 4px;">
+                <div style="display: flex; gap: 8px;">
+                  <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
+                  <span style="width: 8px; height: 8px; border-radius: 50%; background: #f59e0b;"></span>
+                  <span style="width: 8px; height: 8px; border-radius: 50%; background: #ef4444;"></span>
+                </div>
+                <span style="font-size: 0.65rem; color: var(--accent-cyan); font-family: var(--font-mono);">ALERT LEVELS</span>
+              </div>
+            </div>
+            <ul class="stage-details-list">
+              <li><span class="material-symbols-outlined">check</span> NORMAL (Green)</li>
+              <li><span class="material-symbols-outlined">check</span> WARNING (Amber)</li>
+              <li><span class="material-symbols-outlined">check</span> CRITICAL (Red)</li>
+              <li><span class="material-symbols-outlined">check</span> Operator Ground Station</li>
+              <li><span class="material-symbols-outlined">check</span> Mission Decision Support</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Feedback & Action Closed Loop -->
+        <div class="feedback-arrow-bar">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span class="material-symbols-outlined" style="color: var(--accent-cyan); font-size: 22px; ">arrow_left_circle</span>
+            <span><strong>FEEDBACK / ACTION CLOSED-LOOP:</strong> Operator & AI mitigation commands transmitted via UAV uplink to Real Engine Controller</span>
+          </div>
+          <span style="font-size: 0.7rem; color: var(--text-dim);">Uplink Telecommand Frequency: 10 Hz</span>
+        </div>
+
+        <!-- Project Overview, Technologies, Team, & Scope -->
+        <div class="info-cards-grid" style="margin-top: 1.5rem;">
+          <!-- Technologies Used -->
+          <div class="info-card">
+            <h3><span class="material-symbols-outlined" style="color: var(--accent-cyan);">code</span> TECHNOLOGIES USED</h3>
+            <div class="tech-badges-grid">
+              <div class="tech-pill"><span class="material-symbols-outlined" style="color: #38BDF8;">terminal</span><span>Python</span></div>
+              <div class="tech-pill"><span class="material-symbols-outlined" style="color: #2DD4BF;">bolt</span><span>FastAPI</span></div>
+              <div class="tech-pill"><span class="material-symbols-outlined" style="color: #38BDF8;">psychology</span><span>Machine Learning</span></div>
+              <div class="tech-pill"><span class="material-symbols-outlined" style="color: #F59E0B;">database</span><span>InfluxDB</span></div>
+              <div class="tech-pill"><span class="material-symbols-outlined" style="color: #EF4444;">dashboard</span><span>HTML / CSS / JS</span></div>
+              <div class="tech-pill"><span class="material-symbols-outlined" style="color: #2DD4BF;">bar_chart</span><span>Three.js / Chart.js</span></div>
+            </div>
+          </div>
+
+          <!-- Team Roles -->
+          <div class="info-card">
+            <h3><span class="material-symbols-outlined" style="color: var(--primary);">group</span> TEAM ROLES</h3>
+            <ul class="bullet-check-list">
+              <li><span class="material-symbols-outlined">check</span><div><strong style="color: #fff;">AI / ML:</strong> Autoencoder, XGBoost, LSTM RUL</div></li>
+              <li><span class="material-symbols-outlined">check</span><div><strong style="color: #fff;">Backend:</strong> 50Hz WebSocket telemetry ingestion</div></li>
+              <li><span class="material-symbols-outlined">check</span><div><strong style="color: #fff;">Frontend:</strong> Real-time GCS cockpit, 3D twin UI/UX</div></li>
+              <li><span class="material-symbols-outlined">check</span><div><strong style="color: #fff;">Systems:</strong> Digital twin electric powertrain model</div></li>
+            </ul>
+          </div>
+
+          <!-- Project Impact -->
+          <div class="info-card">
+            <h3><span class="material-symbols-outlined" style="color: var(--status-normal);">emoji_events</span> PROJECT IMPACT</h3>
+            <ul class="bullet-check-list">
+              <li><span class="material-symbols-outlined">check_circle</span> Prevents in-flight motor and inverter failures</li>
+              <li><span class="material-symbols-outlined">check_circle</span> Actionable closed-loop telecommand mitigations</li>
+              <li><span class="material-symbols-outlined">check_circle</span> Enhances mission endurance and flight safety</li>
+            </ul>
+          </div>
+
+          <!-- Future Scope -->
+          <div class="info-card">
+            <h3><span class="material-symbols-outlined" style="color: var(--status-warning);">explore</span> FUTURE SCOPE</h3>
+            <ul class="bullet-check-list">
+              <li><span class="material-symbols-outlined">arrow_circle_right</span> Physical UAV CAN-bus integration</li>
+              <li><span class="material-symbols-outlined">arrow_circle_right</span> Physics-Informed Neural Networks (PINNs)</li>
+              <li><span class="material-symbols-outlined">arrow_circle_right</span> Multi-rotor eVTOL & fleet swarm telemetry</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW 3: 3D DIGITAL TWIN UAV & AERO ENGINE ================= -->
+      <section id="view-threed" class="three-viewport-container" style="display: none;">
+        <div class="three-canvas-holder" id="canvas-container">
+          
+          <!-- Top 3D Camera & View Control Bar -->
+          <div class="three-top-toolbar">
+            <div class="camera-preset-group">
+              <span class="toolbar-label"><span class="material-symbols-outlined">videocam</span> CAMERA:</span>
+              <button class="hud-mini-btn active" id="btn-cam-iso" title="Isometric Perspective">Iso</button>
+              <button class="hud-mini-btn" id="btn-cam-front" title="Front View">Front</button>
+              <button class="hud-mini-btn" id="btn-cam-rear" title="Rear View">Rear</button>
+              <button class="hud-mini-btn" id="btn-cam-left" title="Left View">Left</button>
+              <button class="hud-mini-btn" id="btn-cam-right" title="Right View">Right</button>
+              <button class="hud-mini-btn" id="btn-cam-top" title="Top Down Planform">Top</button>
+              <button class="hud-mini-btn" id="btn-cam-bottom" title="Ventral Belly View">Bottom</button>
+              <button class="hud-mini-btn" id="btn-cam-engine" title="Close-Up Engine Inspection View" style="color: var(--accent-cyan); border-color: var(--border-bright);">Engine 🔍</button>
+            </div>
+
+            <div class="camera-action-group">
+              <button class="hud-mini-btn" id="btn-zoom-in" title="Zoom In"><span class="material-symbols-outlined" style="font-size:14px;">zoom_in</span></button>
+              <button class="hud-mini-btn" id="btn-zoom-out" title="Zoom Out"><span class="material-symbols-outlined" style="font-size:14px;">zoom_out</span></button>
+              <button class="hud-mini-btn" id="btn-cam-reset" title="Reset View Target"><span class="material-symbols-outlined" style="font-size:14px;">restart_alt</span> Reset</button>
+              <button class="hud-mini-btn" id="btn-fullscreen-toggle" title="Toggle Fullscreen Viewport"><span class="material-symbols-outlined" style="font-size:14px;">fullscreen</span></button>
+            </div>
+          </div>
+
+          <!-- 3D HUD Flight Overlays -->
+          <div class="three-overlay-hud">
+            <div class="hud-pill">
+              <span class="material-symbols-outlined" style="color: #2DD4BF;">speed</span>
+              <span>Propeller RPM: <strong id="hud-rpm-val">4215 RPM</strong></span>
+            </div>
+            <div class="hud-pill">
+              <span class="material-symbols-outlined" style="color: #EF4444;">thermostat</span>
+              <span>Cylinder CHT: <strong id="hud-temp-val">78.4 °C</strong></span>
+            </div>
+            <div class="hud-pill">
+              <span class="material-symbols-outlined" style="color: #38BDF8;">opacity</span>
+              <span>Oil Pressure: <strong id="hud-oil-val">4.3 Bar</strong></span>
+            </div>
+            <div class="hud-pill">
+              <span class="material-symbols-outlined" style="color: #F59E0B;">vibration</span>
+              <span>Casing Vib: <strong id="hud-vib-val">1.6 mm/s</strong></span>
+            </div>
+          </div>
+
+          <!-- Digital Twin Live Status Badge (Top Right Overlay) -->
+          <div class="three-live-status-pill">
+            <span class="live-pulse-dot"></span>
+            <span>TWIN SYNC: <strong id="twin-sync-status" style="color: var(--status-normal);">10 Hz LIVE</strong></span>
+            <span class="pill-divider">|</span>
+            <span>HEALTH: <strong id="twin-health-badge" style="color: var(--status-normal);">92%</strong></span>
+            <span class="pill-divider">|</span>
+            <span class="rul-badge-tag" id="twin-rul-tag">RUL: 1200h (SIMULATION-BASED)</span>
+          </div>
+
+          <!-- Flight HUD Pitch & Horizon Overlay -->
+          <div class="flight-hud-center">
+            <div class="pitch-ladder">
+              <span class="ladder-line"></span>
+              <span class="horizon-line"></span>
+              <span class="ladder-line"></span>
+            </div>
+            <div class="compass-tape">
+              <span>HDG <strong>045°</strong> · ALT <strong>15,000 FT</strong></span>
+            </div>
+          </div>
+
+          <!-- Bottom 3D Viewport Controls & Inspection Bar -->
+          <div class="three-controls-bottom">
+            <!-- Inspection & Cutaway Mode Buttons -->
+            <div class="hierarchy-button-group">
+              <button class="three-control-btn active" id="btn-mode-solid" title="Solid Aerospace Alloy Surface">Solid Alloy</button>
+              <button class="three-control-btn" id="btn-mode-hologram" title="Wireframe Hologram Mesh">Hologram</button>
+              <button class="three-control-btn" id="btn-mode-thermal" title="Thermal Heatmap Shader">Thermal Heatmap</button>
+            </div>
+            
+            <span style="width: 1px; height: 20px; background: var(--border-subtle); margin: 0 4px;"></span>
+            
+            <button class="three-control-btn" id="btn-engine-inspect-toggle" title="Focus Camera on Engine & Make Airframe Translucent">
+              <span class="material-symbols-outlined" style="font-size:14px; vertical-align:middle; margin-right:3px;">biotech</span>
+              <span>Engine Inspection</span>
+            </button>
+            
+            <button class="three-control-btn" id="btn-explode-toggle" title="Smoothly Displace Sub-Assemblies for Cutaway View">
+              <span class="material-symbols-outlined" style="font-size:14px; vertical-align:middle; margin-right:3px;">unfold_more</span>
+              <span>Exploded View (0%)</span>
+            </button>
+
+            <button class="three-control-btn active" id="btn-toggle-sensors" title="Toggle 3D Sensor Markers Visibility">
+              <span class="material-symbols-outlined" style="font-size:14px; vertical-align:middle; margin-right:3px;">sensors</span>
+              <span>Show Sensors</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Right Side Component & Evaluator Evidence Inspector -->
+        <div class="engine-component-inspector">
+          <div class="panel-header">
+            <div>
+              <span class="panel-title"><span class="material-symbols-outlined">search</span> COMPONENT TWIN INSPECTOR</span>
+              <div style="font-size: 0.68rem; color: var(--text-muted);">Real-Time State Space Diagnostics</div>
+            </div>
+            <span class="ai-header-badge" id="inspected-part-badge">ROTAX 914 POWERPLANT</span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 0.25rem;">
+            <div style="font-size: 1.05rem; color: #fff; font-weight: 700;" id="inspected-part-title">Rotax 914 Turbocharged Aero Piston Engine</div>
+            <span class="status-pill-badge" id="inspected-status-pill" style="background: rgba(16, 185, 129, 0.18); color: var(--status-normal); border: 1px solid var(--status-normal);">HEALTHY</span>
+          </div>
+          <p style="font-size: 0.74rem; color: var(--text-muted); line-height: 1.4; margin-top: 0.25rem;" id="inspected-part-desc">4-cylinder horizontally opposed 4-stroke engine with turbocharger and dual electronic ignition.</p>
+
+          <!-- Component Health, Status & RUL Matrix -->
+          <div class="component-spec-grid">
+            <div class="spec-box">
+              <span class="spec-box-label">Component Health</span>
+              <span class="spec-box-val" id="inspect-health" style="color: var(--status-normal);">92.4%</span>
+            </div>
+            <div class="spec-box">
+              <span class="spec-box-label">Operating CHT</span>
+              <span class="spec-box-val" id="inspect-temp">78.4 °C</span>
+            </div>
+            <div class="spec-box">
+              <span class="spec-box-label">Estimated RUL</span>
+              <span class="spec-box-val" id="inspect-rul" style="color: var(--accent-cyan);">1200 h</span>
+            </div>
+            <div class="spec-box">
+              <span class="spec-box-label">Vibration Residual</span>
+              <span class="spec-box-val" id="inspect-stress">+0.12 σ</span>
+            </div>
+          </div>
+
+          <!-- Active Fault & AI Diagnostic Box -->
+          <div class="inspector-fault-box" id="inspect-fault-box">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;">ACTIVE DIAGNOSIS / FAULT</span>
+              <span id="inspect-confidence-tag" style="font-size: 0.70rem; color: var(--accent-cyan); font-family: var(--font-mono);">Confidence: 94%</span>
+            </div>
+            <div id="inspect-fault-desc" style="font-size: 0.85rem; color: #fff; font-weight: 700; margin-top: 2px;">Nominal Combustion & Bearing Dynamics</div>
+          </div>
+
+          <!-- Evaluator "Why is this Unhealthy?" Action Button -->
+          <button class="hud-btn hud-btn-evidence" id="btn-why-unhealthy" style="width: 100%; margin: 0.6rem 0; justify-content: center; background: rgba(165, 215, 232, 0.12); border-color: var(--border-bright);">
+            <span class="material-symbols-outlined" style="font-size: 16px; color: var(--accent-cyan);">help_center</span>
+            <span>Why is this Component Flagged / Unhealthy?</span>
+          </button>
+
+          <!-- Component Selection Buttons Tree -->
+          <div style="border-top: 1px solid var(--border-subtle); padding-top: 0.6rem; flex: 1; overflow-y: auto;">
+            <div style="font-size: 0.72rem; font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 0.4rem;">Select UAV Subsystem or Sensor:</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.35rem;">
+              <button class="hud-btn component-pick-btn active" data-comp="engine"><span class="material-symbols-outlined" style="font-size:13px;">settings</span> Engine Core</button>
+              <button class="hud-btn component-pick-btn" data-comp="bearings"><span class="material-symbols-outlined" style="font-size:13px;">radio_button_checked</span> Main Bearings</button>
+              <button class="hud-btn component-pick-btn" data-comp="cylinder_1"><span class="material-symbols-outlined" style="font-size:13px;">view_in_ar</span> Cylinder #1</button>
+              <button class="hud-btn component-pick-btn" data-comp="cylinder_2"><span class="material-symbols-outlined" style="font-size:13px;">view_in_ar</span> Cylinder #2</button>
+              <button class="hud-btn component-pick-btn" data-comp="cylinder_3"><span class="material-symbols-outlined" style="font-size:13px;">view_in_ar</span> Cylinder #3</button>
+              <button class="hud-btn component-pick-btn" data-comp="cylinder_4"><span class="material-symbols-outlined" style="font-size:13px;">view_in_ar</span> Cylinder #4</button>
+              <button class="hud-btn component-pick-btn" data-comp="crankshaft"><span class="material-symbols-outlined" style="font-size:13px;">sync</span> Crankshaft</button>
+              <button class="hud-btn component-pick-btn" data-comp="oil_system"><span class="material-symbols-outlined" style="font-size:13px;">water_drop</span> Lubrication Sump</button>
+              <button class="hud-btn component-pick-btn" data-comp="fuel_system"><span class="material-symbols-outlined" style="font-size:13px;">local_gas_station</span> Fuel Injection</button>
+              <button class="hud-btn component-pick-btn" data-comp="cooling_system"><span class="material-symbols-outlined" style="font-size:13px;">ac_unit</span> Cooling Radiator</button>
+              <button class="hud-btn component-pick-btn" data-comp="propeller"><span class="material-symbols-outlined" style="font-size:13px;">rotate_right</span> Propeller Hub</button>
+              <button class="hud-btn component-pick-btn" data-comp="airframe"><span class="material-symbols-outlined" style="font-size:13px;">flight</span> UAV Airframe</button>
+              <button class="hud-btn component-pick-btn" data-comp="ecu"><span class="material-symbols-outlined" style="font-size:13px;">memory</span> Dual ECU</button>
+              <button class="hud-btn component-pick-btn" data-comp="telemetry_gateway"><span class="material-symbols-outlined" style="font-size:13px;">router</span> Telemetry Node</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Evaluator "Why is this Unhealthy?" Evidence Modal Dialog -->
+      <div id="why-unhealthy-modal" class="modal-backdrop" style="display: none;">
+        <div class="modal-card" style="max-width: 650px;">
+          <div class="panel-header">
+            <div>
+              <span class="panel-title" style="font-size: 1.15rem;"><span class="material-symbols-outlined" style="color: var(--accent-cyan);">biotech</span> WHY IS THIS COMPONENT UNHEALTHY?</span>
+              <div style="font-size: 0.72rem; color: var(--text-muted);">Root Cause Traceability & Multi-Perspective Evidence Chain</div>
+            </div>
+            <button id="btn-close-why-modal" class="hud-mini-btn"><span class="material-symbols-outlined">close</span></button>
+          </div>
+
+          <div style="margin: 0.75rem 0; padding: 0.75rem; background: rgba(0, 0, 0, 0.4); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+            <div style="font-size: 0.95rem; font-weight: 700; color: #fff;" id="modal-component-title">Rotax 914 Engine Core</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);" id="modal-component-sub">Subsystem: Powerplant · Evaluated at 10Hz</div>
+          </div>
+
+          <div class="evidence-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-bottom: 0.75rem;">
+            <div class="spec-box">
+              <span class="spec-box-label">Measured Value</span>
+              <span class="spec-box-val" id="modal-measured-val">1.6 mm/s</span>
+            </div>
+            <div class="spec-box">
+              <span class="spec-box-label">Physics Expected Baseline</span>
+              <span class="spec-box-val" id="modal-expected-val">1.5 mm/s</span>
+            </div>
+            <div class="spec-box">
+              <span class="spec-box-label">Normalized Residual (z-score)</span>
+              <span class="spec-box-val" id="modal-residual-val" style="color: var(--status-normal);">+0.12 σ</span>
+            </div>
+            <div class="spec-box">
+              <span class="spec-box-label">Residual Slope (Trend)</span>
+              <span class="spec-box-val" id="modal-slope-val">0.0001 /s (STABLE)</span>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 0.75rem;">
+            <div style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 0.3rem;">Traceable Subsystem Evidence:</div>
+            <ul class="action-list" id="modal-evidence-list" style="max-height: 140px; overflow-y: auto;">
+              <li>Physics Model: Mean-value thermodynamic expectation corroboration</li>
+              <li>Sensor Trust Engine: Transducer operating in nominal calibration boundary (100% trust)</li>
+              <li>Isolation Forest: Score 0.024 within 95% nominal cluster</li>
+            </ul>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem; color: var(--text-dim); border-top: 1px solid var(--border-subtle); padding-top: 0.6rem;">
+            <span>Model: <strong style="color: var(--text-muted);" id="modal-model-ver">AERIS-MV-AeroPiston-v1.8</strong></span>
+            <span>Confidence: <strong style="color: var(--accent-cyan);" id="modal-conf-val">94%</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= VIEW 4: AI / ML DIAGNOSTICS LAB ================= -->
+      <section id="view-ai-lab" class="pipeline-view-container" style="display: none;">
+        <div class="panel-header">
+          <div>
+            <span class="panel-title" style="font-size: 1.3rem;"><span class="material-symbols-outlined">memory</span> AI & ML PROGNOSTICS LAB</span>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">Deep neural network feature embeddings, autoencoder reconstruction error, and multi-class failure probabilities.</p>
+          </div>
+        </div>
+
+        <div class="info-cards-grid">
+          <!-- Model Card 1: Anomaly Autoencoder & 2D Latent Space -->
+          <div class="info-card">
+            <h3><span class="material-symbols-outlined">scatter_plot</span> LATENT SPACE ANOMALY CLUSTERING</h3>
+            <div style="font-size: 0.72rem; color: var(--text-muted); display:flex; justify-content:space-between;">
+              <span>Autoencoder Reconstruction Error: <strong id="lab-anomaly-score" style="color: var(--accent-cyan);">0.018</strong></span>
+              <span style="color: var(--status-normal);">Cluster: In-Bounds</span>
+            </div>
+            
+            <!-- Latent Space 2D Scatter Canvas -->
+            <div style="background: rgba(0, 0, 0, 0.65); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 8px; margin: 6px 0;">
+              <canvas id="latent-space-canvas" width="280" height="110" style="width: 100%; height: 110px; display: block;"></canvas>
+            </div>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; font-size: 0.72rem; font-family: var(--font-mono);">
+              <span>Sensitivity:</span>
+              <input type="range" id="slider-sensitivity" min="0.01" max="0.08" step="0.005" value="0.045" style="flex:1; accent-color: var(--accent-cyan); cursor:pointer;">
+              <span id="label-sensitivity" style="color: var(--accent-cyan); font-weight: 700;">0.045</span>
+            </div>
+          </div>
+
+          <!-- Model Card 2: XGBoost Classifier -->
+          <div class="info-card">
+            <h3><span class="material-symbols-outlined">pie_chart</span> FAULT CLASSIFIER (XGBoost)</h3>
+            <div style="display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.75rem; font-family: var(--font-mono);">
+              <div class="prob-row">
+                <div style="display:flex;justify-content:space-between;margin-bottom:2px;">
+                  <span>Nominal Cruise:</span>
+                  <span id="prob-nominal" style="color: var(--status-normal);">96%</span>
+                </div>
+                <div class="progress-bar-bg"><div id="prob-nominal-bar" class="progress-bar-fill" style="width:96%;background:var(--status-normal);"></div></div>
+              </div>
+              <div class="prob-row">
+                <div style="display:flex;justify-content:space-between;margin-bottom:2px;">
+                  <span>Lubrication Fault:</span>
+                  <span id="prob-lube" style="color: var(--status-warning);">1%</span>
+                </div>
+                <div class="progress-bar-bg"><div id="prob-lube-bar" class="progress-bar-fill" style="width:1%;"></div></div>
+              </div>
+              <div class="prob-row">
+                <div style="display:flex;justify-content:space-between;margin-bottom:2px;">
+                  <span>Bearing Anomaly:</span>
+                  <span id="prob-bearing" style="color: var(--status-warning);">1%</span>
+                </div>
+                <div class="progress-bar-bg"><div id="prob-bearing-bar" class="progress-bar-fill" style="width:1%;"></div></div>
+              </div>
+              <div class="prob-row">
+                <div style="display:flex;justify-content:space-between;margin-bottom:2px;">
+                  <span>Ignition Misfire:</span>
+                  <span id="prob-misfire">1%</span>
+                </div>
+                <div class="progress-bar-bg"><div id="prob-misfire-bar" class="progress-bar-fill" style="width:1%;"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Model Card 3: LSTM RUL Predictor -->
+          <div class="info-card">
+            <h3><span class="material-symbols-outlined">schedule</span> PROGNOSTICS (RUL)</h3>
+            <div style="font-family: var(--font-mono); font-size: 1.4rem; color: var(--accent-cyan); font-weight: 700;" id="lab-rul-val">
+              01:15:30
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">
+              Weibull Reliability Hazard Rate: <strong style="color: #fff;">0.0034 / hr</strong>
+            </div>
+            <div style="font-size: 0.72rem; color: var(--text-dim);">
+              LSTM recurrent sequence model trained on 10,000+ flight test hours.
+            </div>
+          </div>
+
+          <!-- Model Card 4: Action Advice Engine -->
+          <div class="info-card">
+            <h3><span class="material-symbols-outlined">shield_check</span> MITIGATION ADVICE</h3>
+            <div id="lab-mitigation-box" style="font-size: 0.78rem; color: var(--text-muted); background: rgba(7, 11, 20, 0.5); padding: 0.75rem; border-radius: var(--radius-md); border-left: 3px solid var(--accent-cyan);">
+              • All parameters nominal. Regular surveillance active.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW 5: MISSION ANALYTICS & LOGS ================= -->
+      <section id="view-mission" class="pipeline-view-container" style="display: none;">
+        <div class="panel-header">
+          <div>
+            <span class="panel-title" style="font-size: 1.3rem;"><span class="material-symbols-outlined">flight_takeoff</span> MISSION PROFILE & TELEMETRY LOGS</span>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">UAV Flight parameters, altitude profile, fuel consumption audit, and telemetry report export.</p>
+          </div>
+          <button class="hud-btn" id="btn-export-logs">
+            <span class="material-symbols-outlined">download</span>
+            <span>Export Mission Report (JSON/CSV)</span>
+          </button>
+        </div>
+
+        <div class="kpi-row">
+          <div class="kpi-card">
+            <span class="kpi-title">ALTITUDE</span>
+            <div class="flight-time-val">15,420 <span style="font-size: 0.8rem; color: var(--text-muted);">FT</span></div>
+            <span class="flight-time-sub">BAROMETRIC PRESSURE</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-title">AIRSPEED</span>
+            <div class="flight-time-val">118 <span style="font-size: 0.8rem; color: var(--text-muted);">KTAS</span></div>
+            <span class="flight-time-sub">TRUE AIRSPEED</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-title">FUEL REMAINING</span>
+            <div class="flight-time-val" style="color: var(--status-warning);">42.8 <span style="font-size: 0.8rem; color: var(--text-muted);">L</span></div>
+            <span class="flight-time-sub">EST. 04H 20M ENDURANCE</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-title">MISSION HEALTH INDEX</span>
+            <div class="reliability-val" style="color: var(--status-normal);">94.6%</div>
+            <span class="reliability-sub">SATISFACTORY</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW 6: REAL-TIME MONITOR ================= -->
+      <section id="view-realtime" class="pipeline-view-container" style="display:none;">
+        <div class="panel-header">
+          <div>
+            <span class="panel-title" style="font-size:1.3rem;"><span class="material-symbols-outlined">show_chart</span> REAL-TIME TELEMETRY MONITOR</span>
+            <p style="font-size:0.8rem;color:var(--text-muted);">Live sensor readings with threshold bands, status indicators and 5-minute rolling sparklines for all 6 engine parameters.</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.75rem;">
+            <div style="font-size:0.72rem;font-family:var(--font-mono);color:var(--text-dim);text-align:right;">
+              <div>LAST UPDATE: <span id="rt-data-rate" style="color:var(--accent-cyan);">--</span></div>
+              <div>HEALTH: <span id="rt-health-val" style="color:var(--status-normal);">87%</span></div>
+            </div>
+            <span id="rt-summary-status" class="rt-overall-badge normal">NORMAL</span>
+          </div>
+        </div>
+
+        <!-- Quick Summary Strip -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.75rem;margin-bottom:1rem;">
+          <div class="rt-summary-pill"><span class="rt-sum-label">RPM</span><span id="rt-summary-rpm" class="rt-sum-val">4,215</span></div>
+          <div class="rt-summary-pill"><span class="rt-sum-label">TEMP</span><span id="rt-summary-temp" class="rt-sum-val">78.4 °C</span></div>
+          <div class="rt-summary-pill"><span class="rt-sum-label">OIL</span><span id="rt-summary-oil" class="rt-sum-val">4.3 Bar</span></div>
+          <div class="rt-summary-pill"><span class="rt-sum-label">VIB</span><span id="rt-summary-vib" class="rt-sum-val">1.6 mm/s</span></div>
+        </div>
+
+        <!-- 6-Chart Grid -->
+        <div class="rt-charts-grid">
+
+          <!-- RPM -->
+          <div class="rt-chart-card">
+            <div class="rt-chart-header">
+              <div>
+                <div class="rt-chart-title"><span class="material-symbols-outlined" style="font-size: 14px; color: #2DD4BF;">speed</span> ENGINE RPM</div>
+                <div class="rt-chart-subtitle">Nominal: 4,215 RPM · Warn: 5,000 · Crit: 5,500</div>
+              </div>
+              <div class="rt-readout-group">
+                <span class="rt-big-val" id="rt-val-rpm">4,215</span>
+                <span class="rt-unit">RPM</span>
+                <span id="rt-badge-rpm" class="rt-status-badge ok">NORMAL</span>
+              </div>
+            </div>
+            <div class="rt-bar-wrap"><div class="rt-range-bar"><div id="rt-bar-rpm" class="rt-range-fill" style="width:36%;background:#2DD4BF;"></div></div></div>
+            <div class="rt-chart-canvas-wrap"><canvas id="rt-chart-rpm"></canvas></div>
+          </div>
+
+          <!-- Temperature -->
+          <div class="rt-chart-card">
+            <div class="rt-chart-header">
+              <div>
+                <div class="rt-chart-title"><span class="material-symbols-outlined" style="font-size: 14px;color:#EF4444;">thermostat</span> CYLINDER TEMP</div>
+                <div class="rt-chart-subtitle">Nominal: 78.4 °C · Warn: 84 · Crit: 92</div>
+              </div>
+              <div class="rt-readout-group">
+                <span class="rt-big-val" id="rt-val-temperature">78.4</span>
+                <span class="rt-unit">°C</span>
+                <span id="rt-badge-temperature" class="rt-status-badge ok">NORMAL</span>
+              </div>
+            </div>
+            <div class="rt-bar-wrap"><div class="rt-range-bar"><div id="rt-bar-temperature" class="rt-range-fill" style="width:41%;background:#EF4444;"></div></div></div>
+            <div class="rt-chart-canvas-wrap"><canvas id="rt-chart-temp"></canvas></div>
+          </div>
+
+          <!-- Motor Current -->
+          <div class="rt-chart-card">
+            <div class="rt-chart-header">
+              <div>
+                <div class="rt-chart-title"><span class="material-symbols-outlined" style="font-size: 14px;color:#38BDF8;">bolt</span> MOTOR CURRENT</div>
+                <div class="rt-chart-subtitle">Nominal: 4.3 Bar · Warn &lt;3.8 · Crit &lt;3.0</div>
+              </div>
+              <div class="rt-readout-group">
+                <span class="rt-big-val" id="rt-val-oilPressure">4.3</span>
+                <span class="rt-unit">Bar</span>
+                <span id="rt-badge-oilPressure" class="rt-status-badge ok">NORMAL</span>
+              </div>
+            </div>
+            <div class="rt-bar-wrap"><div class="rt-range-bar"><div id="rt-bar-oilPressure" class="rt-range-fill" style="width:55%;background:#38BDF8;"></div></div></div>
+            <div class="rt-chart-canvas-wrap"><canvas id="rt-chart-oil"></canvas></div>
+          </div>
+
+          <!-- Vibration -->
+          <div class="rt-chart-card">
+            <div class="rt-chart-header">
+              <div>
+                <div class="rt-chart-title"><span class="material-symbols-outlined" style="font-size: 14px;color:#F59E0B;">show_chart</span> VIBRATION</div>
+                <div class="rt-chart-subtitle">Nominal: 1.6 mm/s · Warn: 2.4 · Crit: 4.0</div>
+              </div>
+              <div class="rt-readout-group">
+                <span class="rt-big-val" id="rt-val-vibration">1.6</span>
+                <span class="rt-unit">mm/s</span>
+                <span id="rt-badge-vibration" class="rt-status-badge ok">NORMAL</span>
+              </div>
+            </div>
+            <div class="rt-bar-wrap"><div class="rt-range-bar"><div id="rt-bar-vibration" class="rt-range-fill" style="width:20%;background:#F59E0B;"></div></div></div>
+            <div class="rt-chart-canvas-wrap"><canvas id="rt-chart-vib"></canvas></div>
+          </div>
+
+          <!-- Battery Voltage -->
+          <div class="rt-chart-card">
+            <div class="rt-chart-header">
+              <div>
+                <div class="rt-chart-title"><span class="material-symbols-outlined" style="font-size: 14px;color:#38BDF8;">battery_full</span> BATTERY VOLTAGE</div>
+                <div class="rt-chart-subtitle">Nominal: 5.2 ml/min · Warn: 7.5 · Crit: 10.0</div>
+              </div>
+              <div class="rt-readout-group">
+                <span class="rt-big-val" id="rt-val-fuelFlow">5.2</span>
+                <span class="rt-unit">ml/min</span>
+                <span id="rt-badge-fuelFlow" class="rt-status-badge ok">NORMAL</span>
+              </div>
+            </div>
+            <div class="rt-bar-wrap"><div class="rt-range-bar"><div id="rt-bar-fuelFlow" class="rt-range-fill" style="width:43%;background:#38BDF8;"></div></div></div>
+            <div class="rt-chart-canvas-wrap"><canvas id="rt-chart-fuel"></canvas></div>
+          </div>
+
+          <!-- Engine Load -->
+          <div class="rt-chart-card">
+            <div class="rt-chart-header">
+              <div>
+                <div class="rt-chart-title"><span class="material-symbols-outlined" style="font-size: 14px;color:#2DD4BF;">bolt</span> ENGINE LOAD</div>
+                <div class="rt-chart-subtitle">Nominal: 62% · Warn: 85% · Crit: 95%</div>
+              </div>
+              <div class="rt-readout-group">
+                <span class="rt-big-val" id="rt-val-engineLoad">62</span>
+                <span class="rt-unit">%</span>
+                <span id="rt-badge-engineLoad" class="rt-status-badge ok">NORMAL</span>
+              </div>
+            </div>
+            <div class="rt-bar-wrap"><div class="rt-range-bar"><div id="rt-bar-engineLoad" class="rt-range-fill" style="width:62%;background:#2DD4BF;"></div></div></div>
+            <div class="rt-chart-canvas-wrap"><canvas id="rt-chart-load"></canvas></div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ================= VIEW 7: HISTORY & LOGS ================= -->
+      <section id="view-history" class="pipeline-view-container" style="display:none;">
+        <div class="panel-header">
+          <div>
+            <span class="panel-title" style="font-size:1.3rem;"><span class="material-symbols-outlined">description</span> HISTORY &amp; TELEMETRY LOGS</span>
+            <p style="font-size:0.8rem;color:var(--text-muted);">Session statistics, engine event timeline with severity filters, and component health degradation log.</p>
+          </div>
+          <div style="display:flex;gap:0.6rem;">
+            <button class="hud-btn" id="hist-filter-all" onclick="window._histFilter('all')" style="border-color:var(--accent-cyan);color:var(--accent-cyan);">All Events</button>
+            <button class="hud-btn" id="hist-filter-warning" onclick="window._histFilter('warning')">Warnings</button>
+            <button class="hud-btn" id="hist-filter-critical" onclick="window._histFilter('critical')">Critical</button>
+            <button class="hud-btn" id="btn-export-csv" style="margin-left:0.5rem;"><span class="material-symbols-outlined">download</span><span>Export CSV</span></button>
+          </div>
+        </div>
+
+        <!-- Deterministic Replay & Scrubbing Toolbar -->
+        <div class="replay-toolbar" id="replay-toolbar">
+          <button class="rate-btn active" id="replay-play-pause-btn" style="min-width: 80px;">
+            <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">pause</span> Pause Replay
+          </button>
+          <span style="color: var(--text-dim);">SEEK:</span>
+          <input type="range" id="replay-seek-slider" min="0" max="100" value="0" style="flex: 1; accent-color: var(--accent-cyan);" title="Scrub through recorded telemetry frames">
+          <span id="replay-time-display" style="color: var(--accent-cyan); min-width: 60px;">00:00:00</span>
+          <span style="color: var(--text-dim); margin-left: 8px;">SPEED:</span>
+          <select id="replay-speed-select" class="scenario-select" style="padding: 3px 8px; font-size: 0.75rem;">
+            <option value="0.5">0.5x</option>
+            <option value="1.0" selected>1.0x (Real-time)</option>
+            <option value="2.0">2.0x</option>
+            <option value="5.0">5.0x</option>
+            <option value="10.0">10.0x</option>
+          </select>
+        </div>
+
+        <!-- Session Statistics Grid -->
+        <div class="info-card" style="margin-bottom:1rem;">
+          <h3><span class="material-symbols-outlined" style="color:var(--accent-cyan);">bar_chart</span> SESSION STATISTICS — MIN / AVG / MAX</h3>
+          <div id="hist-stats-grid" class="hist-stats-grid">
+            <div style="color:var(--text-dim);font-size:0.8rem;">Loading statistics…</div>
+          </div>
+        </div>
+
+        <!-- Event Timeline + Component Table side by side -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+
+          <!-- Event Timeline -->
+          <div class="info-card" style="max-height:520px;display:flex;flex-direction:column;">
+            <h3><span class="material-symbols-outlined" style="color:var(--accent-cyan);">schedule</span> EVENT TIMELINE</h3>
+            <div id="hist-timeline" class="hist-timeline" style="flex:1;overflow-y:auto;margin-top:0.5rem;">
+              <div class="hist-empty">No events recorded yet.</div>
+            </div>
+          </div>
+
+          <!-- Component Health Degradation Table -->
+          <div class="info-card" style="max-height:520px;display:flex;flex-direction:column;">
+            <h3><span class="material-symbols-outlined" style="color:var(--accent-cyan);">memory</span> COMPONENT HEALTH STATUS</h3>
+            <div style="flex:1;overflow-y:auto;margin-top:0.5rem;">
+              <table class="hist-comp-table">
+                <thead>
+                  <tr><th>Component</th><th>Health</th><th>Status</th><th>Wear / Load</th><th>Live Reading</th></tr>
+                </thead>
+                <tbody id="hist-comp-table-body">
+                  <tr><td colspan="5" style="color:var(--text-dim);text-align:center;padding:1rem;">Loading…</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Bottom Footer Quote & Taglines -->
+  <footer class="app-footer">
+    <div class="footer-quote">
+      "This project creates a smart, intelligent system that acts like a 'virtual engineer', constantly monitoring the UAV engine, understanding its health, predicting problems and helping operators take the right actions at the right time."
+    </div>
+    <div class="footer-pills">
+      <span>SMARTER MONITORING</span>
+      <span>•</span>
+      <span>EARLY DETECTION</span>
+      <span>•</span>
+      <span>BETTER DECISIONS</span>
+      <span>•</span>
+      <span>MISSION SUCCESS</span>
+    </div>
+  </footer>
+  </div> <!-- /#dashboard-root -->
+
+
+  <!-- Critical Alert Modal -->
+  <div id="critical-alert-modal" class="modal-overlay" style="display: none; backdrop-filter: blur(16px); background: rgba(5, 10, 20, 0.85); z-index: 9999;">
+    <div class="modal-card" style="border: 1px solid var(--status-critical); box-shadow: 0 0 40px rgba(239,68,68,0.2); max-width: 450px;">
+      
+      <!-- Header -->
+      <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1rem; text-align: center;">
+        <span style="font-family: var(--font-tech); font-weight: 800; font-size: 1.1rem; letter-spacing: 2px;">UAV ENGINE DIGITAL TWIN</span>
+      </div>
+
+      <!-- Health Row -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <span style="font-family: var(--font-tech); font-size: 0.9rem; color: var(--text-dim);">ENGINE HEALTH</span>
+        <strong style="font-size: 1.1rem;" id="alert-health-val">87% <span style="color:var(--status-normal);">🟢</span></strong>
+      </div>
+
+      <!-- Telemetry Grid -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 1.5rem; font-family: var(--font-mono); font-size: 0.85rem;">
+        <div style="color: var(--text-dim);">RPM</div> <div id="alert-rpm-val" style="text-align: right; font-weight: 700;">5021</div>
+        <div style="color: var(--text-dim);">Temperature</div> <div id="alert-temp-val" style="text-align: right; font-weight: 700;">184°C</div>
+        <div style="color: var(--text-dim);">Engine Load</div> <div id="alert-load-val" style="text-align: right; font-weight: 700;">64%</div>
+        <div style="color: var(--text-dim);">Motor Current</div> <div id="alert-oil-val" style="text-align: right; font-weight: 700;">4.8 A</div>
+        <div style="color: var(--text-dim);">Battery Volts</div> <div id="alert-fuel-val" style="text-align: right; font-weight: 700;">21.4 V</div>
+        <div style="color: var(--text-dim);">Vibration</div> <div id="alert-vib-val" style="text-align: right; font-weight: 700; color: var(--status-critical);">HIGH</div>
+      </div>
+
+      <!-- Trend Chart -->
+      <div style="border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); padding: 1rem 0; margin-bottom: 1.5rem;">
+        <div style="font-family: var(--font-tech); font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0.5rem;">ENGINE HEALTH TREND</div>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <span style="font-size: 1.2rem;">📉</span>
+          <svg width="100%" height="40" viewBox="0 0 300 40" preserveAspectRatio="none" style="overflow: visible;">
+            <path d="M0,5 L100,5 L150,20 L250,35 L300,38" fill="none" stroke="var(--status-critical)" stroke-width="3" stroke-linecap="round" />
+            <path d="M0,5 L100,5 L150,20 L250,35 L300,38 L300,40 L0,40 Z" fill="rgba(239,68,68,0.15)" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- Alert Details -->
+      <div style="background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--status-critical); padding: 1rem; margin-bottom: 1.5rem; border-radius: 4px;">
+        <div style="color: var(--status-critical); font-family: var(--font-tech); font-weight: 700; font-size: 1.1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+          <span class="material-symbols-outlined">warning</span> ALERT
+        </div>
+        <div id="alert-desc" style="font-weight: 600; margin-bottom: 1rem;">Increasing vibration trend detected</div>
+        
+        <div style="display: grid; grid-template-columns: auto 1fr; gap: 0.5rem 1rem; font-family: var(--font-mono); font-size: 0.85rem;">
+          <div style="color: var(--text-dim);">Predicted fault:</div> <div id="alert-fault-val" style="font-weight: 700;">Injector degradation</div>
+          <div style="color: var(--text-dim);">Probability:</div> <div id="alert-prob-val" style="font-weight: 700; color: var(--status-critical);">78%</div>
+          <div style="color: var(--text-dim);">Estimated RUL:</div> <div id="alert-rul-val" style="font-weight: 700;">94 hrs</div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <button id="alert-btn-replay" class="hud-btn" style="justify-content: center;">MISSION REPLAY</button>
+        <button id="alert-btn-sim" class="hud-btn" style="justify-content: center; background: rgba(239, 68, 68, 0.15); border-color: var(--status-critical); color: var(--status-critical);">SIMULATOR</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Floating Toast Notifications -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Main JavaScript Orchestrator -->
+  <script type="module" src="./src/js/main.js"></script>
+</body>
+</html>
