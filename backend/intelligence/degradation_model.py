@@ -21,6 +21,12 @@ class EngineDegradationModel:
             "combustion": 0.15    # Fuel consumption, spark efficiency
         }
 
+    def reset(self):
+        """Clears rolling degradation and timestamp buffers."""
+        self.degradation_history.clear()
+        self.timestamp_history.clear()
+
+
     def compute_degradation(
         self,
         residuals: Dict[str, Any],

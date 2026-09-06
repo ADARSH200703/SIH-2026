@@ -1287,7 +1287,7 @@
         <div class="rt-charts-grid">
 
           <!-- RPM -->
-          <div class="rt-chart-card">
+          <div class="rt-chart-card" data-sensor="rpm" title="Click to inspect Engine RPM channel details">
             <div class="rt-chart-header">
               <div>
                 <div class="rt-chart-title"><span class="material-symbols-outlined" style="font-size: 14px; color: #2DD4BF;">speed</span> ENGINE RPM</div>
@@ -1304,7 +1304,7 @@
           </div>
 
           <!-- Temperature -->
-          <div class="rt-chart-card">
+          <div class="rt-chart-card" data-sensor="temperature" title="Click to inspect Cylinder Head Temp channel details">
             <div class="rt-chart-header">
               <div>
                 <div class="rt-chart-title"><span class="material-symbols-outlined" style="font-size: 14px;color:#EF4444;">thermostat</span> CYLINDER TEMP</div>
@@ -1321,7 +1321,7 @@
           </div>
 
           <!-- Oil Pressure -->
-          <div class="rt-chart-card">
+          <div class="rt-chart-card" data-sensor="oilPressure" title="Click to inspect Oil Pressure channel details">
             <div class="rt-chart-header">
               <div>
                 <div class="rt-chart-title"><span class="material-symbols-outlined" style="font-size: 14px;color:#38BDF8;">water_drop</span> OIL PRESSURE</div>
@@ -1338,7 +1338,7 @@
           </div>
 
           <!-- Vibration -->
-          <div class="rt-chart-card">
+          <div class="rt-chart-card" data-sensor="vibration" title="Click to inspect Casing Vibration channel details">
             <div class="rt-chart-header">
               <div>
                 <div class="rt-chart-title"><span class="material-symbols-outlined" style="font-size: 14px;color:#F59E0B;">show_chart</span> CASING VIBRATION</div>
@@ -1355,7 +1355,7 @@
           </div>
 
           <!-- Fuel Flow -->
-          <div class="rt-chart-card">
+          <div class="rt-chart-card" data-sensor="fuelFlow" title="Click to inspect Fuel Flow Rate channel details">
             <div class="rt-chart-header">
               <div>
                 <div class="rt-chart-title"><span class="material-symbols-outlined" style="font-size: 14px;color:#38BDF8;">local_gas_station</span> FUEL FLOW RATE</div>
@@ -1372,7 +1372,7 @@
           </div>
 
           <!-- Engine Load -->
-          <div class="rt-chart-card">
+          <div class="rt-chart-card" data-sensor="engineLoad" title="Click to inspect Engine Load Demand channel details">
             <div class="rt-chart-header">
               <div>
                 <div class="rt-chart-title"><span class="material-symbols-outlined" style="font-size: 14px;color:#2DD4BF;">bolt</span> ENGINE LOAD DEMAND</div>
@@ -1387,6 +1387,7 @@
             <div class="rt-bar-wrap"><div class="rt-range-bar"><div id="rt-bar-engineLoad" class="rt-range-fill" style="width:62%;background:#2DD4BF;"></div></div></div>
             <div class="rt-chart-canvas-wrap"><canvas id="rt-chart-load"></canvas></div>
           </div>
+
 
         </div>
       </section>

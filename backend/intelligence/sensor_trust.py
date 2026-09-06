@@ -47,6 +47,15 @@ class SensorTrustEngine:
         self.last_frame_timestamp: Optional[float] = None
         self.last_frame_monotonic: Optional[float] = None
 
+    def reset(self):
+        """Clears historical buffers, resets timestamps, and restores valid trust."""
+        for s in self.history:
+            self.history[s].clear()
+        self.last_valid_timestamps = {s: time.time() for s in self.sensor_limits}
+        self.last_valid_values.clear()
+        self.last_frame_timestamp = None
+        self.last_frame_monotonic = None
+
     def evaluate_sensors(self, telemetry: Dict[str, Any]) -> Dict[str, Any]:
         """
         Evaluates trust for each sensor and returns structured trust scores and diagnostic reasons.
@@ -121,12 +130,21 @@ class SensorTrustEngine:
                     trust_score = 0.20
                     
                 # 5. Check Excessive NOISY Sensor
-                elif len(buf) >= 10:
-                    buf_diffs = np.abs(np.diff(list(buf)[-10:] + [val]))
-                    if np.mean(buf_diffs) > (self.max_step_jumps[sensor] * 0.45):
-                        status = "NOISY"
-                        reason = "High-frequency signal flutter exceeds acceptable transducer noise baseline"
-                        trust_score = 0.55
+                elif len(buf) >= 10 and np.mean(np.abs(np.diff(list(buf)[-10:] + [val]))) > (self.max_step_jumps[sensor] * 0.45):
+                    status = "NOISY"
+                    reason = "High-frequency signal flutter exceeds acceptable transducer noise baseline"
+                    trust_score = 0.55
+
+                # 6. Check DRIFTING Sensor (Monotonic calibration drift)
+                elif len(buf) >= 20:
+                    recent = np.array(list(buf)[-20:] + [val])
+                    poly = np.polyfit(np.arange(len(recent)), recent, 1)
+                    slope = poly[0]
+                    # If drift slope is persistent with low local variance
+                    if abs(slope) > (self.max_step_jumps[sensor] * 0.05) and np.std(recent - (poly[0] * np.arange(len(recent)) + poly[1])) < 0.1:
+                        status = "DRIFTING"
+                        reason = f"Monotonic calibration drift detected (slope: {slope:+.4f}/sample)"
+                        trust_score = 0.45
                 
                 # If valid or minimally degraded, update buffer & timestamp
                 if trust_score > 0.4:
@@ -134,6 +152,7 @@ class SensorTrustEngine:
                     self.last_valid_values[sensor] = val
                     
                 buf.append(val)
+
             
             w = criticality_weights.get(sensor, 1.0)
             total_trust_weighted += trust_score * w

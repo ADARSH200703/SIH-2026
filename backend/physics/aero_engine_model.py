@@ -99,6 +99,25 @@ class AeroPistonPhysicsModel:
         # 2nd harmonic crankshaft rotational vibration; baseline ~1.2 - 1.8 mm/s
         exp_vibration_mms = round(0.8 + (rpm / 3000.0) * 0.6 + (exp_load_pct / 100.0) * 0.2, 2)
 
+        # 10. Operating Regime Classification
+        flight_phase = str(telemetry.get("flight_phase", "CRUISE")).upper()
+        if rpm < 400.0:
+            regime = "SHUTDOWN"
+        elif rpm < 1200.0:
+            regime = "START"
+        elif rpm < 2200.0:
+            regime = "IDLE"
+        elif throttle > 0.88 or exp_load_pct > 85.0:
+            regime = "HIGH_LOAD"
+        elif throttle >= 0.82 or flight_phase == "CLIMB":
+            regime = "CLIMB"
+        elif flight_phase == "DESCENT" or (throttle < 0.35 and alt_ft > 3000.0):
+            regime = "DESCENT"
+        elif throttle < 0.35:
+            regime = "LOW_LOAD"
+        else:
+            regime = "CRUISE"
+
         return {
             "expected_rpm": rpm,
             "expected_map_kpa": exp_map_kpa,
@@ -113,5 +132,7 @@ class AeroPistonPhysicsModel:
             "estimated_torque_nm": round(est_torque_nm, 2),
             "angular_velocity_rad_s": round(omega_rad_s, 2),
             "isa_air_density": round(isa["air_density_kg_m3"], 4),
+            "operating_regime": regime,
             "model_version": "AERIS-MV-AeroPiston-v1.8"
         }
+

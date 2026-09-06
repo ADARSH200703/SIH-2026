@@ -54,6 +54,8 @@ class TwinUpdateService:
         """Resets all pipeline buffers, histories, alert states, and sensor trust."""
         self.residual_engine.reset()
         self.alert_engine.reset()
+        self.sensor_trust_engine.reset()
+        self.degradation_model.reset()
         self.state_history.clear()
         self._frame_timestamps.clear()
         self._processing_durations.clear()
