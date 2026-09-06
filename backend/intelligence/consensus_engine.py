@@ -20,7 +20,10 @@ class TwinConsensusEngine:
         Synthesizes Physics, Sensor Trust, and AI perspectives.
         """
         # 1. Physics Perspective
-        max_norm_res = max([abs(r.get("normalized_residual", 0.0)) for r in physics_residuals.values()] or [0.0])
+        max_norm_res = max(
+            (abs(r.get("normalized_residual", 0.0)) for r in physics_residuals.values()),
+            default=0.0
+        )
         physics_sees_anomaly = max_norm_res >= 2.2
         physics_confidence = round(min(0.98, max(0.60, 1.0 - (max_norm_res / 10.0))), 3) if not physics_sees_anomaly else 0.90
         

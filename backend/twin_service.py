@@ -45,7 +45,8 @@ class TwinUpdateService:
         # State tracking & rate metrics
         self.last_twin_state: Optional[Dict[str, Any]] = None
         self.last_dashboard_view: Optional[Dict[str, Any]] = None
-        self.state_history: List[Dict[str, Any]] = []
+        # deque(maxlen=100): O(1) append + automatic oldest-drop; replaces list + pop(0)
+        self.state_history: deque = deque(maxlen=100)
 
         self._frame_timestamps: deque = deque(maxlen=60)
         self._processing_durations: deque = deque(maxlen=60)
@@ -368,8 +369,6 @@ class TwinUpdateService:
         self.last_twin_state = digital_twin_state
         self.last_dashboard_view = dashboard_view
         
-        if len(self.state_history) >= 100:
-            self.state_history.pop(0)
         self.state_history.append(digital_twin_state)
         
         return {

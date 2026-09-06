@@ -27,6 +27,9 @@ class ResidualEngine:
         self.history: Dict[str, deque] = {
             param: deque(maxlen=window_size) for param in self.nominal_sigmas
         }
+        
+        # Pre-computed index array for polyfit — sliced per call, never re-allocated
+        self._x_full = np.arange(window_size, dtype=np.float64)
 
     def reset(self):
         """Clears all historical residual buffers."""
@@ -69,7 +72,7 @@ class ResidualEngine:
             
             # Compute residual slope (linear regression over recent window)
             if len(buf_arr) >= 5:
-                x = np.arange(len(buf_arr))
+                x = self._x_full[:len(buf_arr)]  # slice pre-computed index array
                 slope, _ = np.polyfit(x, buf_arr, 1)
             else:
                 slope = 0.0

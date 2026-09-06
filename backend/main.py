@@ -430,9 +430,10 @@ def get_evaluations_latest():
 def get_evaluations_history(limit: int = 50):
     """Returns historical evaluation frames."""
     limit = max(1, min(200, limit))
+    recent = list(twin_service.state_history)[-limit:]
     return {
-        "count": len(twin_service.state_history[-limit:]),
-        "history": twin_service.state_history[-limit:]
+        "count": len(recent),
+        "history": recent
     }
 
 @app.post("/api/telemetry/override")
@@ -747,10 +748,11 @@ def get_engine_digital_twin(engine_id: str):
 
 @app.get("/twin/{engine_id}/history")
 def get_digital_twin_history(engine_id: str, limit: int = 30):
+    recent = list(twin_service.state_history)[-limit:]
     return {
         "engine_id": engine_id,
-        "history_count": len(twin_service.state_history[-limit:]),
-        "states": twin_service.state_history[-limit:]
+        "history_count": len(recent),
+        "states": recent
     }
 
 # ==========================================

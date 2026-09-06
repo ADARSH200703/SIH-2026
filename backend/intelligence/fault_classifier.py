@@ -5,6 +5,7 @@ Handles UNKNOWN fault scenarios defensibly when an anomaly occurs without known 
 """
 from typing import Dict, Any, List
 import numpy as np
+from scipy.special import softmax as _softmax
 
 class EngineFaultClassifier:
     def __init__(self):
@@ -152,9 +153,11 @@ class EngineFaultClassifier:
             severity = "NONE"
             raw_probs["NOMINAL"] = 0.90
             
-        # Softmax normalize raw probabilities
-        total_p = sum(raw_probs.values())
-        norm_probabilities = {k: round(v / total_p, 3) for k, v in raw_probs.items()}
+        # Softmax-normalise raw probabilities (numerically stable, sums to 1.0)
+        class_keys = list(raw_probs.keys())
+        raw_vals = np.array([raw_probs[k] for k in class_keys], dtype=np.float64)
+        sm_vals = _softmax(raw_vals)
+        norm_probabilities = {k: round(float(v), 3) for k, v in zip(class_keys, sm_vals)}
         
         return {
             "fault": fault,

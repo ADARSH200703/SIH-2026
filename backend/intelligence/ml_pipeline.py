@@ -500,7 +500,7 @@ class AerisMLPipeline:
                 coverage_count += 1
                 
         rul_mae = mean_absolute_error(rul_true, rul_pred) if rul_true else 4.2
-        rul_rmse = math.sqrt(mean_squared_error(rul_true, rul_pred)) if rul_true else 5.8
+        rul_rmse = float(np.sqrt(mean_squared_error(rul_true, rul_pred))) if rul_true else 5.8
         rul_coverage = (coverage_count / max(1, len(rul_true))) if rul_true else 0.92
         
         # 8. Register in SQLite Database Tables

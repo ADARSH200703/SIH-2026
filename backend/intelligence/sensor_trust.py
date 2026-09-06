@@ -77,21 +77,21 @@ class SensorTrustEngine:
             "engineLoad": 0.8
         }
         
+        # Alternative telemetry key names for sensors that may arrive under different field names
+        _alt_keys: Dict[str, str] = {
+            "temperature":    "cht_c",
+            "oilPressure":    "oil_pressure_bar",
+            "vibration":      "vibration_mms",
+            "egt":            "egt_c",
+            "oilTemperature": "oil_temperature_c",
+            "fuelFlow":       "fuel_flow",
+        }
+
         for sensor, bounds in self.sensor_limits.items():
             val = telemetry.get(sensor)
-            # Check for alternative key names if needed
-            if val is None and sensor == "temperature":
-                val = telemetry.get("cht_c")
-            elif val is None and sensor == "oilPressure":
-                val = telemetry.get("oil_pressure_bar")
-            elif val is None and sensor == "vibration":
-                val = telemetry.get("vibration_mms")
-            elif val is None and sensor == "egt":
-                val = telemetry.get("egt_c")
-            elif val is None and sensor == "oilTemperature":
-                val = telemetry.get("oil_temperature_c")
-            elif val is None and sensor == "fuelFlow":
-                val = telemetry.get("fuel_flow")
+            # Fall back to alternative key name if primary key is absent
+            if val is None:
+                val = telemetry.get(_alt_keys.get(sensor, ""))
                 
             status = "VALID"
             reason = "Sensor operating within valid physical envelope and signal dynamics"
