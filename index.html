@@ -1268,19 +1268,19 @@
           </div>
           <div style="display:flex;align-items:center;gap:0.75rem;">
             <div style="font-size:0.72rem;font-family:var(--font-mono);color:var(--text-dim);text-align:right;">
-              <div>LAST UPDATE: <span id="rt-data-rate" style="color:var(--accent-cyan);">--</span></div>
-              <div>HEALTH: <span id="rt-health-val" style="color:var(--status-normal);">87%</span></div>
+              <div>STATUS: <span id="rt-data-rate" style="color:var(--accent-cyan);">SOURCE: DISCONNECTED · DATA AGE: --</span></div>
+              <div>HEALTH: <span id="rt-health-val" style="color:var(--status-normal);">--</span></div>
             </div>
-            <span id="rt-summary-status" class="rt-overall-badge normal">NORMAL</span>
+            <span id="rt-summary-status" class="rt-overall-badge offline">NO LIVE DATA</span>
           </div>
         </div>
 
         <!-- Quick Summary Strip -->
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.75rem;margin-bottom:1rem;">
-          <div class="rt-summary-pill"><span class="rt-sum-label">RPM</span><span id="rt-summary-rpm" class="rt-sum-val">4,215</span></div>
-          <div class="rt-summary-pill"><span class="rt-sum-label">TEMP</span><span id="rt-summary-temp" class="rt-sum-val">78.4 °C</span></div>
-          <div class="rt-summary-pill"><span class="rt-sum-label">OIL</span><span id="rt-summary-oil" class="rt-sum-val">4.3 Bar</span></div>
-          <div class="rt-summary-pill"><span class="rt-sum-label">VIB</span><span id="rt-summary-vib" class="rt-sum-val">1.6 mm/s</span></div>
+          <div class="rt-summary-pill"><span class="rt-sum-label">RPM</span><span id="rt-summary-rpm" class="rt-sum-val">N/A</span></div>
+          <div class="rt-summary-pill"><span class="rt-sum-label">TEMP</span><span id="rt-summary-temp" class="rt-sum-val">N/A</span></div>
+          <div class="rt-summary-pill"><span class="rt-sum-label">OIL</span><span id="rt-summary-oil" class="rt-sum-val">N/A</span></div>
+          <div class="rt-summary-pill"><span class="rt-sum-label">VIB</span><span id="rt-summary-vib" class="rt-sum-val">N/A</span></div>
         </div>
 
         <!-- 6-Chart Grid -->
@@ -1294,12 +1294,12 @@
                 <div class="rt-chart-subtitle">Nominal: 4,215 RPM · Warn: 5,000 · Crit: 5,500</div>
               </div>
               <div class="rt-readout-group">
-                <span class="rt-big-val" id="rt-val-rpm">4,215</span>
+                <span class="rt-big-val" id="rt-val-rpm">N/A</span>
                 <span class="rt-unit">RPM</span>
-                <span id="rt-badge-rpm" class="rt-status-badge ok">NORMAL</span>
+                <span id="rt-badge-rpm" class="rt-status-badge offline">NO DATA</span>
               </div>
             </div>
-            <div class="rt-bar-wrap"><div class="rt-range-bar"><div id="rt-bar-rpm" class="rt-range-fill" style="width:36%;background:#2DD4BF;"></div></div></div>
+            <div class="rt-bar-wrap"><div class="rt-range-bar"><div id="rt-bar-rpm" class="rt-range-fill" style="width:0%;background:#2DD4BF;"></div></div></div>
             <div class="rt-chart-canvas-wrap"><canvas id="rt-chart-rpm"></canvas></div>
           </div>
 
@@ -1311,29 +1311,29 @@
                 <div class="rt-chart-subtitle">Nominal: 78.4 °C · Warn: 84 · Crit: 92</div>
               </div>
               <div class="rt-readout-group">
-                <span class="rt-big-val" id="rt-val-temperature">78.4</span>
+                <span class="rt-big-val" id="rt-val-temperature">N/A</span>
                 <span class="rt-unit">°C</span>
-                <span id="rt-badge-temperature" class="rt-status-badge ok">NORMAL</span>
+                <span id="rt-badge-temperature" class="rt-status-badge offline">NO DATA</span>
               </div>
             </div>
-            <div class="rt-bar-wrap"><div class="rt-range-bar"><div id="rt-bar-temperature" class="rt-range-fill" style="width:41%;background:#EF4444;"></div></div></div>
+            <div class="rt-bar-wrap"><div class="rt-range-bar"><div id="rt-bar-temperature" class="rt-range-fill" style="width:0%;background:#EF4444;"></div></div></div>
             <div class="rt-chart-canvas-wrap"><canvas id="rt-chart-temp"></canvas></div>
           </div>
 
-          <!-- Motor Current -->
+          <!-- Oil Pressure -->
           <div class="rt-chart-card">
             <div class="rt-chart-header">
               <div>
-                <div class="rt-chart-title"><span class="material-symbols-outlined" style="font-size: 14px;color:#38BDF8;">bolt</span> MOTOR CURRENT</div>
-                <div class="rt-chart-subtitle">Nominal: 4.3 Bar · Warn &lt;3.8 · Crit &lt;3.0</div>
+                <div class="rt-chart-title"><span class="material-symbols-outlined" style="font-size: 14px;color:#38BDF8;">water_drop</span> OIL PRESSURE</div>
+                <div class="rt-chart-subtitle">Nominal: 4.3 Bar · Warn &lt;3.6 · Crit &lt;2.8</div>
               </div>
               <div class="rt-readout-group">
-                <span class="rt-big-val" id="rt-val-oilPressure">4.3</span>
+                <span class="rt-big-val" id="rt-val-oilPressure">N/A</span>
                 <span class="rt-unit">Bar</span>
-                <span id="rt-badge-oilPressure" class="rt-status-badge ok">NORMAL</span>
+                <span id="rt-badge-oilPressure" class="rt-status-badge offline">NO DATA</span>
               </div>
             </div>
-            <div class="rt-bar-wrap"><div class="rt-range-bar"><div id="rt-bar-oilPressure" class="rt-range-fill" style="width:55%;background:#38BDF8;"></div></div></div>
+            <div class="rt-bar-wrap"><div class="rt-range-bar"><div id="rt-bar-oilPressure" class="rt-range-fill" style="width:0%;background:#38BDF8;"></div></div></div>
             <div class="rt-chart-canvas-wrap"><canvas id="rt-chart-oil"></canvas></div>
           </div>
 
@@ -1341,33 +1341,33 @@
           <div class="rt-chart-card">
             <div class="rt-chart-header">
               <div>
-                <div class="rt-chart-title"><span class="material-symbols-outlined" style="font-size: 14px;color:#F59E0B;">show_chart</span> VIBRATION</div>
-                <div class="rt-chart-subtitle">Nominal: 1.6 mm/s · Warn: 2.4 · Crit: 4.0</div>
+                <div class="rt-chart-title"><span class="material-symbols-outlined" style="font-size: 14px;color:#F59E0B;">show_chart</span> CASING VIBRATION</div>
+                <div class="rt-chart-subtitle">Nominal: 1.6 mm/s · Warn: 2.4 · Crit: 3.8</div>
               </div>
               <div class="rt-readout-group">
-                <span class="rt-big-val" id="rt-val-vibration">1.6</span>
+                <span class="rt-big-val" id="rt-val-vibration">N/A</span>
                 <span class="rt-unit">mm/s</span>
-                <span id="rt-badge-vibration" class="rt-status-badge ok">NORMAL</span>
+                <span id="rt-badge-vibration" class="rt-status-badge offline">NO DATA</span>
               </div>
             </div>
-            <div class="rt-bar-wrap"><div class="rt-range-bar"><div id="rt-bar-vibration" class="rt-range-fill" style="width:20%;background:#F59E0B;"></div></div></div>
+            <div class="rt-bar-wrap"><div class="rt-range-bar"><div id="rt-bar-vibration" class="rt-range-fill" style="width:0%;background:#F59E0B;"></div></div></div>
             <div class="rt-chart-canvas-wrap"><canvas id="rt-chart-vib"></canvas></div>
           </div>
 
-          <!-- Battery Voltage -->
+          <!-- Fuel Flow -->
           <div class="rt-chart-card">
             <div class="rt-chart-header">
               <div>
-                <div class="rt-chart-title"><span class="material-symbols-outlined" style="font-size: 14px;color:#38BDF8;">battery_full</span> BATTERY VOLTAGE</div>
-                <div class="rt-chart-subtitle">Nominal: 5.2 ml/min · Warn: 7.5 · Crit: 10.0</div>
+                <div class="rt-chart-title"><span class="material-symbols-outlined" style="font-size: 14px;color:#38BDF8;">local_gas_station</span> FUEL FLOW RATE</div>
+                <div class="rt-chart-subtitle">Nominal: 5.2 L/h · Warn: 7.5 · Crit: 9.0</div>
               </div>
               <div class="rt-readout-group">
-                <span class="rt-big-val" id="rt-val-fuelFlow">5.2</span>
-                <span class="rt-unit">ml/min</span>
-                <span id="rt-badge-fuelFlow" class="rt-status-badge ok">NORMAL</span>
+                <span class="rt-big-val" id="rt-val-fuelFlow">N/A</span>
+                <span class="rt-unit">L/h</span>
+                <span id="rt-badge-fuelFlow" class="rt-status-badge offline">NO DATA</span>
               </div>
             </div>
-            <div class="rt-bar-wrap"><div class="rt-range-bar"><div id="rt-bar-fuelFlow" class="rt-range-fill" style="width:43%;background:#38BDF8;"></div></div></div>
+            <div class="rt-bar-wrap"><div class="rt-range-bar"><div id="rt-bar-fuelFlow" class="rt-range-fill" style="width:0%;background:#38BDF8;"></div></div></div>
             <div class="rt-chart-canvas-wrap"><canvas id="rt-chart-fuel"></canvas></div>
           </div>
 
@@ -1375,13 +1375,13 @@
           <div class="rt-chart-card">
             <div class="rt-chart-header">
               <div>
-                <div class="rt-chart-title"><span class="material-symbols-outlined" style="font-size: 14px;color:#2DD4BF;">bolt</span> ENGINE LOAD</div>
+                <div class="rt-chart-title"><span class="material-symbols-outlined" style="font-size: 14px;color:#2DD4BF;">bolt</span> ENGINE LOAD DEMAND</div>
                 <div class="rt-chart-subtitle">Nominal: 62% · Warn: 85% · Crit: 95%</div>
               </div>
               <div class="rt-readout-group">
-                <span class="rt-big-val" id="rt-val-engineLoad">62</span>
+                <span class="rt-big-val" id="rt-val-engineLoad">N/A</span>
                 <span class="rt-unit">%</span>
-                <span id="rt-badge-engineLoad" class="rt-status-badge ok">NORMAL</span>
+                <span id="rt-badge-engineLoad" class="rt-status-badge offline">NO DATA</span>
               </div>
             </div>
             <div class="rt-bar-wrap"><div class="rt-range-bar"><div id="rt-bar-engineLoad" class="rt-range-fill" style="width:62%;background:#2DD4BF;"></div></div></div>

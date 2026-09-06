@@ -28,6 +28,12 @@ class ResidualEngine:
             param: deque(maxlen=window_size) for param in self.nominal_sigmas
         }
 
+    def reset(self):
+        """Clears all historical residual buffers."""
+        for param in self.history:
+            self.history[param].clear()
+
+
     def compute_residuals(self, measured: Dict[str, Any], expected: Dict[str, Any]) -> Dict[str, Any]:
         """
         Calculates residual = measured - expected, normalized residual, and rolling trends.

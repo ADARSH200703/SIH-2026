@@ -64,6 +64,15 @@ class RealtimeAlertEngine:
         # Initial nominal event
         self._record_event("Evaluator Initialized — State: NOMINAL", "info", time.time())
 
+    def reset(self):
+        """Resets active alerts, transition histories, and restores NORMAL system state."""
+        self.active_alerts.clear()
+        self.current_system_state = "NORMAL"
+        self.transition_history.clear()
+        self.event_timeline.clear()
+        self._record_event("Evaluator Reset — State: NOMINAL", "info", time.time())
+
+
     def _format_time(self, ts: float) -> str:
         return time.strftime("%H:%M:%S", time.localtime(ts))
 

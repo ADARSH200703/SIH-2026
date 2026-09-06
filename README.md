@@ -244,6 +244,28 @@ Ground Station
 
 The same evaluation pipeline can be used with live telemetry, replayed telemetry, or simulation sources.
 
+### Data Modes & Disconnection Contract
+
+AERIS-TWIN enforces strict operational mode isolation:
+1. **LIVE Mode**: Accepts real telemetry frames strictly through confirmed telemetry channels (`POST /api/telemetry/live`, WebSocket ingestion, MAVLink). When no frame arrives within the threshold (`>3.0s` STALE, `>6.0s` DISCONNECTED), the UI strictly displays `NO LIVE DATA`, `SOURCE: DISCONNECTED`, `DATA AGE: --`, and `N/A` for all channel values. No random or mock frames are ever generated in LIVE mode.
+2. **SIMULATION Mode**: Explicitly labeled (`SIMULATION` / `[SIM]`). Driven exclusively by the backend physics simulation engine (`backend/simulation/aero_simulator.py`).
+3. **REPLAY Mode**: Explicitly labeled (`REPLAY`). Replays recorded multi-channel telemetry flight profiles deterministically with variable speed and pause/seek controls.
+
+### Feeding Live Telemetry in Development
+
+Use the included standalone telemetry producer to stream deterministic test frames into the live ingestion pipeline:
+
+```bash
+# Stream nominal cruise telemetry at 10 Hz
+python dev_telemetry_sender.py --rate 10 --scenario cruise
+
+# Stream an engine degradation scenario
+python dev_telemetry_sender.py --rate 10 --scenario bearing_wear
+
+# Send a single deterministic test frame with custom values
+python dev_telemetry_sender.py --single --rpm 4215 --cht 78.4 --oil 4.3 --vib 1.6
+```
+
 ---
 
 ## 3D Digital Twin

@@ -103,10 +103,11 @@ async def telemetry_broadcast_loop():
             if not system_state.is_paused:
                 if system_state.mode == "LIVE":
                     # LIVE MODE: Ingest from LiveStreamSource
+                    status_info = live_source.get_status()
                     if live_source.is_connected():
                         raw_frame = live_source.get_frame()
                         if raw_frame is not None:
-                            raw_frame["source"] = "LIVE"
+                            raw_frame["source"] = raw_frame.get("source", "LIVE")
                             raw_frame["is_simulated"] = False
                             pipeline_out = twin_service.process_telemetry_frame(raw_frame)
                             
@@ -114,6 +115,7 @@ async def telemetry_broadcast_loop():
                                 "type": "TELEMETRY_UPDATE",
                                 "mode": "LIVE",
                                 "connected": True,
+                                "status": "LIVE" if not live_source.is_stale() else "STALE",
                                 "data": pipeline_out,
                                 "state": raw_frame,
                                 "history": simulator.history,
@@ -126,19 +128,30 @@ async def telemetry_broadcast_loop():
                                 "alerts": pipeline_out.get("alerts", []),
                                 "events": pipeline_out.get("events", []),
                                 "primary_evidence": pipeline_out.get("primary_evidence", []),
-                                "stream_metrics": pipeline_out.get("stream_metrics", {}),
+                                "stream_metrics": status_info,
                                 "target_rate_hz": system_state.target_rate_hz,
+                            }
+                            await manager.broadcast(payload)
+                        elif live_source.is_stale():
+                            payload = {
+                                "type": "LIVE_STREAM_STATUS",
+                                "mode": "LIVE",
+                                "connected": True,
+                                "status": "STALE",
+                                "message": f"LIVE DATA: STALE ({status_info.get('data_age_ms')} ms)",
+                                "status_details": status_info,
+                                "target_rate_hz": system_state.target_rate_hz,
+                                "timestamp": time.time(),
                             }
                             await manager.broadcast(payload)
                     else:
                         # Live mode but no active live stream connected
-                        status_info = live_source.get_status()
                         payload = {
                             "type": "LIVE_STREAM_STATUS",
                             "mode": "LIVE",
                             "connected": False,
-                            "status": "NOT_CONNECTED",
-                            "message": "LIVE DATA: NOT CONNECTED",
+                            "status": status_info.get("status", "NOT_CONNECTED"),
+                            "message": "NO LIVE DATA — SOURCE DISCONNECTED",
                             "status_details": status_info,
                             "target_rate_hz": system_state.target_rate_hz,
                             "timestamp": time.time(),
@@ -244,6 +257,7 @@ def set_evaluator_mode(req: ModeRequest):
     if req_mode == "TEST":
         req_mode = "SIMULATION"
     system_state.mode = req_mode
+    twin_service.reset()
     log_event(f"Evaluator Mode Switched to: {req_mode}", "info", "ModeManager")
     return {
         "status": "mode_updated",

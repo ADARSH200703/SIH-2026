@@ -183,3 +183,97 @@ def test_replay_and_mavlink_sources():
     assert mav.is_connected() is True
     assert m_frame["rpm"] == 4350.0
     assert m_frame["source"] == "MAVLINK"
+
+
+def test_live_stream_disconnection_and_staleness():
+    """Verify live stream source transitions through NOT_CONNECTED -> CONNECTED -> STALE -> DISCONNECTED."""
+    src = LiveStreamSource(stale_timeout_sec=0.2, disconnect_timeout_sec=0.5)
+    
+    # 1. Initially not connected
+    assert src.is_connected() is False
+    assert src.get_status()["status"] == "NOT CONNECTED"
+    assert src.get_frame() is None
+
+    # 2. Push frame -> CONNECTED
+    t0 = time.time()
+    src.push_frame({"rpm": 4215, "temperature": 78.4, "oilPressure": 4.3, "timestamp": t0})
+    assert src.is_connected() is True
+    assert src.is_stale() is False
+    assert src.get_status()["status"] == "CONNECTED"
+    
+    # Get frame should pop the exact frame
+    frame = src.get_frame()
+    assert frame is not None
+    assert frame["rpm"] == 4215
+
+    # Subsequent get_frame with empty buffer should return None (no fake synthesis!)
+    assert src.get_frame() is None
+
+    # 3. Wait for stale timeout
+    time.sleep(0.25)
+    assert src.is_stale() is True
+    assert src.is_connected() is True
+    assert src.get_status()["status"] == "STALE"
+
+    # 4. Wait for disconnect timeout
+    time.sleep(0.35)
+    assert src.is_connected() is False
+    assert src.get_status()["status"] == "DISCONNECTED"
+
+
+def test_deterministic_live_telemetry_flow():
+    """Send known deterministic frame and verify exact outputs without interpolation."""
+    set_evaluator_mode(ModeRequest(mode="LIVE"))
+
+    deterministic_packet = {
+        "engine_id": "UAV-ENG-ROT-914-01",
+        "timestamp": time.time(),
+        "sequence_number": 8801,
+        "rpm": 4215.0,
+        "temperature": 78.4,
+        "oilPressure": 4.30,
+        "vibration": 1.60,
+        "fuelFlow": 5.20,
+        "engineLoad": 62.0,
+        "throttle": 68.0,
+        "egt_c": 645.0,
+        "source": "DEV_TEST",
+    }
+    
+    resp = ingest_live_telemetry(deterministic_packet)
+    assert resp["status"] == "ingested"
+    assert resp["sequence_number"] == 8801
+
+    view = twin_service.last_dashboard_view
+    assert view is not None
+    assert view["rpm"] == 4215.0
+    assert view["oil_pressure"] == 4.30
+    assert view["fuel_flow"] == 5.20
+    assert view["status"] == "NORMAL"
+    assert "stream_metrics" in view
+
+    # Send second frame with perturbed oil pressure
+    anomaly_packet = {
+        "engine_id": "UAV-ENG-ROT-914-01",
+        "timestamp": time.time(),
+        "sequence_number": 8802,
+        "rpm": 4215.0,
+        "temperature": 94.0,
+        "oilPressure": 1.80,
+        "vibration": 3.20,
+        "fuelFlow": 5.20,
+        "engineLoad": 70.0,
+        "throttle": 68.0,
+        "egt_c": 650.0,
+        "source": "DEV_TEST",
+    }
+    resp2 = ingest_live_telemetry(anomaly_packet)
+    assert resp2["sequence_number"] == 8802
+    view2 = twin_service.last_dashboard_view
+    assert view2["oil_pressure"] == 1.80
+    assert view2["temperature"] == 94.0
+    assert view2["status"] in ["ANOMALY", "CRITICAL", "HIGH_RISK"]
+    assert view2["engine_health"] < 50
+
+
+

@@ -96,9 +96,6 @@ class LiveStreamSource(TelemetrySource):
     def get_frame(self) -> Optional[Dict[str, Any]]:
         if self._buffer:
             return self._buffer.popleft()
-        if self.is_connected() and self.last_frame is not None:
-            # Return last frame if connected but buffer drained
-            return dict(self.last_frame)
         return None
 
     def get_status(self) -> Dict[str, Any]:

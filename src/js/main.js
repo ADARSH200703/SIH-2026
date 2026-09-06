@@ -675,6 +675,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const scenarioPicker = $('scenario-picker-container');
 
     if (isLive) {
+      sim.stop();
       if (bannerLive) bannerLive.style.display = liveStreamConnected ? 'none' : 'flex';
       if (bannerSim) bannerSim.style.display = 'none';
       if (scenarioPicker) scenarioPicker.style.display = 'none';
@@ -684,6 +685,10 @@ document.addEventListener('DOMContentLoaded', () => {
       setText('sb-mode-badge', 'LIVE STREAM');
       setCss('sb-mode-badge', 'color', 'var(--status-normal)');
       
+      if (!liveStreamConnected) {
+        renderDisconnectedLiveState({ status: 'NO LIVE DATA', source: 'DISCONNECTED' });
+      }
+
       wsCmd({ action: 'SET_MODE', mode: 'LIVE' });
       fetch(`${API_BASE_URL}/api/mode`, {
         method: 'POST',
@@ -701,6 +706,10 @@ document.addEventListener('DOMContentLoaded', () => {
       setCss('hdr-mode-tag', 'color', 'var(--status-warning)');
       setText('sb-mode-badge', 'SIM / TEST');
       setCss('sb-mode-badge', 'color', 'var(--status-warning)');
+
+      if (!wsConnected) {
+        sim.start();
+      }
 
       wsCmd({ action: 'SET_MODE', mode: 'SIMULATION' });
       fetch(`${API_BASE_URL}/api/mode`, {
@@ -1137,27 +1146,156 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ─── Main Telemetry Update Processor (Backend and Fallback) ─────────────────
-  function processTelemetryUpdate(data) {
+  // ─── Disconnected / Standby State Renderer ────────────────────────────────
+  function renderDisconnectedLiveState(statusDetails = {}) {
+    liveStreamConnected = false;
+    const status = statusDetails?.status || 'NO LIVE DATA';
+    const source = statusDetails?.source || 'DISCONNECTED';
+
+    if ($('live-not-connected-banner') && evalMode === 'LIVE') {
+      $('live-not-connected-banner').style.display = 'flex';
+    }
+
+    // Header & KPIs
+    setText('hdr-last-update', 'NO STREAM');
+    setText('hdr-data-age', '--');
+    setText('hdr-latency', '--');
+    setCss('hdr-pulse-dot', 'background', '#64748B');
+
+    setText('metric-ingest-rate', '0.0 Hz');
+    setText('metric-proc-rate', '--');
+    setText('metric-eval-latency', '--');
+    setText('metric-data-age', '--');
+
+    // Values to N/A
+    setText('val-rpm', 'N/A');
+    setText('val-temp', 'N/A');
+    setText('val-oil', 'N/A');
+    setText('val-vib', 'N/A');
+    setText('val-fuel', 'N/A');
+    setText('val-load', 'N/A');
+
+    // Health gauge
+    setText('kpi-health-val', '--');
+    setText('kpi-health-sub', 'NO DATA');
+    setCss('kpi-health-sub', 'color', 'var(--text-dim)');
+    const circle = $('health-gauge-circle');
+    if (circle) { circle.style.strokeDashoffset = '251.2'; }
+
+    // Status Badge
+    setText('kpi-status-val', status);
+    setText('kpi-status-sub', 'Waiting for live telemetry ingestion...');
+    setText('status-badge-icon', 'sensors_off');
+    const badge = $('kpi-status-badge');
+    if (badge) {
+      badge.style.color = 'var(--text-dim)';
+      badge.style.textShadow = 'none';
+      badge.classList.remove('status-pulse');
+    }
+
+    setText('kpi-reliability-val', '--');
+    setText('kpi-reliability-sub', 'NO DATA');
+    setCss('kpi-reliability-sub', 'color', 'var(--text-dim)');
+    setText('kpi-flight-time', '--:--:--');
+    setText('header-mission-clock', 'T+ --:--:--');
+
+    // Range bars to 0%
+    ['range-rpm', 'range-temp', 'range-oil', 'range-vib', 'range-fuel', 'range-load'].forEach(id => {
+      setCss(id, 'width', '0%');
+    });
+
+    // Trend arrows to —
+    Object.values(TREND_IDS).forEach(elId => {
+      const el = $(elId);
+      if (el) { el.textContent = '—'; el.style.color = 'var(--text-dim)'; }
+    });
+
+    // AI Panel
+    setText('ai-possible-issue', 'No active telemetry stream connected');
+    const rb = $('ai-risk-badge');
+    if (rb) {
+      rb.textContent = 'STANDBY';
+      rb.className = 'risk-badge normal';
+    }
+    setText('ai-confidence-val', '0%');
+    setCss('ai-confidence-bar', 'width', '0%');
+    setText('ai-time-to-fault', '--');
+
+    setText('lab-anomaly-score', '0.000');
+    setCss('lab-anomaly-bar', 'width', '0%');
+    setText('lab-rul-val', '--');
+
+    // Pipeline strip
+    const pBadge = $('pipeline-health-badge');
+    if (pBadge) {
+      pBadge.textContent = 'DISCONNECTED';
+      pBadge.style.color = 'var(--text-dim)';
+    }
+
+    // Primary evidence
+    const listEl = $('primary-evidence-list');
+    if (listEl) {
+      listEl.innerHTML = '<li style="color:var(--text-dim);">No telemetry frames received. Ingest live telemetry via POST /api/telemetry or CAN-bus / MAVLink gateway to start AI evaluation.</li>';
+    }
+    setText('evidence-trust-val', '--');
+    setText('evidence-conf-val', '--');
+    const rLabel = $('evidence-risk-label');
+    if (rLabel) {
+      rLabel.textContent = 'STANDBY';
+      rLabel.style.color = 'var(--text-dim)';
+    }
+
+    // Residuals table
+    ['rpm', 'cht', 'oil', 'vib', 'fuel'].forEach(p => {
+      setText(`res-val-${p}`, 'N/A');
+      setText(`res-exp-${p}`, '--');
+      setText(`res-delta-${p}`, '--');
+      setText(`res-sigma-${p}`, '--');
+      setText(`res-slope-${p}`, '--');
+    });
+
+    // 3D Twin HUD
+    if (twin) {
+      setText('hud-rpm-val', '-- RPM');
+      setText('hud-temp-val', '-- °C');
+      setText('hud-oil-val', '-- Bar');
+      setText('hud-vib-val', '-- mm/s');
+      setText('twin-health-badge', '--');
+      setText('twin-rul-tag', 'RUL: --');
+    }
+
+    // 6-Channel Realtime Monitor
+    rtMon.renderDisconnected({ mode: 'LIVE', status, source });
+  }
+
+  // ─── Main Telemetry Update Processor ────────────────────────────────────────
+  function processTelemetryUpdate(data, mode = evalMode, status = 'LIVE', streamMetrics = {}) {
     const dashboardView = data.dashboard_view || data;
     const twinState = data.twin_state || {};
     const residuals = data.residuals || {};
     const expected = data.expected_physics || {};
     const sensorTrust = data.sensor_trust || {};
-    const streamMetrics = data.stream_metrics || {};
+    const metrics = data.stream_metrics || streamMetrics || {};
 
-    // Synchronize simulator state object
-    sim.state.rpm = dashboardView.rpm ?? sim.state.rpm;
-    sim.state.temperature = dashboardView.temperature ?? sim.state.temperature;
-    sim.state.oilPressure = dashboardView.oil_pressure ?? sim.state.oilPressure;
-    sim.state.vibration = dashboardView.vibration ?? sim.state.vibration;
-    sim.state.fuelFlow = dashboardView.fuel_flow ?? sim.state.fuelFlow;
-    sim.state.engineLoad = dashboardView.engine_load ?? sim.state.engineLoad;
-    sim.state.engineHealth = dashboardView.engine_health ?? sim.state.engineHealth;
-    sim.state.missionReliability = dashboardView.mission_reliability ?? sim.state.missionReliability;
-    sim.state.status = dashboardView.status ?? sim.state.status;
+    if (evalMode === 'LIVE' && !liveStreamConnected) {
+      renderDisconnectedLiveState();
+      return;
+    }
+
+    // Synchronize simulator state object with real telemetry frame
+    sim.state.rpm = typeof dashboardView.rpm === 'number' ? dashboardView.rpm : sim.state.rpm;
+    sim.state.temperature = typeof dashboardView.temperature === 'number' ? dashboardView.temperature : sim.state.temperature;
+    sim.state.oilPressure = typeof dashboardView.oil_pressure === 'number' ? dashboardView.oil_pressure : (typeof dashboardView.oilPressure === 'number' ? dashboardView.oilPressure : sim.state.oilPressure);
+    sim.state.vibration = typeof dashboardView.vibration === 'number' ? dashboardView.vibration : sim.state.vibration;
+    sim.state.fuelFlow = typeof dashboardView.fuel_flow === 'number' ? dashboardView.fuel_flow : (typeof dashboardView.fuelFlow === 'number' ? dashboardView.fuelFlow : sim.state.fuelFlow);
+    sim.state.engineLoad = typeof dashboardView.engine_load === 'number' ? dashboardView.engine_load : (typeof dashboardView.engineLoad === 'number' ? dashboardView.engineLoad : sim.state.engineLoad);
+    sim.state.engineHealth = typeof dashboardView.engine_health === 'number' ? dashboardView.engine_health : (typeof dashboardView.engineHealth === 'number' ? dashboardView.engineHealth : sim.state.engineHealth);
+    sim.state.missionReliability = typeof dashboardView.mission_reliability === 'number' ? dashboardView.mission_reliability : (typeof dashboardView.missionReliability === 'number' ? dashboardView.missionReliability : sim.state.missionReliability);
+    sim.state.status = dashboardView.status || sim.state.status || 'NORMAL';
 
     // Push into telemetry history
-    sim.history.labels.push(sim.getFormattedFlightTime());
+    const fTime = dashboardView.flight_time_str || sim.getFormattedFlightTime();
+    sim.history.labels.push(fTime);
     sim.history.rpm.push(sim.state.rpm);
     sim.history.temperature.push(sim.state.temperature);
     sim.history.oilPressure.push(sim.state.oilPressure);
@@ -1168,7 +1306,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Bounded history array to prevent memory leaks
     if (sim.history.labels.length > 500) {
-      Object.keys(sim.history).forEach(k => sim.history[k].shift());
+      Object.keys(sim.history).forEach(k => {
+        if (Array.isArray(sim.history[k])) sim.history[k].shift();
+      });
     }
 
     const state = sim.state;
@@ -1194,6 +1334,7 @@ document.addEventListener('DOMContentLoaded', () => {
       DEGRADED: { color: 'var(--status-warning)',  sub: 'Operating in degraded mode',   icon: 'warning' },
       CRITICAL: { color: 'var(--status-critical)', sub: 'Critical threshold exceeded!', icon: 'error'  },
       FAULT:    { color: 'var(--status-critical)', sub: 'Fault signature confirmed!',   icon: 'error'  },
+      LIVE:     { color: 'var(--status-normal)',   sub: 'Live telemetry ingestion',     icon: 'sensors' },
     };
     const cfg = STATUS_CFG[state.status] || STATUS_CFG.NORMAL;
     setText('kpi-status-val', state.status);
@@ -1204,7 +1345,6 @@ document.addEventListener('DOMContentLoaded', () => {
     badge?.classList.toggle('status-pulse', state.status === 'CRITICAL' || state.status === 'FAULT');
 
     // — KPI Cards —
-    const fTime = dashboardView.flight_time_str || sim.getFormattedFlightTime();
     setText('kpi-flight-time', fTime);
     setText('header-mission-clock', `T+ ${fTime}`);
     setText('kpi-reliability-val', `${state.missionReliability}%`);
@@ -1216,9 +1356,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // — Sensor Readouts —
     setText('val-rpm',  Math.round(state.rpm).toLocaleString());
     setText('val-temp', state.temperature.toFixed(1));
-    setText('val-oil',  state.oilPressure.toFixed(1));
-    setText('val-vib',  state.vibration.toFixed(1));
-    setText('val-fuel', state.fuelFlow.toFixed(1));
+    setText('val-oil',  state.oilPressure.toFixed(2));
+    setText('val-vib',  state.vibration.toFixed(2));
+    setText('val-fuel', state.fuelFlow.toFixed(2));
     setText('val-load', Math.round(state.engineLoad));
 
     // — Trend Arrows —
@@ -1226,7 +1366,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // — Param card status highlighting —
     const PARAM_ALERTS = [
-      ['param-oil-card',  state.oilPressure < 3.8, state.oilPressure < 2.8],
+      ['param-oil-card',  state.oilPressure < 3.6, state.oilPressure < 2.8],
       ['param-temp-card', state.temperature > 84,  state.temperature > 92 ],
       ['param-vib-card',  state.vibration > 2.4,   state.vibration > 3.8  ],
     ];
@@ -1266,7 +1406,7 @@ document.addEventListener('DOMContentLoaded', () => {
       twin.updateState(state);
       setText('hud-rpm-val',  `${Math.round(state.rpm)} RPM`);
       setText('hud-temp-val', `${state.temperature.toFixed(1)} °C`);
-      setText('hud-oil-val',  `${state.oilPressure.toFixed(1)} Bar`);
+      setText('hud-oil-val',  `${state.oilPressure.toFixed(2)} Bar`);
       setText('hud-vib-val',  `${state.vibration.toFixed(2)} mm/s`);
       setText('twin-health-badge', `${state.engineHealth}%`);
       setText('twin-rul-tag', `RUL: ${dashboardView.rul_time_str || infer.estimatedTimeToFault || '1200h'}`);
@@ -1276,7 +1416,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderInspector(activeComp, false);
 
     // — Stream Performance Metrics & Pipeline Strip —
-    updateStreamMetrics(streamMetrics);
+    updateStreamMetrics(metrics);
     updatePipelineStrip(state.status);
     updateResidualsTable(residuals, expected, state);
     updatePrimaryEvidence(dashboardView.primary_evidence || twinState.primary_evidence, sensorTrust, twinState);
@@ -1310,16 +1450,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // — Audio RPM —
     audio.updateEngineRPM(state.rpm);
 
-    // — Realtime Monitor & History Logs —
-    rtMon.update(state, history);
+    // — 6-Channel Realtime Monitor & History Logs —
+    rtMon.update(state, history, {
+      isConnected: true,
+      mode,
+      status,
+      source: data.source || (mode === 'LIVE' ? 'LIVE STREAM' : 'SIMULATION'),
+      dataAgeMs: metrics?.data_age_ms
+    });
+
     if ($('view-history')?.style.display !== 'none') {
       histLog.render();
     }
   }
 
-  // Fallback simulator subscription for client simulation mode
+  // Client Simulation mode listener (ONLY active when explicitly in SIMULATION mode and backend is offline)
   sim.subscribe((state, history) => {
-    if (!wsConnected || evalMode === 'SIMULATION') {
+    if (!wsConnected && evalMode === 'SIMULATION') {
       processTelemetryUpdate({
         dashboard_view: {
           ...state,
@@ -1328,7 +1475,7 @@ document.addEventListener('DOMContentLoaded', () => {
           engine_health: state.engineHealth,
           mission_reliability: state.missionReliability,
         }
-      });
+      }, 'SIMULATION', 'SIMULATED');
     }
   });
 
@@ -1374,10 +1521,11 @@ document.addEventListener('DOMContentLoaded', () => {
               banner.style.display = liveStreamConnected ? 'none' : 'flex';
             }
             if (!liveStreamConnected && evalMode === 'LIVE') {
-              setText('hdr-last-update', 'NO STREAM');
-              setCss('hdr-pulse-dot', 'background', '#EF4444');
-            } else {
-              setCss('hdr-pulse-dot', 'background', '#22C55E');
+              renderDisconnectedLiveState(msg.status_details || { status: msg.status, source: 'DISCONNECTED' });
+            } else if (msg.status === 'STALE' && evalMode === 'LIVE') {
+              setText('hdr-last-update', 'STALE STREAM');
+              setCss('hdr-pulse-dot', 'background', '#F59E0B');
+              setText('kpi-status-val', 'STALE');
             }
           } else if (msg.type === 'TELEMETRY_UPDATE') {
             liveStreamConnected = true;
@@ -1385,7 +1533,7 @@ document.addEventListener('DOMContentLoaded', () => {
               $('live-not-connected-banner').style.display = 'none';
             }
             setCss('hdr-pulse-dot', 'background', '#22C55E');
-            processTelemetryUpdate(msg.data);
+            processTelemetryUpdate(msg.data, msg.mode, msg.status, msg.stream_metrics);
           } else if (msg.type === 'ALERT_TRIGGERED') {
             if (msg.alert) {
               histLog.addBackendEvent(msg.alert);
@@ -1399,9 +1547,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
       socket.onclose = () => {
         wsConnected = false;
-        setText('comm-link-status',    'Client Fallback Mode');
-        setText('backend-status-text', 'FastAPI Offline — Local Sim Active');
+        setText('comm-link-status',    'Disconnected');
+        setText('backend-status-text', 'FastAPI Offline');
         $('ws-status-dot')?.classList.remove('connected');
+        if (evalMode === 'LIVE') {
+          renderDisconnectedLiveState({ status: 'BACKEND OFFLINE', source: 'DISCONNECTED' });
+        }
         setTimeout(initWebSocket, 3000);
       };
 
@@ -1410,8 +1561,13 @@ document.addEventListener('DOMContentLoaded', () => {
       };
     } catch (_) {
       // Backend offline
+      if (evalMode === 'LIVE') {
+        renderDisconnectedLiveState({ status: 'BACKEND OFFLINE', source: 'DISCONNECTED' });
+      }
     }
   }
 
+  // Initial state on page load: clean disconnected live state
+  renderDisconnectedLiveState();
   initWebSocket();
 });

@@ -61,31 +61,39 @@ export class EngineSimulator {
     }
     this._lastStatus = 'NORMAL';
     this.speedMultiplier = 1;
+    this.state.isRunning = false;
     this._initHistory();
+  }
+
+  start() {
+    this.state.isRunning = true;
     this._startTick();
   }
 
+  stop() {
+    this.state.isRunning = false;
+    clearInterval(this._interval);
+  }
+
   _initHistory() {
-    for (let i = 59; i >= 0; i--) {
-      this.history.labels.push((((-i * 5) / 60)).toFixed(1));
-      this.history.rpm.push(4215 + Math.sin(i * 0.4) * 25 + noise(5));
-      this.history.temperature.push(78.0 + Math.cos(i * 0.2) * 1.5 + noise(0.2));
-      this.history.oilPressure.push(4.3 + Math.sin(i * 0.3) * 0.1 + noise(0.025));
-      this.history.vibration.push(1.6 + Math.cos(i * 0.5) * 0.15 + noise(0.04));
-      this.history.fuelFlow.push(5.2 + noise(0.06));
-      this.history.engineLoad.push(62 + noise(0.4));
-    }
+    this.history = {
+      labels: [], rpm: [], temperature: [], oilPressure: [],
+      vibration: [], fuelFlow: [], engineLoad: [],
+    };
   }
 
   _startTick() {
     clearInterval(this._interval);
+    if (!this.state.isRunning) return;
     const intervalMs = Math.max(150, Math.round(1000 / (this.speedMultiplier || 1)));
     this._interval = setInterval(() => this.tick(), intervalMs);
   }
 
   setSpeed(multiplier = 1) {
     this.speedMultiplier = multiplier;
-    this._startTick();
+    if (this.state.isRunning) {
+      this._startTick();
+    }
   }
 
   setScenario(name) {
@@ -246,7 +254,6 @@ export class EngineSimulator {
 
   subscribe(cb) {
     this.subscribers.add(cb);
-    cb(this.state, this.history);
     return () => this.subscribers.delete(cb);
   }
 

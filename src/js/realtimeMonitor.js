@@ -2,12 +2,12 @@ import { Chart, registerables } from "chart.js";
 Chart.register(...registerables);
 
 const SENSOR_CONFIGS = [
-  { key: "rpm",         id: "rt-chart-rpm",  label: "Engine RPM",            color: "#2DD4BF", unit: "RPM",    warn: 5000, crit: 5500, min: 2000, max: 6000 },
-  { key: "temperature", id: "rt-chart-temp", label: "Cylinder Head Temp",    color: "#EF4444", unit: "°C",     warn: 84,   crit: 92,   min: 50,   max: 120  },
-  { key: "oilPressure", id: "rt-chart-oil",  label: "Oil Pressure",          color: "#38BDF8", unit: "Bar",    warn: 3.6,  crit: 2.8,  min: 1.0,  max: 6.5  },
-  { key: "vibration",   id: "rt-chart-vib",  label: "Casing Vibration",      color: "#F59E0B", unit: "mm/s",   warn: 2.4,  crit: 3.8,  min: 0,    max: 8    },
-  { key: "fuelFlow",    id: "rt-chart-fuel", label: "Fuel Flow Rate",        color: "#38BDF8", unit: "L/h",    warn: 7.5,  crit: 9.0,  min: 2,    max: 12   },
-  { key: "engineLoad",  id: "rt-chart-load", label: "Engine Load Demand",    color: "#2DD4BF", unit: "%",      warn: 85,   crit: 95,   min: 0,    max: 100  },
+  { key: "rpm",         id: "rt-chart-rpm",  label: "Engine RPM",            color: "#2DD4BF", unit: "RPM",    warn: 5000, crit: 5500, min: 0,   max: 6000 },
+  { key: "temperature", id: "rt-chart-temp", label: "Cylinder Head Temp",    color: "#EF4444", unit: "°C",     warn: 84,   crit: 92,   min: 0,   max: 130  },
+  { key: "oilPressure", id: "rt-chart-oil",  label: "Oil Pressure",          color: "#38BDF8", unit: "Bar",    warn: 3.6,  crit: 2.8,  min: 0,   max: 7.0  },
+  { key: "vibration",   id: "rt-chart-vib",  label: "Casing Vibration",      color: "#F59E0B", unit: "mm/s",   warn: 2.4,  crit: 3.8,  min: 0,   max: 8.0  },
+  { key: "fuelFlow",    id: "rt-chart-fuel", label: "Fuel Flow Rate",        color: "#38BDF8", unit: "L/h",    warn: 7.5,  crit: 9.0,  min: 0,   max: 12.0 },
+  { key: "engineLoad",  id: "rt-chart-load", label: "Engine Load Demand",    color: "#2DD4BF", unit: "%",      warn: 85,   crit: 95,   min: 0,   max: 100  },
 ];
 
 function makeChart(canvas, cfg) {
@@ -35,8 +35,8 @@ function makeChart(canvas, cfg) {
           borderColor: "#263449", borderWidth: 1, padding: 8, cornerRadius: 6,
           filter: item => item.datasetIndex === 0,
           callbacks: {
-            title: items => "T: " + items[0]?.label + " min",
-            label: ctx => " " + cfg.label + ": " + (+ctx.raw).toFixed(2) + " " + cfg.unit,
+            title: items => items[0]?.label ? "T: " + items[0].label : "--",
+            label: ctx => " " + cfg.label + ": " + (typeof ctx.raw === "number" ? (+ctx.raw).toFixed(2) : "--") + " " + cfg.unit,
           },
         },
       },
@@ -70,51 +70,153 @@ export class RealtimeMonitor {
     this.maxPoints = Math.max(30, this.windowSeconds * 10);
   }
 
-  update(state, history) {
-    if (!this._initialized) return;
-    const limit = this.maxPoints;
-    const labels = (history.labels || []).slice(-limit);
+  renderDisconnected(options = {}) {
+    const el = id => document.getElementById(id);
+    const mode = options.mode || "LIVE";
+    const statusText = options.status || "NO LIVE DATA";
+    const sourceText = options.source || "DISCONNECTED";
 
+    // Sensor card readouts -> N/A
+    SENSOR_CONFIGS.forEach(cfg => {
+      const valEl = el("rt-val-" + cfg.key);
+      if (valEl) valEl.textContent = "N/A";
+      const badge = el("rt-badge-" + cfg.key);
+      if (badge) {
+        badge.textContent = "NO DATA";
+        badge.className = "rt-status-badge offline";
+      }
+      const bar = el("rt-bar-" + cfg.key);
+      if (bar) {
+        bar.style.width = "0%";
+        bar.style.background = "var(--border-light)";
+      }
+    });
+
+    // Summary strip -> N/A
+    if (el("rt-summary-rpm"))  el("rt-summary-rpm").textContent  = "N/A";
+    if (el("rt-summary-temp")) el("rt-summary-temp").textContent = "N/A";
+    if (el("rt-summary-oil"))  el("rt-summary-oil").textContent  = "N/A";
+    if (el("rt-summary-vib"))  el("rt-summary-vib").textContent  = "N/A";
+    if (el("rt-health-val"))   el("rt-health-val").textContent   = "N/A";
+
+    if (el("rt-data-rate")) {
+      el("rt-data-rate").textContent = `SOURCE: ${sourceText} · DATA AGE: --`;
+    }
+    if (el("rt-summary-status")) {
+      el("rt-summary-status").textContent = statusText;
+      el("rt-summary-status").className = "rt-overall-badge offline";
+    }
+  }
+
+  update(state, history, options = {}) {
+    this.init();
+    if (!this._initialized) return;
+
+    const isConnected = options.isConnected !== undefined ? options.isConnected : true;
+    const mode = options.mode || "LIVE";
+    const status = options.status || (mode === "LIVE" ? "LIVE" : "SIMULATION");
+    const source = options.source || (mode === "LIVE" ? "LIVE STREAM" : "SIMULATOR");
+    const dataAgeMs = options.dataAgeMs !== undefined ? options.dataAgeMs : null;
+
+    if (!isConnected && mode === "LIVE") {
+      this.renderDisconnected({ mode, status: "NO LIVE DATA", source: "DISCONNECTED" });
+      return;
+    }
+
+    const limit = this.maxPoints;
+    const labels = (history && history.labels ? history.labels : []).slice(-limit);
+
+    // Update charts with actual received history
     SENSOR_CONFIGS.forEach(cfg => {
       const chart = this.charts[cfg.key];
       if (!chart) return;
-      const rawData = history[cfg.key] || [];
+      const rawData = (history && history[cfg.key]) ? history[cfg.key] : [];
       const data = rawData.slice(-limit);
 
-      chart.data.labels            = labels;
-      chart.data.datasets[0].data  = data;
-      chart.data.datasets[1].data  = Array(labels.length).fill(cfg.warn);
-      chart.data.datasets[2].data  = Array(labels.length).fill(cfg.crit);
-      const v = state[cfg.key] ?? 0;
-      const isOil = cfg.key === "oilPressure";
-      const isCrit = isOil ? v < cfg.crit : v > cfg.crit;
-      const isWarn = isOil ? v < cfg.warn : v > cfg.warn;
-      chart.data.datasets[0].borderColor = isCrit ? "#EF4444" : isWarn ? "#F59E0B" : cfg.color;
+      chart.data.labels           = labels;
+      chart.data.datasets[0].data = data;
+      chart.data.datasets[1].data = Array(labels.length).fill(cfg.warn);
+      chart.data.datasets[2].data = Array(labels.length).fill(cfg.crit);
+      
+      const v = state[cfg.key];
+      if (typeof v === "number") {
+        const isOil = cfg.key === "oilPressure";
+        const isCrit = isOil ? v < cfg.crit : v > cfg.crit;
+        const isWarn = isOil ? v < cfg.warn : v > cfg.warn;
+        chart.data.datasets[0].borderColor = isCrit ? "#EF4444" : isWarn ? "#F59E0B" : cfg.color;
+      }
       chart.update("none");
     });
 
-    // Live readouts
-    SENSOR_CONFIGS.forEach(cfg => {
-      const v = state[cfg.key] ?? 0;
-      const isOil = cfg.key === "oilPressure";
-      const isCrit = isOil ? v < cfg.crit : v > cfg.crit;
-      const isWarn = isOil ? v < cfg.warn : v > cfg.warn;
-      const el = id => document.getElementById(id);
-      const valEl = el("rt-val-" + cfg.key);
-      if (valEl) valEl.textContent = cfg.key === "rpm" ? Math.round(v).toLocaleString() : v.toFixed(cfg.key === "engineLoad" ? 0 : 1);
-      const badge = el("rt-badge-" + cfg.key);
-      if (badge) { badge.textContent = isCrit ? "CRITICAL" : isWarn ? "WARNING" : "NORMAL"; badge.className = "rt-status-badge " + (isCrit ? "crit" : isWarn ? "warn" : "ok"); }
-      const bar = el("rt-bar-" + cfg.key);
-      if (bar) { const pct = Math.round(((v - cfg.min) / (cfg.max - cfg.min)) * 100); bar.style.width = Math.max(0, Math.min(100, pct)) + "%"; bar.style.background = isCrit ? "#EF4444" : isWarn ? "#F59E0B" : cfg.color; }
-    });
+    // Live Readouts with real telemetry values
     const el = id => document.getElementById(id);
-    if (el("rt-summary-rpm"))    el("rt-summary-rpm").textContent    = Math.round(state.rpm || 0).toLocaleString() + " RPM";
-    if (el("rt-summary-temp"))   el("rt-summary-temp").textContent   = (state.temperature || 0).toFixed(1) + " °C";
-    if (el("rt-summary-oil"))    el("rt-summary-oil").textContent    = (state.oilPressure || 0).toFixed(1) + " Bar";
-    if (el("rt-summary-vib"))    el("rt-summary-vib").textContent    = (state.vibration || 0).toFixed(1) + " mm/s";
-    if (el("rt-health-val"))     el("rt-health-val").textContent     = (state.engineHealth || 92) + "%";
-    if (el("rt-data-rate"))      el("rt-data-rate").textContent      = new Date().toTimeString().slice(0,8) + " · 10 Hz";
-    if (el("rt-summary-status")) { el("rt-summary-status").textContent = state.status || "NORMAL"; el("rt-summary-status").className = "rt-overall-badge " + (state.status || "normal").toLowerCase(); }
+    SENSOR_CONFIGS.forEach(cfg => {
+      const v = state[cfg.key];
+      const valEl = el("rt-val-" + cfg.key);
+      const badge = el("rt-badge-" + cfg.key);
+      const bar = el("rt-bar-" + cfg.key);
+
+      if (typeof v === "number" && !isNaN(v)) {
+        if (valEl) {
+          valEl.textContent = cfg.key === "rpm" 
+            ? Math.round(v).toLocaleString() 
+            : v.toFixed(cfg.key === "engineLoad" ? 0 : (cfg.key === "oilPressure" || cfg.key === "vibration" || cfg.key === "fuelFlow" ? 2 : 1));
+        }
+
+        const isOil = cfg.key === "oilPressure";
+        const isCrit = isOil ? v < cfg.crit : v > cfg.crit;
+        const isWarn = isOil ? v < cfg.warn : v > cfg.warn;
+
+        if (badge) {
+          badge.textContent = isCrit ? "CRITICAL" : isWarn ? "WARNING" : "NORMAL";
+          badge.className = "rt-status-badge " + (isCrit ? "crit" : isWarn ? "warn" : "ok");
+        }
+
+        if (bar) {
+          const pct = Math.round(((v - cfg.min) / (cfg.max - cfg.min)) * 100);
+          bar.style.width = Math.max(0, Math.min(100, pct)) + "%";
+          bar.style.background = isCrit ? "#EF4444" : isWarn ? "#F59E0B" : cfg.color;
+        }
+      } else {
+        if (valEl) valEl.textContent = "N/A";
+        if (badge) { badge.textContent = "NO DATA"; badge.className = "rt-status-badge offline"; }
+        if (bar) { bar.style.width = "0%"; }
+      }
+    });
+
+    // Summary Strip
+    if (el("rt-summary-rpm")) {
+      el("rt-summary-rpm").textContent = typeof state.rpm === "number" ? `${Math.round(state.rpm).toLocaleString()} RPM` : "N/A";
+    }
+    if (el("rt-summary-temp")) {
+      el("rt-summary-temp").textContent = typeof state.temperature === "number" ? `${state.temperature.toFixed(1)} °C` : "N/A";
+    }
+    if (el("rt-summary-oil")) {
+      el("rt-summary-oil").textContent = typeof state.oilPressure === "number" ? `${state.oilPressure.toFixed(2)} Bar` : "N/A";
+    }
+    if (el("rt-summary-vib")) {
+      el("rt-summary-vib").textContent = typeof state.vibration === "number" ? `${state.vibration.toFixed(2)} mm/s` : "N/A";
+    }
+    if (el("rt-health-val")) {
+      el("rt-health-val").textContent = typeof state.engineHealth === "number" ? `${state.engineHealth}%` : "--";
+    }
+
+    // Rate & Status
+    const ageStr = dataAgeMs !== null ? `${Math.round(dataAgeMs)} ms` : "--";
+    const nowTime = new Date().toTimeString().slice(0, 8);
+    if (el("rt-data-rate")) {
+      el("rt-data-rate").textContent = `${nowTime} · ${source} · AGE: ${ageStr}`;
+    }
+
+    if (el("rt-summary-status")) {
+      const overall = status.toUpperCase();
+      el("rt-summary-status").textContent = overall;
+      const stClass = (overall === "NORMAL" || overall === "LIVE" || overall === "CONNECTED") ? "normal"
+                    : (overall === "WARNING" || overall === "STALE" || overall === "SIMULATION" || overall === "SIMULATED") ? "warning"
+                    : (overall === "CRITICAL" || overall === "FAULT") ? "critical"
+                    : "offline";
+      el("rt-summary-status").className = "rt-overall-badge " + stClass;
+    }
   }
 }
 

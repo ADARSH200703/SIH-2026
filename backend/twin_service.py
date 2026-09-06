@@ -50,7 +50,18 @@ class TwinUpdateService:
         self._frame_timestamps: deque = deque(maxlen=60)
         self._processing_durations: deque = deque(maxlen=60)
 
+    def reset(self):
+        """Resets all pipeline buffers, histories, alert states, and sensor trust."""
+        self.residual_engine.reset()
+        self.alert_engine.reset()
+        self.state_history.clear()
+        self._frame_timestamps.clear()
+        self._processing_durations.clear()
+        self.last_twin_state = None
+        self.last_dashboard_view = None
+
     def process_telemetry_frame(self, raw_frame: Dict[str, Any]) -> Dict[str, Any]:
+
         """
         Executes the complete 16-stage AERIS-TWIN intelligence pipeline.
         """
