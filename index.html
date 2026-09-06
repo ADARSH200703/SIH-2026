@@ -38,12 +38,18 @@
 
           <ul class="landing-nav-links">
             <li><a href="#capabilities-section" class="landing-nav-link">Capabilities</a></li>
-            <li><a href="#pipeline-section" class="landing-nav-link">Pipeline</a></li>
+            <li><a href="#how-it-works-section" class="landing-nav-link">How It Works</a></li>
+            <li><a href="#architecture-section" class="landing-nav-link">Architecture</a></li>
+            <li><a href="#data-modes-section" class="landing-nav-link">Data Modes</a></li>
           </ul>
 
           <div class="landing-nav-actions">
+            <a href="/realtime" class="landing-btn landing-btn-secondary" data-route="/realtime">
+              <span class="material-symbols-outlined" style="font-size:15px;">show_chart</span>
+              <span>Live Monitor</span>
+            </a>
             <a href="/overview" class="landing-btn landing-btn-primary" data-route="/overview">
-              <span>ENTER GROUND STATION</span>
+              <span>Ground Station</span>
               <span class="material-symbols-outlined" style="font-size: 16px;">arrow_forward</span>
             </a>
           </div>
@@ -58,6 +64,12 @@
         <div class="landing-container">
           <div class="landing-hero-grid">
             <div class="landing-hero-content">
+              <!-- Research / Prototype badge -->
+              <div class="landing-hero-badge">
+                <span class="lp-badge-dot" aria-hidden="true"></span>
+                <span>TECHNOLOGY DEMONSTRATOR &nbsp;&middot;&nbsp; SIH 2026 &nbsp;&middot;&nbsp; DRDO &nbsp;SIH26054</span>
+              </div>
+
               <h1 class="landing-hero-title hero-parallax-layer" data-depth="0.02">
                 AERIS-TWIN <br>
                 <span class="highlight-cyan">Intelligent Digital Twin</span> <br>
@@ -65,51 +77,95 @@
               </h1>
 
               <p class="landing-hero-subtitle hero-parallax-layer" data-depth="0.03">
-                Monitor engine health, detect faults and predict degradation before failure.
+                A physics-informed digital twin and AI pipeline for real-time health monitoring,
+                anomaly detection, fault diagnosis, degradation tracking and remaining useful life
+                estimation of aero-piston engines in MALE&nbsp;UAV platforms &mdash;
+                using the Rotax&nbsp;914 as the reference powerplant.
               </p>
 
               <div class="landing-hero-buttons hero-parallax-layer" data-depth="0.05">
                 <a href="/overview" class="landing-btn landing-btn-primary landing-btn-lg" data-route="/overview">
-                  <span>ENTER GROUND STATION</span>
+                  <span>OPEN GROUND STATION</span>
                   <span class="material-symbols-outlined" style="font-size: 18px;">arrow_forward</span>
                 </a>
                 <a href="/twin" class="landing-btn landing-btn-secondary landing-btn-lg" data-route="/twin">
                   <span class="material-symbols-outlined" style="font-size: 18px;">deployed_code</span>
-                  <span>EXPLORE DIGITAL TWIN</span>
+                  <span>3D DIGITAL TWIN</span>
+                </a>
+                <a href="/realtime" class="landing-btn landing-btn-secondary landing-btn-lg" data-route="/realtime">
+                  <span class="material-symbols-outlined" style="font-size: 18px;">show_chart</span>
+                  <span>LIVE MONITOR</span>
                 </a>
               </div>
             </div>
 
-            <!-- Hero Right Visual Card with 3D Depth -->
+            <!-- Hero Right — Data-flow Pipeline Card -->
             <div class="landing-hero-card hero-parallax-layer" id="landing-hero-card" data-depth="0.06">
               <div class="hero-card-header">
                 <div class="hero-card-title">
                   <span class="material-symbols-outlined" style="font-size: 16px; color: var(--primary);">memory</span>
-                  <span>ROTAX 914 DIGITAL TWIN</span>
+                  <span>AERIS-TWIN PIPELINE</span>
                 </div>
                 <div class="hero-card-status">
                   <span class="live-pulse-dot" style="width: 6px; height: 6px;"></span>
-                  <span>NOMINAL SYNC</span>
+                  <span>DEMONSTRATOR</span>
                 </div>
               </div>
 
-              <div class="hero-card-body">
+              <div class="hero-card-body lp-hero-pipe-body">
                 <div class="schematic-scan-line"></div>
-                <svg class="hero-uav-blueprint" viewBox="0 0 100 80">
-                  <rect x="25" y="25" width="50" height="30" rx="4" stroke="currentColor" fill="rgba(56, 189, 248, 0.08)" stroke-width="1.5"/>
-                  <circle cx="50" cy="40" r="10" stroke="currentColor" stroke-dasharray="3,3" fill="none"/>
-                  <line x1="10" y1="40" x2="25" y2="40" stroke="currentColor" stroke-width="2.5"/>
-                  <line x1="75" y1="40" x2="90" y2="40" stroke="currentColor" stroke-width="2.5"/>
-                  <rect x="30" y="10" width="10" height="15" stroke="currentColor" fill="none"/>
-                  <rect x="60" y="10" width="10" height="15" stroke="currentColor" fill="none"/>
-                  <path d="M 50 15 L 50 25 M 35 55 L 65 55" stroke="var(--secondary)" stroke-width="1.5"/>
-                </svg>
+                <div class="lp-hero-pipe-flow">
+                  <div class="lp-hero-pipe-step">
+                    <span class="material-symbols-outlined lp-hero-pipe-icon">precision_manufacturing</span>
+                    <div class="lp-hero-pipe-text">
+                      <span class="lp-hero-pipe-label">ENGINE / UAV PLATFORM</span>
+                      <span class="lp-hero-pipe-sub">Rotax 914 &middot; MALE Platform</span>
+                    </div>
+                  </div>
+                  <div class="lp-hero-pipe-arrow">&darr;</div>
+                  <div class="lp-hero-pipe-step">
+                    <span class="material-symbols-outlined lp-hero-pipe-icon">sensors</span>
+                    <div class="lp-hero-pipe-text">
+                      <span class="lp-hero-pipe-label">TELEMETRY INGESTION</span>
+                      <span class="lp-hero-pipe-sub">RPM &middot; CHT &middot; Oil &middot; Vibration &middot; EGT</span>
+                    </div>
+                  </div>
+                  <div class="lp-hero-pipe-arrow">&darr;</div>
+                  <div class="lp-hero-pipe-step">
+                    <span class="material-symbols-outlined lp-hero-pipe-icon">deployed_code</span>
+                    <div class="lp-hero-pipe-text">
+                      <span class="lp-hero-pipe-label">DIGITAL TWIN</span>
+                      <span class="lp-hero-pipe-sub">Physics model &middot; Residual analysis</span>
+                    </div>
+                  </div>
+                  <div class="lp-hero-pipe-arrow">&darr;</div>
+                  <div class="lp-hero-pipe-step">
+                    <span class="material-symbols-outlined lp-hero-pipe-icon">psychology</span>
+                    <div class="lp-hero-pipe-text">
+                      <span class="lp-hero-pipe-label">AI / ML PIPELINE</span>
+                      <span class="lp-hero-pipe-sub">Anomaly detection &middot; Fault diagnosis</span>
+                    </div>
+                  </div>
+                  <div class="lp-hero-pipe-arrow">&darr;</div>
+                  <div class="lp-hero-pipe-step lp-hero-pipe-step-out">
+                    <span class="material-symbols-outlined lp-hero-pipe-icon">shield</span>
+                    <div class="lp-hero-pipe-text">
+                      <span class="lp-hero-pipe-label">HEALTH &middot; RUL &middot; DECISION</span>
+                      <span class="lp-hero-pipe-sub">Mission risk &middot; Maintenance insight</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div class="hero-telemetry-tags" style="margin-bottom: 0; justify-content: center;">
-                <div class="telemetry-status-tag" title="Real-time 3D kinematic model lock">
-                  <span class="pulse-dot"></span>
-                  <span>PHYSICS-INFORMED STATE LOCK</span>
+              <div class="hero-telemetry-tags" style="margin-bottom: 0; justify-content: space-between;">
+                <div class="telemetry-status-tag">
+                  <span class="pulse-dot"></span><span>PHYSICS-INFORMED</span>
+                </div>
+                <div class="telemetry-status-tag">
+                  <span class="pulse-dot"></span><span>ISOLATION FOREST</span>
+                </div>
+                <div class="telemetry-status-tag">
+                  <span class="pulse-dot"></span><span>RUL PROGNOSTICS</span>
                 </div>
               </div>
             </div>
@@ -117,125 +173,461 @@
         </div>
       </section>
 
-      <!-- Core Capabilities Section -->
+      <!-- ── System Status Strip ────────────────────────────────────────── -->
+      <section class="lp-status-strip" aria-label="Module implementation status">
+        <div class="landing-container">
+          <div class="lp-status-grid">
+            <div class="lp-status-item">
+              <span class="lp-status-label">DIGITAL TWIN</span>
+              <span class="lp-status-val lp-status-ok">IMPLEMENTED</span>
+            </div>
+            <div class="lp-status-divider" aria-hidden="true"></div>
+            <div class="lp-status-item">
+              <span class="lp-status-label">AI PIPELINE</span>
+              <span class="lp-status-val lp-status-ok">IMPLEMENTED</span>
+            </div>
+            <div class="lp-status-divider" aria-hidden="true"></div>
+            <div class="lp-status-item">
+              <span class="lp-status-label">TELEMETRY INTERFACE</span>
+              <span class="lp-status-val lp-status-ok">IMPLEMENTED</span>
+            </div>
+            <div class="lp-status-divider" aria-hidden="true"></div>
+            <div class="lp-status-item">
+              <span class="lp-status-label">REALTIME MONITOR</span>
+              <span class="lp-status-val lp-status-ok">IMPLEMENTED</span>
+            </div>
+            <div class="lp-status-divider" aria-hidden="true"></div>
+            <div class="lp-status-item">
+              <span class="lp-status-label">PROTOTYPE STATUS</span>
+              <span class="lp-status-val lp-status-demo">TECHNOLOGY DEMONSTRATOR</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Core Capabilities Section ─────────────────────────────────── -->
       <section class="landing-section" id="capabilities-section">
         <div class="landing-container">
           <div class="landing-section-header landing-reveal">
             <span class="landing-section-tag">CAPABILITIES</span>
             <h2 class="landing-section-title">Core Capabilities</h2>
             <p class="landing-section-desc">
-              Three autonomous intelligence layers engineered for aero piston propulsion.
+              Eight implemented intelligence modules — from raw telemetry to operational decision support.
             </p>
           </div>
 
-          <div class="landing-capabilities-grid">
-            <!-- 1. Digital Twin -->
+          <div class="landing-capabilities-grid lp-cap-8">
             <div class="capability-card landing-reveal stagger-1" tabindex="0" role="button" aria-label="Digital Twin">
-              <div class="capability-icon-wrap">
-                <span class="material-symbols-outlined">deployed_code</span>
-              </div>
+              <div class="capability-icon-wrap"><span class="material-symbols-outlined">deployed_code</span></div>
               <h3 class="capability-card-title">DIGITAL TWIN</h3>
-              <p class="capability-card-desc">
-                Virtual representation of engine behaviour.
-              </p>
+              <p class="capability-card-desc">Mean-value physics model of the Rotax 914 estimating expected CHT, oil pressure, vibration, fuel flow and RPM for any operating condition.</p>
               <div class="capability-card-tag">
-                <span class="material-symbols-outlined" style="font-size: 14px;">check_circle</span>
-                <span>Physics &amp; Kinematics</span>
+                <span class="material-symbols-outlined" style="font-size:14px;">check_circle</span>
+                <span>ISA Atmosphere &amp;bull; BSFC &amp;bull; Thermal Model</span>
               </div>
             </div>
 
-            <!-- 2. AI Diagnostics -->
-            <div class="capability-card landing-reveal stagger-2" tabindex="0" role="button" aria-label="AI Diagnostics">
-              <div class="capability-icon-wrap">
-                <span class="material-symbols-outlined">psychology</span>
-              </div>
-              <h3 class="capability-card-title">AI DIAGNOSTICS</h3>
-              <p class="capability-card-desc">
-                Detect abnormal behaviour and emerging faults.
-              </p>
+            <div class="capability-card landing-reveal stagger-2" tabindex="0" role="button" aria-label="Sensor Trust">
+              <div class="capability-icon-wrap"><span class="material-symbols-outlined">verified_user</span></div>
+              <h3 class="capability-card-title">SENSOR TRUST</h3>
+              <p class="capability-card-desc">Per-channel evaluation detecting missing, out-of-range, stuck, noisy, jump-discontinuity and drift conditions before data enters the twin.</p>
               <div class="capability-card-tag">
-                <span class="material-symbols-outlined" style="font-size: 14px;">check_circle</span>
-                <span>Anomaly Detection</span>
+                <span class="material-symbols-outlined" style="font-size:14px;">check_circle</span>
+                <span>8 Channels &amp;bull; Weighted Trust Score</span>
               </div>
             </div>
 
-            <!-- 3. Predictive Maintenance -->
-            <div class="capability-card landing-reveal stagger-3" tabindex="0" role="button" aria-label="Predictive Maintenance">
-              <div class="capability-icon-wrap">
-                <span class="material-symbols-outlined">ecg_heart</span>
-              </div>
-              <h3 class="capability-card-title">PREDICTIVE MAINTENANCE</h3>
-              <p class="capability-card-desc">
-                Track degradation and anticipate maintenance needs.
-              </p>
+            <div class="capability-card landing-reveal stagger-3" tabindex="0" role="button" aria-label="Residual Analysis">
+              <div class="capability-icon-wrap"><span class="material-symbols-outlined">compare_arrows</span></div>
+              <h3 class="capability-card-title">RESIDUAL ANALYSIS</h3>
+              <p class="capability-card-desc">Computes measured-minus-expected residuals, normalised z-scores, rolling statistics and linear trend slopes per sensor channel at every evaluation frame.</p>
               <div class="capability-card-tag">
-                <span class="material-symbols-outlined" style="font-size: 14px;">check_circle</span>
-                <span>Prognostics &amp; RUL</span>
+                <span class="material-symbols-outlined" style="font-size:14px;">check_circle</span>
+                <span>Z-Score &amp;bull; Slope &amp;bull; Rolling Window</span>
+              </div>
+            </div>
+
+            <div class="capability-card landing-reveal stagger-4" tabindex="0" role="button" aria-label="Anomaly Detection">
+              <div class="capability-icon-wrap"><span class="material-symbols-outlined">crisis_alert</span></div>
+              <h3 class="capability-card-title">ANOMALY DETECTION</h3>
+              <p class="capability-card-desc">Isolation Forest trained on nominal residuals identifies multivariate deviations from the expected operating envelope with a composite anomaly score.</p>
+              <div class="capability-card-tag">
+                <span class="material-symbols-outlined" style="font-size:14px;">check_circle</span>
+                <span>Isolation Forest &amp;bull; Composite Score</span>
+              </div>
+            </div>
+
+            <div class="capability-card landing-reveal stagger-5" tabindex="0" role="button" aria-label="Fault Diagnosis">
+              <div class="capability-icon-wrap"><span class="material-symbols-outlined">psychology</span></div>
+              <h3 class="capability-card-title">FAULT DIAGNOSIS</h3>
+              <p class="capability-card-desc">Multi-class classifier identifies specific fault modes from physics residual signatures: bearing wear, cooling deficit, lubrication loss, spark misfire, fuel system anomaly.</p>
+              <div class="capability-card-tag">
+                <span class="material-symbols-outlined" style="font-size:14px;">check_circle</span>
+                <span>6 Fault Classes &amp;bull; Evidence Chain</span>
+              </div>
+            </div>
+
+            <div class="capability-card landing-reveal stagger-6" tabindex="0" role="button" aria-label="Health and Degradation">
+              <div class="capability-icon-wrap"><span class="material-symbols-outlined">ecg_heart</span></div>
+              <h3 class="capability-card-title">HEALTH &amp; DEGRADATION</h3>
+              <p class="capability-card-desc">Tracks normalised composite degradation D across mechanical, thermal, lubrication and combustion subsystems. Computes real-time Health Index and degradation velocity.</p>
+              <div class="capability-card-tag">
+                <span class="material-symbols-outlined" style="font-size:14px;">check_circle</span>
+                <span>Health Index &amp;bull; dD/dt Velocity</span>
+              </div>
+            </div>
+
+            <div class="capability-card landing-reveal stagger-7" tabindex="0" role="button" aria-label="RUL Prognostics">
+              <div class="capability-icon-wrap"><span class="material-symbols-outlined">timer</span></div>
+              <h3 class="capability-card-title">RUL PROGNOSTICS</h3>
+              <p class="capability-card-desc">Estimates remaining useful life hours to the defined failure threshold with bounded uncertainty intervals, conditioned on current sensor trust quality.</p>
+              <div class="capability-card-tag">
+                <span class="material-symbols-outlined" style="font-size:14px;">check_circle</span>
+                <span>D_failure=0.75 &amp;bull; 90% PI Bounds</span>
+              </div>
+            </div>
+
+            <div class="capability-card landing-reveal stagger-8" tabindex="0" role="button" aria-label="Mission Risk">
+              <div class="capability-icon-wrap"><span class="material-symbols-outlined">shield</span></div>
+              <h3 class="capability-card-title">MISSION RISK</h3>
+              <p class="capability-card-desc">Translates engine health, fault state, RUL and consensus confidence into an operational risk level with interpretable maintenance and mission recommendations.</p>
+              <div class="capability-card-tag">
+                <span class="material-symbols-outlined" style="font-size:14px;">check_circle</span>
+                <span>Risk Index &amp;bull; Decision Support</span>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- Pipeline Section -->
-      <section class="landing-section" id="pipeline-section">
+      <!-- ── How It Works Section ───────────────────────────────────────── -->
+      <section class="landing-section" id="how-it-works-section">
         <div class="landing-container">
           <div class="landing-section-header landing-reveal">
-            <span class="landing-section-tag">INTELLIGENCE PIPELINE</span>
-            <h2 class="landing-section-title">How It Works</h2>
+            <span class="landing-section-tag">HOW IT WORKS</span>
+            <h2 class="landing-section-title">From Telemetry to Insight</h2>
             <p class="landing-section-desc">
-              Continuous end-to-end data flow from avionics telemetry to predictive action.
+              Six stages that transform raw engine sensor data into interpretable health and maintenance intelligence.
             </p>
           </div>
 
-          <div class="landing-pipeline-flow landing-reveal" id="landing-pipeline-grid">
-            <!-- Node 1 -->
-            <div class="pipeline-node-card landing-reveal stagger-1" data-stage="1" tabindex="0" role="button" aria-label="Stage 1 Telemetry">
+          <div class="lp-hiw-grid">
+            <div class="lp-hiw-step landing-reveal stagger-1">
+              <span class="lp-hiw-num">01</span>
+              <div class="lp-hiw-content">
+                <h3 class="lp-hiw-title">CONNECT</h3>
+                <p class="lp-hiw-desc">Engine telemetry arrives via UDP, serial, MAVLink or CAN. In the absence of live hardware, the built-in simulation engine provides controlled synthetic scenarios at defined failure modes.</p>
+              </div>
+            </div>
+            <div class="lp-hiw-step landing-reveal stagger-2">
+              <span class="lp-hiw-num">02</span>
+              <div class="lp-hiw-content">
+                <h3 class="lp-hiw-title">VALIDATE</h3>
+                <p class="lp-hiw-desc">Each sensor channel is evaluated for quality — checking for missing readings, out-of-range values, stuck signals, noise, jump discontinuities and calibration drift — before data enters the twin.</p>
+              </div>
+            </div>
+            <div class="lp-hiw-step landing-reveal stagger-3">
+              <span class="lp-hiw-num">03</span>
+              <div class="lp-hiw-content">
+                <h3 class="lp-hiw-title">MODEL</h3>
+                <p class="lp-hiw-desc">The physics model estimates expected engine state for the current conditions. Residuals (measured &minus; expected) are computed per channel and normalised against nominal operating sigma.</p>
+              </div>
+            </div>
+            <div class="lp-hiw-step landing-reveal stagger-4">
+              <span class="lp-hiw-num">04</span>
+              <div class="lp-hiw-content">
+                <h3 class="lp-hiw-title">ANALYSE</h3>
+                <p class="lp-hiw-desc">Isolation Forest and physics residual signatures combine. Anomalies are detected; fault modes are classified by an evidence-based classifier. A multi-source consensus engine confirms or disputes findings.</p>
+              </div>
+            </div>
+            <div class="lp-hiw-step landing-reveal stagger-5">
+              <span class="lp-hiw-num">05</span>
+              <div class="lp-hiw-content">
+                <h3 class="lp-hiw-title">PREDICT</h3>
+                <p class="lp-hiw-desc">Degradation velocity is tracked over time. When sufficient history exists, remaining useful life is estimated with prediction-interval bounds conditioned on the current sensor trust quality score.</p>
+              </div>
+            </div>
+            <div class="lp-hiw-step landing-reveal stagger-6">
+              <span class="lp-hiw-num">06</span>
+              <div class="lp-hiw-content">
+                <h3 class="lp-hiw-title">ACT</h3>
+                <p class="lp-hiw-desc">The ground station presents health index, fault class, RUL estimate, evidence chain and mission risk. Operators receive interpretable maintenance and flight decision recommendations.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Architecture Section ───────────────────────────────────────── -->
+      <section class="landing-section" id="architecture-section">
+        <div class="landing-container">
+          <div class="landing-section-header landing-reveal">
+            <span class="landing-section-tag">INTELLIGENCE PIPELINE</span>
+            <h2 class="landing-section-title">System Architecture</h2>
+            <p class="landing-section-desc">
+              Continuous end-to-end data flow from engine telemetry to mission decision support.
+            </p>
+          </div>
+
+          <div class="landing-pipeline-flow lp-pipeline-8 landing-reveal" id="landing-pipeline-grid">
+            <div class="pipeline-node-card landing-reveal stagger-1" tabindex="0">
               <span class="pipeline-node-num">01</span>
               <span class="material-symbols-outlined pipeline-node-icon">sensors</span>
               <span class="pipeline-node-title">TELEMETRY</span>
               <span class="pipeline-node-sub">Avionics Ingestion</span>
             </div>
-
-            <!-- Node 2 -->
-            <div class="pipeline-node-card landing-reveal stagger-2" data-stage="2" tabindex="0" role="button" aria-label="Stage 2 Digital Twin">
+            <div class="pipeline-node-card landing-reveal stagger-2" tabindex="0">
               <span class="pipeline-node-num">02</span>
+              <span class="material-symbols-outlined pipeline-node-icon">verified_user</span>
+              <span class="pipeline-node-title">SENSOR TRUST</span>
+              <span class="pipeline-node-sub">Quality Validation</span>
+            </div>
+            <div class="pipeline-node-card landing-reveal stagger-3" tabindex="0">
+              <span class="pipeline-node-num">03</span>
               <span class="material-symbols-outlined pipeline-node-icon">deployed_code</span>
               <span class="pipeline-node-title">DIGITAL TWIN</span>
-              <span class="pipeline-node-sub">Physics &amp; State Model</span>
+              <span class="pipeline-node-sub">Physics State Model</span>
             </div>
-
-            <!-- Node 3 -->
-            <div class="pipeline-node-card landing-reveal stagger-3" data-stage="3" tabindex="0" role="button" aria-label="Stage 3 AI Analysis">
-              <span class="pipeline-node-num">03</span>
-              <span class="material-symbols-outlined pipeline-node-icon">psychology</span>
-              <span class="pipeline-node-title">AI ANALYSIS</span>
-              <span class="pipeline-node-sub">Fault Diagnostics</span>
-            </div>
-
-            <!-- Node 4 -->
-            <div class="pipeline-node-card landing-reveal stagger-4" data-stage="4" tabindex="0" role="button" aria-label="Stage 4 Prediction">
+            <div class="pipeline-node-card landing-reveal stagger-4" tabindex="0">
               <span class="pipeline-node-num">04</span>
+              <span class="material-symbols-outlined pipeline-node-icon">compare_arrows</span>
+              <span class="pipeline-node-title">RESIDUALS</span>
+              <span class="pipeline-node-sub">Measured vs Expected</span>
+            </div>
+            <div class="pipeline-node-card landing-reveal stagger-5" tabindex="0">
+              <span class="pipeline-node-num">05</span>
+              <span class="material-symbols-outlined pipeline-node-icon">crisis_alert</span>
+              <span class="pipeline-node-title">ANOMALY</span>
+              <span class="pipeline-node-sub">Isolation Forest</span>
+            </div>
+            <div class="pipeline-node-card landing-reveal stagger-6" tabindex="0">
+              <span class="pipeline-node-num">06</span>
+              <span class="material-symbols-outlined pipeline-node-icon">psychology</span>
+              <span class="pipeline-node-title">FAULT CLASS</span>
+              <span class="pipeline-node-sub">Multi-Class Diagnosis</span>
+            </div>
+            <div class="pipeline-node-card landing-reveal stagger-7" tabindex="0">
+              <span class="pipeline-node-num">07</span>
+              <span class="material-symbols-outlined pipeline-node-icon">ecg_heart</span>
+              <span class="pipeline-node-title">HEALTH / RUL</span>
+              <span class="pipeline-node-sub">Degradation &amp; Prognostics</span>
+            </div>
+            <div class="pipeline-node-card landing-reveal stagger-8" tabindex="0">
+              <span class="pipeline-node-num">08</span>
               <span class="material-symbols-outlined pipeline-node-icon">shield</span>
-              <span class="pipeline-node-title">PREDICTION</span>
-              <span class="pipeline-node-sub">Action &amp; RUL</span>
+              <span class="pipeline-node-title">DECISION</span>
+              <span class="pipeline-node-sub">Risk &amp; Mission Action</span>
+            </div>
+          </div>
+
+          <!-- Vertical architecture flow text diagram -->
+          <div class="lp-arch-flow landing-reveal">
+            <div class="lp-arch-top-box">
+              <span class="lp-arch-box-label">PHYSICAL ENGINE / UAV PLATFORM</span>
+              <span class="lp-arch-box-sub">ECU &middot; FADEC &middot; Onboard Sensors</span>
+            </div>
+            <div class="lp-arch-connector">&darr; &nbsp; CAN &middot; MAVLink &middot; Serial &middot; UDP &nbsp; &darr;</div>
+            <div class="lp-arch-row">
+              <div class="lp-arch-box">
+                <span class="lp-arch-box-label">TELEMETRY GATEWAY</span>
+                <span class="lp-arch-box-sub">Ingestion &middot; Packet validation &middot; Link health</span>
+              </div>
+              <div class="lp-arch-box">
+                <span class="lp-arch-box-label">SENSOR TRUST ENGINE</span>
+                <span class="lp-arch-box-sub">STUCK &middot; NOISY &middot; JUMP &middot; DRIFTING &middot; OUT-OF-RANGE</span>
+              </div>
+            </div>
+            <div class="lp-arch-connector">&darr; &nbsp; Validated Telemetry Frame &nbsp; &darr;</div>
+            <div class="lp-arch-row">
+              <div class="lp-arch-box lp-arch-box-primary">
+                <span class="lp-arch-box-label">DIGITAL TWIN</span>
+                <span class="lp-arch-box-sub">Rotax 914 &middot; ISA Atmosphere &middot; Mean-Value Physics</span>
+              </div>
+              <div class="lp-arch-box lp-arch-box-primary">
+                <span class="lp-arch-box-label">RESIDUAL ENGINE</span>
+                <span class="lp-arch-box-sub">Z-Score &middot; Slope &middot; Rolling Statistics</span>
+              </div>
+            </div>
+            <div class="lp-arch-connector">&darr; &nbsp; Physics Residuals &nbsp; &darr;</div>
+            <div class="lp-arch-row">
+              <div class="lp-arch-box">
+                <span class="lp-arch-box-label">ISOLATION FOREST</span>
+                <span class="lp-arch-box-sub">Unsupervised anomaly detection</span>
+              </div>
+              <div class="lp-arch-box">
+                <span class="lp-arch-box-label">FAULT CLASSIFIER</span>
+                <span class="lp-arch-box-sub">Multi-class &middot; Physics signatures</span>
+              </div>
+              <div class="lp-arch-box">
+                <span class="lp-arch-box-label">CONSENSUS ENGINE</span>
+                <span class="lp-arch-box-sub">Physics &middot; Sensor &middot; AI agreement</span>
+              </div>
+            </div>
+            <div class="lp-arch-connector">&darr; &nbsp; Diagnosis &amp; Evidence Chain &nbsp; &darr;</div>
+            <div class="lp-arch-row">
+              <div class="lp-arch-box">
+                <span class="lp-arch-box-label">DEGRADATION MODEL</span>
+                <span class="lp-arch-box-sub">Health Index &middot; Velocity dD/dt</span>
+              </div>
+              <div class="lp-arch-box">
+                <span class="lp-arch-box-label">RUL ENGINE</span>
+                <span class="lp-arch-box-sub">Remaining life &middot; 90% PI bounds</span>
+              </div>
+              <div class="lp-arch-box">
+                <span class="lp-arch-box-label">MISSION RISK</span>
+                <span class="lp-arch-box-sub">Risk index &middot; Decision support</span>
+              </div>
+            </div>
+            <div class="lp-arch-connector">&darr; &nbsp; FastAPI &middot; WebSocket &nbsp; &darr;</div>
+            <div class="lp-arch-output-box">
+              <span class="lp-arch-box-label">GROUND STATION DASHBOARD</span>
+              <span class="lp-arch-box-sub">Chart.js &middot; Three.js &middot; Real-Time Monitor &middot; History &amp; Replay</span>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- Final CTA Section -->
+      <!-- ── Data Modes Section ─────────────────────────────────────────── -->
+      <section class="landing-section" id="data-modes-section">
+        <div class="landing-container">
+          <div class="landing-section-header landing-reveal">
+            <span class="landing-section-tag">DATA MODES</span>
+            <h2 class="landing-section-title">Telemetry Source Modes</h2>
+            <p class="landing-section-desc">
+              AERIS-TWIN supports three distinct source modes. The active mode is always clearly labelled in the dashboard.
+            </p>
+          </div>
+
+          <div class="lp-modes-grid">
+            <div class="lp-mode-card landing-reveal stagger-1">
+              <div class="lp-mode-badge lp-mode-live">
+                <span class="live-pulse-dot" style="width:8px;height:8px;flex-shrink:0;"></span>
+                <span>LIVE</span>
+              </div>
+              <h3 class="lp-mode-title">Live Telemetry</h3>
+              <p class="lp-mode-desc">Actual engine sensor data received from connected hardware over MAVLink, CAN, serial or UDP. Requires a physical engine or UAV telemetry source to be actively streaming.</p>
+              <div class="lp-mode-note">
+                <span class="material-symbols-outlined" style="font-size:14px;flex-shrink:0;">info</span>
+                <span>Live hardware is not required to operate the demonstrator — use Simulation mode instead.</span>
+              </div>
+            </div>
+
+            <div class="lp-mode-card landing-reveal stagger-2">
+              <div class="lp-mode-badge lp-mode-sim">
+                <span class="material-symbols-outlined" style="font-size:14px;">science</span>
+                <span>SIMULATION</span>
+              </div>
+              <h3 class="lp-mode-title">Simulation / Test Mode</h3>
+              <p class="lp-mode-desc">Controlled synthetic engine scenarios generated by the built-in simulation engine. Supports fault injection: bearing wear, cylinder overheat, lubrication loss, spark misfire and high-altitude climb.</p>
+              <div class="lp-mode-note lp-mode-note-warn">
+                <span class="material-symbols-outlined" style="font-size:14px;flex-shrink:0;">warning</span>
+                <span><strong>SIMULATED DATA &mdash; not real engine telemetry.</strong> Clearly labelled in the dashboard at all times.</span>
+              </div>
+            </div>
+
+            <div class="lp-mode-card landing-reveal stagger-3">
+              <div class="lp-mode-badge lp-mode-replay">
+                <span class="material-symbols-outlined" style="font-size:14px;">replay</span>
+                <span>REPLAY</span>
+              </div>
+              <h3 class="lp-mode-title">Historical Replay</h3>
+              <p class="lp-mode-desc">Previously recorded telemetry sessions replayed through the full intelligence pipeline with scrubbing controls. Used for post-flight analysis, verification and model validation.</p>
+              <div class="lp-mode-note">
+                <span class="material-symbols-outlined" style="font-size:14px;flex-shrink:0;">info</span>
+                <span>Session data sourced from the SQLite telemetry database.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Technology Stack Section ───────────────────────────────────── -->
+      <section class="landing-section" id="tech-stack-section">
+        <div class="landing-container">
+          <div class="landing-section-header landing-reveal">
+            <span class="landing-section-tag">TECHNOLOGY</span>
+            <h2 class="landing-section-title">Built With</h2>
+            <p class="landing-section-desc">
+              Technologies genuinely present in the implementation. Every entry is verifiable in the repository.
+            </p>
+          </div>
+
+          <div class="lp-tech-grid landing-reveal">
+            <div class="lp-tech-item">
+              <span class="lp-tech-name">FastAPI</span>
+              <span class="lp-tech-role">REST API &middot; WebSocket server</span>
+            </div>
+            <div class="lp-tech-item">
+              <span class="lp-tech-name">Python 3.12</span>
+              <span class="lp-tech-role">Backend runtime</span>
+            </div>
+            <div class="lp-tech-item">
+              <span class="lp-tech-name">NumPy</span>
+              <span class="lp-tech-role">Numerical computation &middot; Signal processing</span>
+            </div>
+            <div class="lp-tech-item">
+              <span class="lp-tech-name">SciPy</span>
+              <span class="lp-tech-role">Statistics &middot; Softmax normalisation</span>
+            </div>
+            <div class="lp-tech-item">
+              <span class="lp-tech-name">scikit-learn</span>
+              <span class="lp-tech-role">Isolation Forest &middot; Gradient Boosting</span>
+            </div>
+            <div class="lp-tech-item">
+              <span class="lp-tech-name">Pydantic</span>
+              <span class="lp-tech-role">Schema validation &middot; Serialisation</span>
+            </div>
+            <div class="lp-tech-item">
+              <span class="lp-tech-name">SQLite</span>
+              <span class="lp-tech-role">Telemetry &middot; Session database</span>
+            </div>
+            <div class="lp-tech-item">
+              <span class="lp-tech-name">WebSocket</span>
+              <span class="lp-tech-role">Live bi-directional data stream</span>
+            </div>
+            <div class="lp-tech-item">
+              <span class="lp-tech-name">Three.js</span>
+              <span class="lp-tech-role">3D digital twin visualisation</span>
+            </div>
+            <div class="lp-tech-item">
+              <span class="lp-tech-name">Chart.js</span>
+              <span class="lp-tech-role">Real-time telemetry charts</span>
+            </div>
+            <div class="lp-tech-item">
+              <span class="lp-tech-name">MAVLink-ready</span>
+              <span class="lp-tech-role">UAV telemetry adapter layer</span>
+            </div>
+            <div class="lp-tech-item">
+              <span class="lp-tech-name">CAN-ready</span>
+              <span class="lp-tech-role">ECU / FADEC interface layer</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Final CTA ──────────────────────────────────────────────────── -->
       <section class="landing-section" style="padding-bottom: 4.5rem;">
         <div class="landing-container">
           <div class="landing-cta-banner landing-reveal">
             <h2 class="landing-cta-title">ENGINE INTELLIGENCE, BEFORE FAILURE.</h2>
             <p class="landing-cta-desc">
-              Explore the AERIS-TWIN Ground Station.
+              Explore the AERIS-TWIN Ground Station &mdash; digital twin, AI diagnostics,
+              real-time telemetry monitor and prognostics in one integrated system.
             </p>
-            <a href="/overview" class="landing-btn landing-btn-primary landing-btn-lg" data-route="/overview">
-              <span>ENTER GROUND STATION</span>
-              <span class="material-symbols-outlined" style="font-size: 20px;">arrow_forward</span>
-            </a>
+            <div class="lp-cta-actions">
+              <a href="/overview" class="landing-btn landing-btn-primary landing-btn-lg" data-route="/overview">
+                <span>OPEN GROUND STATION</span>
+                <span class="material-symbols-outlined" style="font-size: 20px;">arrow_forward</span>
+              </a>
+              <a href="/realtime" class="landing-btn landing-btn-secondary landing-btn-lg" data-route="/realtime">
+                <span class="material-symbols-outlined" style="font-size:18px;">show_chart</span>
+                <span>LIVE MONITOR</span>
+              </a>
+              <a href="/twin" class="landing-btn landing-btn-secondary landing-btn-lg" data-route="/twin">
+                <span class="material-symbols-outlined" style="font-size:18px;">deployed_code</span>
+                <span>3D DIGITAL TWIN</span>
+              </a>
+            </div>
           </div>
         </div>
       </section>
@@ -247,10 +639,11 @@
         <div class="landing-footer-grid">
           <div class="landing-footer-left">
             <span class="landing-footer-title">AERIS-TWIN</span>
-            <span class="landing-footer-meta">Aero Engine Reliability &amp; Intelligence System · Research Prototype</span>
+            <span class="landing-footer-meta">Aero Engine Reliability &amp; Intelligence System &nbsp;&middot;&nbsp; SIH 2026 &nbsp;&middot;&nbsp; DRDO Target: SIH26054</span>
           </div>
-          <div style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-dim);">
-            MALE UAV PROPULSION GCS
+          <div class="lp-footer-disclaimer">
+            AERIS-TWIN is a research and technology-demonstration prototype. It is not flight-qualified, aviation-certified,
+            or a replacement for certified maintenance procedures or human engineering judgement.
           </div>
         </div>
       </div>

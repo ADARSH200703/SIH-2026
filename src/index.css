@@ -3928,7 +3928,543 @@ body {
   flex: 1;
   accent-color: var(--accent-cyan);
   cursor: pointer;
+}/* ==========================================================================
+   LANDING PAGE — NEW SECTION STYLES (Appended)
+   ========================================================================== */
+
+/* ── Hero badge dot ─────────────────────────────────────────────────────── */
+.lp-badge-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--secondary);
+  animation: telemetryPulse 2.5s ease-in-out infinite;
+  flex-shrink: 0;
 }
 
+/* ── Hero card pipeline flow ─────────────────────────────────────────────── */
+.lp-hero-pipe-body {
+  height: auto !important;
+  padding: 0.9rem 0.85rem !important;
+  flex-direction: column !important;
+  background: var(--background-secondary) !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+}
 
+.lp-hero-pipe-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+  z-index: 2;
+}
+
+.lp-hero-pipe-step {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  transition: border-color 0.18s ease;
+}
+
+.lp-hero-pipe-step:hover,
+.lp-hero-pipe-step-out {
+  border-color: rgba(56, 189, 248, 0.45);
+}
+
+.lp-hero-pipe-step-out {
+  background: rgba(56, 189, 248, 0.07);
+}
+
+.lp-hero-pipe-icon {
+  font-size: 18px;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.lp-hero-pipe-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.lp-hero-pipe-label {
+  font-family: var(--font-tech);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.lp-hero-pipe-sub {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--text-secondary);
+}
+
+.lp-hero-pipe-arrow {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--primary);
+  opacity: 0.7;
+  padding: 0.12rem 0;
+  line-height: 1;
+}
+
+/* ── System Status Strip ─────────────────────────────────────────────────── */
+.lp-status-strip {
+  background: var(--background-secondary);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 0.9rem 0;
+}
+
+.lp-status-grid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  flex-wrap: wrap;
+  row-gap: 0.5rem;
+}
+
+.lp-status-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0 1.5rem;
+}
+
+.lp-status-label {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lp-status-val {
+  font-family: var(--font-tech);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.lp-status-ok {
+  color: var(--success);
+}
+
+.lp-status-demo {
+  color: var(--secondary);
+}
+
+.lp-status-divider {
+  width: 1px;
+  height: 28px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+/* ── 8-card capabilities grid override ───────────────────────────────────── */
+.landing-capabilities-grid.lp-cap-8 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+@media (max-width: 1200px) {
+  .landing-capabilities-grid.lp-cap-8 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .landing-capabilities-grid.lp-cap-8 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 540px) {
+  .landing-capabilities-grid.lp-cap-8 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── 8-node pipeline grid override ───────────────────────────────────────── */
+.landing-pipeline-flow.lp-pipeline-8 {
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.landing-pipeline-flow.lp-pipeline-8 .pipeline-node-card:nth-child(1) { animation: pipelineSignal 5s ease-in-out infinite 0.0s; }
+.landing-pipeline-flow.lp-pipeline-8 .pipeline-node-card:nth-child(2) { animation: pipelineSignal 5s ease-in-out infinite 0.6s; }
+.landing-pipeline-flow.lp-pipeline-8 .pipeline-node-card:nth-child(3) { animation: pipelineSignal 5s ease-in-out infinite 1.2s; }
+.landing-pipeline-flow.lp-pipeline-8 .pipeline-node-card:nth-child(4) { animation: pipelineSignal 5s ease-in-out infinite 1.8s; }
+.landing-pipeline-flow.lp-pipeline-8 .pipeline-node-card:nth-child(5) { animation: pipelineSignal 5s ease-in-out infinite 2.4s; }
+.landing-pipeline-flow.lp-pipeline-8 .pipeline-node-card:nth-child(6) { animation: pipelineSignal 5s ease-in-out infinite 3.0s; }
+.landing-pipeline-flow.lp-pipeline-8 .pipeline-node-card:nth-child(7) { animation: pipelineSignal 5s ease-in-out infinite 3.6s; }
+.landing-pipeline-flow.lp-pipeline-8 .pipeline-node-card:nth-child(8) { animation: pipelineSignal 5s ease-in-out infinite 4.2s; }
+
+@media (max-width: 900px) {
+  .landing-pipeline-flow.lp-pipeline-8 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ── How It Works Section ────────────────────────────────────────────────── */
+.lp-hiw-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.lp-hiw-step {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  padding: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.lp-hiw-step:hover {
+  border-color: rgba(56, 189, 248, 0.4);
+  transform: translateY(-2px);
+}
+
+.lp-hiw-num {
+  font-family: var(--font-tech);
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: rgba(56, 189, 248, 0.2);
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+  user-select: none;
+}
+
+.lp-hiw-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.lp-hiw-title {
+  font-family: var(--font-tech);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.lp-hiw-desc {
+  font-size: 0.83rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+@media (max-width: 900px) {
+  .lp-hiw-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .lp-hiw-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Architecture Flow Diagram ───────────────────────────────────────────── */
+.lp-arch-flow {
+  margin-top: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.lp-arch-top-box,
+.lp-arch-output-box {
+  background: var(--surface);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 2rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.12);
+  min-width: 340px;
+}
+
+.lp-arch-output-box {
+  border-color: var(--secondary);
+  box-shadow: 0 0 14px rgba(45, 212, 191, 0.12);
+}
+
+.lp-arch-box-label {
+  font-family: var(--font-tech);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.lp-arch-box-sub {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+}
+
+.lp-arch-connector {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--primary);
+  opacity: 0.65;
+  padding: 0.35rem 0;
+  text-align: center;
+}
+
+.lp-arch-row {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+  max-width: 900px;
+  justify-content: center;
+}
+
+.lp-arch-box {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.7rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  text-align: center;
+  transition: border-color 0.18s ease;
+  min-width: 0;
+}
+
+.lp-arch-box:hover {
+  border-color: rgba(56, 189, 248, 0.35);
+}
+
+.lp-arch-box-primary {
+  border-color: rgba(56, 189, 248, 0.3);
+  background: rgba(56, 189, 248, 0.04);
+}
+
+@media (max-width: 760px) {
+  .lp-arch-row {
+    flex-direction: column;
+  }
+  .lp-arch-top-box,
+  .lp-arch-output-box {
+    min-width: unset;
+    width: 100%;
+  }
+}
+
+/* ── Data Modes Section ──────────────────────────────────────────────────── */
+.lp-modes-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+}
+
+.lp-mode-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.lp-mode-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+.lp-mode-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--font-tech);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  border-radius: var(--radius-full);
+  padding: 0.25rem 0.7rem;
+  width: fit-content;
+}
+
+.lp-mode-live {
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  color: var(--success);
+}
+
+.lp-mode-sim {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: var(--warning);
+}
+
+.lp-mode-replay {
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: var(--primary);
+}
+
+.lp-mode-title {
+  font-family: var(--font-tech);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.lp-mode-desc {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+.lp-mode-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  background: var(--background-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.7rem;
+  line-height: 1.4;
+  margin-top: auto;
+}
+
+.lp-mode-note-warn {
+  color: #FCD34D;
+  border-color: rgba(245, 158, 11, 0.3);
+  background: rgba(245, 158, 11, 0.07);
+}
+
+@media (max-width: 900px) {
+  .lp-modes-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Technology Stack ────────────────────────────────────────────────────── */
+.lp-tech-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.75rem;
+}
+
+.lp-tech-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  transition: border-color 0.18s ease, transform 0.18s ease;
+}
+
+.lp-tech-item:hover {
+  border-color: rgba(56, 189, 248, 0.4);
+  transform: translateY(-2px);
+}
+
+.lp-tech-name {
+  font-family: var(--font-tech);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.lp-tech-role {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  line-height: 1.35;
+}
+
+@media (max-width: 1100px) {
+  .lp-tech-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .lp-tech-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ── CTA Actions Row ─────────────────────────────────────────────────────── */
+.lp-cta-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ── Footer Disclaimer ───────────────────────────────────────────────────── */
+.lp-footer-disclaimer {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  max-width: 500px;
+  text-align: right;
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .lp-footer-disclaimer {
+    text-align: center;
+    max-width: 100%;
+  }
+  .lp-status-divider {
+    display: none;
+  }
+  .lp-status-grid {
+    gap: 0.65rem;
+  }
+  .lp-status-item {
+    padding: 0 0.75rem;
+  }
+}
+
+/* ── Stagger Animation Delays (reused for new cards) ────────────────────── */
+.stagger-5.landing-reveal { transition-delay: 0.12s; }
+.stagger-6.landing-reveal { transition-delay: 0.18s; }
+.stagger-7.landing-reveal { transition-delay: 0.24s; }
+.stagger-8.landing-reveal { transition-delay: 0.30s; }
+
+/* ── Reduced motion overrides for new elements ───────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .lp-badge-dot,
+  .lp-hero-pipe-step,
+  .lp-hiw-step,
+  .lp-mode-card,
+  .lp-tech-item,
+  .lp-arch-box {
+    animation: none !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
 
