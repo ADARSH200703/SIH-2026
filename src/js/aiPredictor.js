@@ -12,7 +12,7 @@ const FAULT_RULES = [
     confidence: s => Math.min(99, Math.max(72, Math.round(76 + (3.8 - s.oilPressure) * 15))),
     rul: '01:15:30',
     actions: ['Inspect oil pressure system', 'Check lubrication circuit', 'Limit throttle demand to 65%'],
-    alertText: 'Motor Current Drop', alertLevel: 'warning',
+    alertText: 'Oil Pressure Sub-Nominal', alertLevel: 'warning',
     probs: { nominal:0.08, lubrication:0.84, bearing:0.05, thermal:0.02, misfire:0.01 },
   },
   {
@@ -32,7 +32,7 @@ const FAULT_RULES = [
     confidence: s => Math.min(99, Math.round(85 + (s.temperature - 90) * 2.5)),
     rul: '00:28:45',
     actions: ['Open cowl cooling flaps 100%', 'Enrich air-fuel mixture', 'Descend for cooler air'],
-    alertText: 'Motor Coil Temperature Critical', alertLevel: 'critical',
+    alertText: 'Cylinder Head Temperature Critical', alertLevel: 'critical',
     probs: { nominal:0.04, lubrication:0.03, bearing:0.03, thermal:0.89, misfire:0.01 },
   },
   {
@@ -42,7 +42,7 @@ const FAULT_RULES = [
     confidence: () => 88,
     rul: '02:10:00',
     actions: ['Switch to secondary magneto', 'Verify injection rail pressure', 'Avoid high climb power'],
-    alertText: 'Phase Desync Detected', alertLevel: 'warning',
+    alertText: 'Ignition Misfire Detected', alertLevel: 'warning',
     probs: { nominal:0.06, lubrication:0.02, bearing:0.04, thermal:0.03, misfire:0.85 },
   },
   {
@@ -67,12 +67,12 @@ const NOMINAL = {
 export class AIPredictor {
   constructor() {
     this.alerts = [
-      { id: 1, text: 'Motor Current Drop', level: 'warning', time: '10:24:15' },
+      { id: 1, text: 'Oil Pressure Sub-Nominal', level: 'warning', time: '10:24:15' },
       { id: 2, text: 'Vibration Increasing',       level: 'warning', time: '10:23:50' },
     ];
     this.events = [
       { id: 1, text: 'Data Updated',              time: '10:25:00', type: 'info' },
-      { id: 2, text: 'Warning: Current Drop', time: '10:24:15', type: 'warning' },
+      { id: 2, text: 'Warning: Oil Pressure Drop', time: '10:24:15', type: 'warning' },
       { id: 3, text: 'Vibration Rising',           time: '10:23:50', type: 'warning' },
       { id: 4, text: 'System Check OK',            time: '10:20:00', type: 'info' },
     ];

@@ -73,6 +73,9 @@ class TestAerisBackend(unittest.TestCase):
         self.assertGreater(exp["expected_cht_c"], 65.0)
         self.assertLess(exp["expected_cht_c"], 95.0)
         self.assertGreater(exp["expected_oil_pressure_bar"], 3.5)
+        self.assertGreater(exp["estimated_power_kw"], 50.0)
+        self.assertGreater(exp["estimated_torque_nm"], 100.0)
+        self.assertLess(exp["estimated_torque_nm"], 200.0)
         
         residuals_engine = ResidualEngine()
         res = residuals_engine.compute_residuals(

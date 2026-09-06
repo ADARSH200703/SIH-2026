@@ -69,6 +69,9 @@ class AeroPistonPhysicsModel:
         # Power is proportional to RPM * MAP
         exp_load_pct = round(min(100.0, max(15.0, (throttle * 0.75 + (rpm / self.max_continuous_rpm) * 0.25) * 100.0)), 1)
         est_power_kw = (rpm / self.max_continuous_rpm) * (exp_map_kpa / 100.0) * self.rated_power_kw
+        # Mechanical torque tau = Power / omega = (P * 60,000) / (2 * pi * RPM) in N*m
+        omega_rad_s = (2.0 * math.pi * max(100.0, rpm)) / 60.0
+        est_torque_nm = (est_power_kw * 1000.0) / omega_rad_s
         
         # 4. Expected Fuel Flow (L/h or ml/min)
         # Fuel Flow = Power (kW) * BSFC (g/kWh) / (Density * 1000)
@@ -107,6 +110,8 @@ class AeroPistonPhysicsModel:
             "expected_vibration_mms": exp_vibration_mms,
             "expected_load_pct": exp_load_pct,
             "estimated_power_kw": round(est_power_kw, 2),
+            "estimated_torque_nm": round(est_torque_nm, 2),
+            "angular_velocity_rad_s": round(omega_rad_s, 2),
             "isa_air_density": round(isa["air_density_kg_m3"], 4),
             "model_version": "AERIS-MV-AeroPiston-v1.8"
         }
