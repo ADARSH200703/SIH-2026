@@ -44,8 +44,11 @@ document.addEventListener('DOMContentLoaded', () => {
   let socket      = null;
 
   // ─── Dynamic API & WebSocket Endpoints ─────────────────────────────────────
+  const envBackend = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_BACKEND_URL)
+    ? import.meta.env.VITE_BACKEND_URL.replace(/^https?:\/\//, '').replace(/^wss?:\/\//, '')
+    : null;
   const isDevPort = window.location.port === '3000' || window.location.port === '5173';
-  const apiHost = isDevPort ? `${window.location.hostname || 'localhost'}:8000` : window.location.host;
+  const apiHost = envBackend || (isDevPort ? `${window.location.hostname || 'localhost'}:8000` : window.location.host);
   const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   const httpProtocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
   const API_BASE_URL = `${httpProtocol}//${apiHost}`;
