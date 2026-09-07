@@ -729,6 +729,100 @@ body {
   margin-top: 0.35rem;
 }
 
+/* ── Cockpit Sensor Strip (6-Channel Primary Readouts) ── */
+.cockpit-sensor-strip {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.85rem;
+}
+
+.telemetry-readout-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.telemetry-readout-card:hover {
+  background: var(--surface-hover);
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+
+.telemetry-readout-card.warning {
+  border-color: var(--warning) !important;
+  background: rgba(245, 158, 11, 0.08) !important;
+}
+
+.telemetry-readout-card.critical {
+  border-color: var(--danger) !important;
+  background: rgba(239, 68, 68, 0.12) !important;
+}
+
+.tro-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+}
+
+.tro-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-transform: uppercase;
+}
+
+.tro-ref {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-dim);
+}
+
+.tro-body {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
+.tro-val {
+  font-family: var(--font-tech);
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.tro-unit {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 1200px) {
+  .cockpit-sensor-strip {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .cockpit-sensor-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 /* Cockpit 2-Column Main Layout */
 .cockpit-main-layout {
   display: grid;
@@ -2995,6 +3089,22 @@ body {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1.25rem;
+}
+
+.landing-capabilities-grid.lp-cap-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+@media (max-width: 1024px) {
+  .landing-capabilities-grid.lp-cap-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .landing-capabilities-grid.lp-cap-4 {
+    grid-template-columns: 1fr;
+  }
 }
 
 .capability-card {
