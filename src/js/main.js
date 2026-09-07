@@ -1,6 +1,6 @@
 import { EngineSimulator }  from './engineSimulator.js';
 import { AIPredictor }      from './aiPredictor.js';
-import { ChartsManager }    from './chartsManager.js';
+import { ChartsManager, AITrendChartManager } from './chartsManager.js';
 import { AudioManager }     from './audioManager.js';
 import { ThreeDigitalTwin } from './threeDigitalTwin.js';
 import { RealtimeMonitor }  from './realtimeMonitor.js';
@@ -20,6 +20,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const ai    = new AIPredictor();
   const audio = new AudioManager();
   const chart = new ChartsManager($('telemetry-chart'));
+  const aiTrend = new AITrendChartManager($('ai-trend-chart'));
+  const aiTrendHistory = { labels: [], anomalyScores: [], health: [], maxSigmas: [], hazardRates: [] };
   const rtMon = new RealtimeMonitor();
   const histLog = new HistoryLogs(sim);
 
@@ -889,9 +891,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const val = parseFloat(e.target.value);
     setText('label-sensitivity', val.toFixed(3));
     ai.anomalyThreshold = val;
+    if (sim && sim.state) {
+      drawLatentSpace(ai.lastInference?.anomalyScore || 0.024, null, sim.state, sim.scenario);
+    }
   });
 
-  function drawLatentSpace(anomalyScore) {
+  function drawLatentSpace(anomalyScore, residuals, state, activeScenario) {
     const canvas = $('latent-space-canvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -899,95 +904,277 @@ document.addEventListener('DOMContentLoaded', () => {
     const h = canvas.height;
     ctx.clearRect(0, 0, w, h);
 
-    // Subtle background grid
+    const cx = w / 2;
+    const cy = h / 2;
+    const scaleX = (w - 70) / 10; // 10 sigma horizontal range (-5σ to +5σ)
+    const scaleY = (h - 50) / 8;  // 8 sigma vertical range (-4σ to +4σ)
+
+    const toCanvasX = (zx) => cx + zx * scaleX;
+    const toCanvasY = (zy) => cy - zy * scaleY;
+
+    // 1. Tactical Grid & Sigma Ticks
     ctx.strokeStyle = 'rgba(38, 52, 73, 0.45)';
     ctx.lineWidth = 1;
-    for (let x = 30; x < w; x += 30) {
-      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+    for (let s = -5; s <= 5; s++) {
+      const x = toCanvasX(s);
+      ctx.beginPath(); ctx.moveTo(x, 15); ctx.lineTo(x, h - 15); ctx.stroke();
     }
-    for (let y = 20; y < h; y += 20) {
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+    for (let s = -4; s <= 4; s++) {
+      const y = toCanvasY(s);
+      ctx.beginPath(); ctx.moveTo(25, y); ctx.lineTo(w - 25, y); ctx.stroke();
     }
 
-    // Coordinate Axes
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+    // Concentric Range Rings (1σ, 2σ, 3σ)
+    [1, 2, 3].forEach(r => {
+      ctx.strokeStyle = r === 2 ? 'rgba(56, 189, 248, 0.28)' : 'rgba(100, 116, 139, 0.22)';
+      ctx.setLineDash(r === 2 ? [4, 4] : [2, 4]);
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, r * scaleX, r * scaleY, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    });
+    ctx.setLineDash([]);
+
+    // Major Coordinate Axes
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(w / 2, 0); ctx.lineTo(w / 2, h);
-    ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2);
+    ctx.moveTo(cx, 10); ctx.lineTo(cx, h - 10);
+    ctx.moveTo(20, cy); ctx.lineTo(w - 20, cy);
     ctx.stroke();
 
-    // 2-Sigma outer boundary
-    ctx.strokeStyle = 'rgba(100, 116, 139, 0.25)';
-    ctx.setLineDash([3, 3]);
+    // Axis Arrows
+    ctx.fillStyle = 'rgba(56, 189, 248, 0.6)';
     ctx.beginPath();
-    ctx.ellipse(w / 2, h / 2, 75, 45, 0, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // Nominal 95% confidence cluster ellipse
-    ctx.fillStyle = 'rgba(34, 197, 94, 0.08)';
-    ctx.strokeStyle = 'rgba(34, 197, 94, 0.5)';
-    ctx.setLineDash([]);
+    ctx.moveTo(w - 18, cy); ctx.lineTo(w - 26, cy - 4); ctx.lineTo(w - 26, cy + 4); ctx.fill();
     ctx.beginPath();
-    ctx.ellipse(w / 2, h / 2, 48, 30, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
+    ctx.moveTo(cx, 10); ctx.lineTo(cx - 4, 18); ctx.lineTo(cx + 4, 18); ctx.fill();
 
-    // Nominal cluster scatter dots
-    ctx.fillStyle = 'rgba(34, 197, 94, 0.6)';
-    const nominalPts = [
-      [-22, 8], [24, -12], [-14, -18], [18, 16], [-30, -5],
-      [10, 12], [32, -4], [-16, 22], [5, -15], [-8, 2], [14, 5]
+    // Axis Labels
+    ctx.font = '10px "JetBrains Mono", monospace';
+    ctx.fillStyle = 'rgba(148, 163, 184, 0.85)';
+    ctx.textAlign = 'right';
+    ctx.fillText('+z₁ (Mechanical)', w - 24, cy - 8);
+    ctx.textAlign = 'left';
+    ctx.fillText('+z₂ (Thermodynamic)', cx + 8, 22);
+
+    // 2. Define the 4 Calibrated Cluster Operating Regimes (C0, C1, C2, C3)
+    const clusters = [
+      {
+        id: 'C0',
+        name: 'Nominal Cruise Envelope',
+        shortName: 'C0: NOMINAL',
+        center: [0.0, 0.0],
+        rx: 1.1, ry: 0.9,
+        color: '#10B981',
+        bg: 'rgba(16, 185, 129, 0.10)',
+        border: 'rgba(16, 185, 129, 0.65)',
+        points: [
+          [-0.5, 0.3], [0.4, -0.3], [-0.3, -0.4], [0.5, 0.4], [-0.7, -0.1],
+          [0.2, 0.5], [0.6, -0.2], [-0.4, 0.6], [0.1, -0.6], [-0.2, 0.1],
+          [0.3, 0.2], [-0.6, 0.2], [0.0, -0.3], [0.1, 0.4], [-0.1, -0.2]
+        ]
+      },
+      {
+        id: 'C1',
+        name: 'Thermal Deficit / Overheat',
+        shortName: 'C1: OVERHEAT',
+        center: [1.8, 2.4],
+        rx: 0.9, ry: 0.9,
+        color: '#F59E0B',
+        bg: 'rgba(245, 158, 11, 0.12)',
+        border: 'rgba(245, 158, 11, 0.70)',
+        points: [
+          [1.6, 2.2], [2.0, 2.5], [1.7, 2.7], [2.1, 2.1],
+          [1.4, 2.4], [1.9, 2.8], [2.2, 2.3], [1.5, 2.1]
+        ]
+      },
+      {
+        id: 'C2',
+        name: 'Crankshaft Bearing Wear',
+        shortName: 'C2: BEARING WEAR',
+        center: [2.8, -0.5],
+        rx: 0.9, ry: 0.8,
+        color: '#EF4444',
+        bg: 'rgba(239, 68, 68, 0.12)',
+        border: 'rgba(239, 68, 68, 0.70)',
+        points: [
+          [2.6, -0.3], [3.0, -0.6], [2.7, -0.8], [3.1, -0.4],
+          [2.5, -0.7], [2.9, -0.2], [3.2, -0.5], [2.8, -0.1]
+        ]
+      },
+      {
+        id: 'C3',
+        name: 'Hydrodynamic Lubrication Loss',
+        shortName: 'C3: LUBE LOSS',
+        center: [-0.6, -2.5],
+        rx: 0.8, ry: 0.9,
+        color: '#38BDF8',
+        bg: 'rgba(56, 189, 248, 0.12)',
+        border: 'rgba(56, 189, 248, 0.70)',
+        points: [
+          [-0.5, -2.3], [-0.7, -2.6], [-0.4, -2.7], [-0.8, -2.2],
+          [-0.6, -2.8], [-0.3, -2.4], [-0.9, -2.5], [-0.5, -2.9]
+        ]
+      }
     ];
-    nominalPts.forEach(([x, y]) => {
+
+    // Render Clusters
+    clusters.forEach(c => {
+      const ccx = toCanvasX(c.center[0]);
+      const ccy = toCanvasY(c.center[1]);
+      const crx = c.rx * scaleX;
+      const cry = c.ry * scaleY;
+
+      // Region Fill & Boundary
+      ctx.fillStyle = c.bg;
+      ctx.strokeStyle = c.border;
+      ctx.lineWidth = 1.2;
+      ctx.setLineDash([4, 3]);
       ctx.beginPath();
-      ctx.arc(w / 2 + x, h / 2 + y, 2, 0, Math.PI * 2);
+      ctx.ellipse(ccx, ccy, crx, cry, 0, 0, Math.PI * 2);
       ctx.fill();
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Cluster Calibration Scatter Dots
+      ctx.fillStyle = c.color;
+      c.points.forEach(([px, py]) => {
+        ctx.beginPath();
+        ctx.arc(toCanvasX(px), toCanvasY(py), 2.2, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Cluster Label Pill
+      ctx.font = 'bold 9px "JetBrains Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = c.color;
+      ctx.fillText(c.shortName, ccx, ccy - cry - 4);
     });
 
-    // Sensitivity boundary ring based on anomalyThreshold
-    const threshR = Math.max(25, Math.min(85, ((ai.anomalyThreshold || 0.045) / 0.08) * 90));
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.6)';
-    ctx.setLineDash([4, 4]);
+    // 3. Dynamic Anomaly Sensitivity Threshold Ring
+    const threshVal = ai.anomalyThreshold || 0.045;
+    const threshSigma = (threshVal / 0.045) * 1.5; // Baseline 1.5σ at 0.045
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.55)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([5, 4]);
     ctx.beginPath();
-    ctx.arc(w / 2, h / 2, threshR, 0, Math.PI * 2);
+    ctx.ellipse(cx, cy, threshSigma * scaleX, threshSigma * scaleY, 0, 0, Math.PI * 2);
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Live moving UAV state point
-    const t = anomalyScore * 280;
-    const px = (w / 2) + Math.cos(Date.now() * 0.002) * (18 + t * 0.5);
-    const py = (h / 2) + Math.sin(Date.now() * 0.0015) * (12 + t * 0.45);
+    // 4. Calculate Live UAV State Coordinates (z1, z2) from Physics Residuals
+    let vibSigma = 0;
+    let rpmSigma = 0;
+    let tempSigma = 0;
+    let oilSigma = 0;
 
-    const isAnomaly = anomalyScore > (ai.anomalyThreshold || 0.045);
-    
-    // Dynamic cluster badge update
-    const clusterStatus = $('lab-cluster-status');
-    if (clusterStatus) {
-      clusterStatus.textContent = isAnomaly ? 'ANOMALY DETECTED' : 'IN-BOUNDS (NOMINAL)';
-      clusterStatus.style.color = isAnomaly ? 'var(--status-critical)' : 'var(--status-normal)';
-      clusterStatus.style.borderColor = isAnomaly ? 'rgba(239, 68, 68, 0.3)' : 'rgba(34, 197, 94, 0.3)';
-      clusterStatus.style.background = isAnomaly ? 'rgba(239, 68, 68, 0.15)' : 'rgba(34, 197, 94, 0.15)';
+    if (residuals && typeof residuals.vibration?.sigma === 'number') {
+      vibSigma = residuals.vibration.sigma;
+      rpmSigma = residuals.rpm ? residuals.rpm.sigma : 0;
+      tempSigma = residuals.temperature ? residuals.temperature.sigma : 0;
+      oilSigma = residuals.oilPressure ? residuals.oilPressure.sigma : 0;
+    } else if (state) {
+      vibSigma = (state.vibration - 1.6) / 0.8;
+      rpmSigma = (state.rpm - 4215) / 400;
+      tempSigma = (state.temperature - 78.4) / 8.0;
+      oilSigma = (4.3 - state.oilPressure) / 0.8;
     }
 
-    // Outer glow pulse
-    ctx.fillStyle = isAnomaly ? 'rgba(239, 68, 68, 0.25)' : 'rgba(56, 189, 248, 0.25)';
+    const z1 = Number((vibSigma * 0.75 + rpmSigma * 0.25).toFixed(2));
+    const z2 = Number((tempSigma * 0.60 + oilSigma * 0.40).toFixed(2));
+
+    const curPx = toCanvasX(z1);
+    const curPy = toCanvasY(z2);
+
+    // Distance to Nominal Center (0, 0)
+    const dist0 = Math.sqrt(z1 * z1 + z2 * z2);
+    const isAnomaly = anomalyScore > threshVal || dist0 > threshSigma;
+
+    // Determine Active Operating Cluster
+    let activeCluster = clusters[0];
+    let minClusterDist = dist0;
+
+    clusters.forEach(c => {
+      const d = Math.sqrt((z1 - c.center[0]) ** 2 + (z2 - c.center[1]) ** 2);
+      if (d < minClusterDist) {
+        minClusterDist = d;
+        activeCluster = c;
+      }
+    });
+
+    // 5. Draw Crosshairs & Observation Reticle for Current Point
+    ctx.strokeStyle = isAnomaly ? 'rgba(239, 68, 68, 0.4)' : 'rgba(56, 189, 248, 0.4)';
+    ctx.setLineDash([2, 2]);
     ctx.beginPath();
-    ctx.arc(px, py, 10, 0, Math.PI * 2);
+    ctx.moveTo(curPx, cy); ctx.lineTo(curPx, curPy);
+    ctx.moveTo(cx, curPy); ctx.lineTo(curPx, curPy);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Outer Glow Ring Pulse
+    ctx.fillStyle = isAnomaly ? 'rgba(239, 68, 68, 0.25)' : 'rgba(45, 212, 191, 0.25)';
+    ctx.beginPath();
+    ctx.arc(curPx, curPy, 14, 0, Math.PI * 2);
     ctx.fill();
 
-    // Core state dot
-    ctx.fillStyle = isAnomaly ? '#EF4444' : '#38BDF8';
+    // Intermediate Reticle Ring
+    ctx.strokeStyle = isAnomaly ? '#EF4444' : '#2DD4BF';
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(px, py, 4.5, 0, Math.PI * 2);
+    ctx.arc(curPx, curPy, 8, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Core Point Dot
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.arc(curPx, curPy, 3.5, 0, Math.PI * 2);
     ctx.fill();
 
-    // Legend annotations
-    ctx.font = '9px "JetBrains Mono", monospace';
-    ctx.fillStyle = 'rgba(148, 163, 184, 0.7)';
-    ctx.fillText('95% Nominal Cluster', 8, 14);
-    ctx.fillStyle = isAnomaly ? '#EF4444' : '#38BDF8';
-    ctx.fillText('• Live State', 8, 26);
+    // Star Observation Badge
+    ctx.font = 'bold 10px "JetBrains Mono", monospace';
+    ctx.textAlign = curPx > w - 160 ? 'right' : 'left';
+    ctx.fillStyle = isAnomaly ? '#EF4444' : '#2DD4BF';
+    const tagOffset = curPx > w - 160 ? -12 : 12;
+    ctx.fillText(`★ CURRENT (z₁:${z1 > 0 ? '+' : ''}${z1}σ, z₂:${z2 > 0 ? '+' : ''}${z2}σ)`, curPx + tagOffset, curPy - 6);
+
+    // 6. Synchronize AI Lab UI Elements
+    const labClusterStatus = $('lab-cluster-status');
+    if (labClusterStatus) {
+      if (isAnomaly) {
+        labClusterStatus.textContent = `ANOMALY: ${activeCluster.id} (${activeCluster.name})`;
+        labClusterStatus.style.color = 'var(--status-critical)';
+        labClusterStatus.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+        labClusterStatus.style.background = 'rgba(239, 68, 68, 0.15)';
+      } else {
+        labClusterStatus.textContent = 'CLUSTER C0: NOMINAL ENVELOPE';
+        labClusterStatus.style.color = 'var(--status-normal)';
+        labClusterStatus.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+        labClusterStatus.style.background = 'rgba(16, 185, 129, 0.15)';
+      }
+    }
+
+    setText('lab-cluster-id', isAnomaly ? `Cluster ${activeCluster.id} (${activeCluster.name})` : 'Cluster C0 (Nominal Envelope)');
+    
+    const anomalyStatusVal = $('ai-anomaly-status-val');
+    if (anomalyStatusVal) {
+      anomalyStatusVal.textContent = isAnomaly ? (anomalyScore > 0.08 ? 'CRITICAL FAULT' : 'ANOMALY DETECTED') : 'NOMINAL';
+      anomalyStatusVal.style.color = isAnomaly ? (anomalyScore > 0.08 ? 'var(--status-critical)' : 'var(--status-warning)') : 'var(--status-normal)';
+    }
+
+    const anomalyDesc = $('ai-anomaly-desc');
+    if (anomalyDesc) {
+      if (isAnomaly) {
+        anomalyDesc.textContent = `Operating point transitioned into ${activeCluster.name} regime (Distance: ${dist0.toFixed(2)}σ from nominal center).`;
+      } else {
+        anomalyDesc.textContent = 'Operating within nominal multi-variate thermodynamic and kinematic envelope.';
+      }
+    }
+
+    const sevBadge = $('lab-severity-badge');
+    if (sevBadge) {
+      sevBadge.textContent = isAnomaly ? (anomalyScore > 0.08 ? 'HIGH' : 'ELEVATED') : 'LOW';
+      sevBadge.style.color = isAnomaly ? (anomalyScore > 0.08 ? 'var(--status-critical)' : 'var(--status-warning)') : 'var(--status-normal)';
+    }
   }
 
   // ─── SVG Sparkline Generator ──────────────────────────────────────────────
@@ -1504,7 +1691,38 @@ document.addEventListener('DOMContentLoaded', () => {
     setRangeFill('range-load', state.engineLoad, 0, 100);
 
     // — Draw Latent Space —
-    drawLatentSpace(infer.anomalyScore);
+    const rawAnomScore = Number(dashboardView.anomaly_score ?? infer.anomalyScore ?? 0.024);
+    drawLatentSpace(rawAnomScore, residuals, state, state.activeScenario || sim.scenario);
+
+    // — AI Prognostics & Signal Trend Chart —
+    if (aiTrend) {
+      const nowLabel = (state.flightTime / 60).toFixed(1);
+      aiTrendHistory.labels.push(nowLabel);
+      aiTrendHistory.anomalyScores.push(rawAnomScore);
+      aiTrendHistory.health.push(state.engineHealth || 100);
+
+      // Compute max sigma across all available residuals
+      let maxSig = 0;
+      if (residuals) {
+        ['rpm', 'temperature', 'oilPressure', 'vibration', 'fuelFlow'].forEach(k => {
+          if (residuals[k]?.sigma) maxSig = Math.max(maxSig, Math.abs(residuals[k].sigma));
+        });
+      }
+      aiTrendHistory.maxSigmas.push(Number(maxSig.toFixed(2)));
+
+      // Hazard rate (Weibull hazard or derived from health degradation)
+      const hazRate = twinState?.hazard_rate || (0.002 + Math.max(0, (100 - state.engineHealth) * 0.00018));
+      aiTrendHistory.hazardRates.push(Number(hazRate.toFixed(4)));
+
+      if (aiTrendHistory.labels.length > 300) {
+        aiTrendHistory.labels.shift();
+        aiTrendHistory.anomalyScores.shift();
+        aiTrendHistory.health.shift();
+        aiTrendHistory.maxSigmas.shift();
+        aiTrendHistory.hazardRates.shift();
+      }
+      aiTrend.update(aiTrendHistory);
+    }
 
     // — Live Chart —
     chart.update(history);
@@ -1542,10 +1760,72 @@ document.addEventListener('DOMContentLoaded', () => {
     setCss('ai-confidence-bar', 'width', `${conf}%`);
     setText('ai-time-to-fault', dashboardView.rul_time_str || infer.estimatedTimeToFault);
 
-    // — AI Lab —
-    setText('lab-anomaly-score', (dashboardView.anomaly_score || infer.anomalyScore).toFixed(3));
-    setCss('lab-anomaly-bar', 'width', `${Math.min(100, (dashboardView.anomaly_score || infer.anomalyScore) * 100).toFixed(1)}%`);
-    setText('lab-rul-val', dashboardView.rul_time_str || infer.estimatedTimeToFault);
+    // — AI Lab Primary Summary Cards & Probability Bars —
+    setText('lab-anomaly-score', rawAnomScore.toFixed(3));
+    setCss('lab-anomaly-bar', 'width', `${Math.min(100, rawAnomScore * 100).toFixed(1)}%`);
+    
+    // Multi-Class Fault Classifier Probabilities
+    const probs = dashboardView.fault_probabilities || infer.probabilities || {};
+    const pNominal = Math.round((probs.NOMINAL ?? probs.nominal ?? probs.nominal_cruise ?? 0.94) * 100);
+    const pLube    = Math.round((probs.LUBRICATION_DEGRADATION ?? probs.lubrication ?? probs.lubrication_degradation ?? probs.oil_pressure_loss ?? 0.01) * 100);
+    const pBearing = Math.round((probs.BEARING_DEGRADATION ?? probs.bearing ?? probs.vibration_bearing ?? probs.bearing_wear ?? 0.01) * 100);
+    const pThermal = Math.round((probs.COOLING_DEGRADATION ?? probs.thermal ?? probs.thermal_overheat ?? probs.cylinder_head_overheat ?? 0.01) * 100);
+    const pMisfire = Math.round((probs.SPARK_PLUG_DEGRADATION ?? probs.misfire ?? probs.spark_misfire ?? probs.ignition_misfire ?? 0.01) * 100);
+
+    setText('prob-nominal', `${pNominal}%`);
+    setCss('prob-nominal-bar', 'width', `${pNominal}%`);
+    setText('prob-lube', `${pLube}%`);
+    setCss('prob-lube-bar', 'width', `${pLube}%`);
+    setText('prob-bearing', `${pBearing}%`);
+    setCss('prob-bearing-bar', 'width', `${pBearing}%`);
+    setText('prob-thermal', `${pThermal}%`);
+    setCss('prob-thermal-bar', 'width', `${pThermal}%`);
+    setText('prob-misfire', `${pMisfire}%`);
+    setCss('prob-misfire-bar', 'width', `${pMisfire}%`);
+
+    // Prognostics RUL, Hazard Rate & Degradation Velocity
+    const rulStr = dashboardView.rul_time_str || infer.estimatedTimeToFault || '1200.0 h';
+    setText('lab-rul-val', rulStr);
+    const hazVal = twinState?.hazard_rate ? `${twinState.hazard_rate.toFixed(4)} / hr` : '0.0034 / hr';
+    setText('lab-hazard-rate', hazVal);
+    const degRate = twinState?.degradation_velocity ? `${twinState.degradation_velocity > 0 ? '+' : ''}${twinState.degradation_velocity.toFixed(4)} / hr` : '+0.0002 / hr';
+    setText('lab-deg-velocity', degRate);
+
+    // Mitigation Advisory in AI Lab
+    const mitigBox = $('lab-mitigation-box');
+    if (mitigBox) {
+      if (state.status === 'CRITICAL' || state.status === 'FAULT' || dashboardView.anomaly_detected) {
+        const actList = dashboardView.recommended_actions || infer.recommendedAction || ['Reduce throttle demand to 65%', 'Trim propeller pitch for thermal relief'];
+        mitigBox.innerHTML = actList.map(a => `&bull; <strong>${a}</strong>`).join('<br>');
+        mitigBox.style.borderLeftColor = 'var(--status-critical)';
+      } else {
+        mitigBox.innerHTML = '&bull; All propulsion parameters within nominal envelope.<br>&bull; Continue planned waypoint flight profile at current throttle demand.';
+        mitigBox.style.borderLeftColor = 'var(--status-normal)';
+      }
+    }
+
+    // AI Lab Evidence List ("Why did the AI reach this conclusion?")
+    const labEvidenceList = $('ai-lab-evidence-list');
+    if (labEvidenceList) {
+      const isAnom = dashboardView.anomaly_detected || rawAnomScore > (ai.anomalyThreshold || 0.045);
+      const confVal = dashboardView.confidence_pct ?? infer.confidence ?? 94;
+      const trustScore = sensorTrust?.overall_trust_score ?? 98;
+      
+      let items = [];
+      if (isAnom) {
+        const topIssue = dashboardView.fault_class ? dashboardView.fault_class.replace(/_/g, ' ') : (infer.possibleIssue || 'Degradation Anomaly');
+        items.push(`Fault Signature: Divergence matching <strong>${topIssue}</strong>.`);
+        items.push(`Isolation Forest: Multi-variate reconstruction error at <strong>${rawAnomScore.toFixed(3)}</strong> (Exceeds ${(ai.anomalyThreshold || 0.045).toFixed(3)} threshold).`);
+        items.push(`Sensor Trust Score: <strong>${Math.round(trustScore)}%</strong> (Validated transducer array).`);
+        items.push(`Consensus Confidence: <strong>${confVal}%</strong> across physics twin and ML classifiers.`);
+      } else {
+        items.push('Physics Model: Operating within nominal indicated brake torque and thermal balance envelope.');
+        items.push(`Sensor Trust Score: <strong>${Math.round(trustScore)}%</strong> (All 6 primary transducers valid, zero sensor drift).`);
+        items.push(`Isolation Forest: Multi-variate reconstruction error within standard 1.5σ nominal cluster boundary (C0).`);
+        items.push(`Digital Twin Consensus: <strong>${confVal}%</strong> confidence across physics, sensor trust, and machine learning pipelines.`);
+      }
+      labEvidenceList.innerHTML = items.map(t => `<li>${t}</li>`).join('');
+    }
 
     // — Critical Popup Alert —
     if ((state.status === 'CRITICAL' || state.status === 'FAULT') && !criticalAlertShown) {
