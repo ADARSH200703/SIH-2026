@@ -29,11 +29,23 @@ export class AudioManager {
     this._ready = true;
   }
 
+  get muted() {
+    return this.isMuted;
+  }
+
+  get isLive() {
+    return !this.isMuted;
+  }
+
   toggleMute() {
     this._init();
-    if (this._ctx.state === 'suspended') this._ctx.resume();
+    if (this._ctx && this._ctx.state === 'suspended') {
+      this._ctx.resume();
+    }
     this.isMuted = !this.isMuted;
-    this._gain.gain.setValueAtTime(this.isMuted ? 0 : 0.04, this._ctx.currentTime);
+    if (this._gain && this._ctx) {
+      this._gain.gain.setValueAtTime(this.isMuted ? 0 : 0.04, this._ctx.currentTime);
+    }
     return !this.isMuted;
   }
 

@@ -223,3 +223,40 @@ def test_bounded_history_buffer():
     # residual engine history is capped at 60
     for channel, history_list in twin_service.residual_engine.history.items():
         assert len(history_list) <= 60
+
+
+def test_stream_pause_and_clock_reset_endpoints():
+    """Verify stream pause toggle, mission clock reset, and mitigation endpoints."""
+    from backend.main import toggle_stream_pause, reset_mission_flight_time, execute_mitigation, start_replay, pause_replay, StreamPauseRequest, FlightTimeResetRequest
+
+    # Test stream pause
+    pause_res = toggle_stream_pause(StreamPauseRequest(is_paused=True))
+    assert pause_res["is_paused"] is True
+    assert pause_res["status"] == "stream_pause_updated"
+
+    resume_res = toggle_stream_pause(StreamPauseRequest(is_paused=False))
+    assert resume_res["is_paused"] is False
+
+    # Test toggle without body
+    toggle_res = toggle_stream_pause(None)
+    assert toggle_res["is_paused"] is True
+    toggle_res2 = toggle_stream_pause(None)
+    assert toggle_res2["is_paused"] is False
+
+    # Test clock reset
+    clk_res = reset_mission_flight_time(FlightTimeResetRequest(seconds=0))
+    assert clk_res["status"] == "flight_time_reset"
+    assert clk_res["flight_time_seconds"] == 0
+    assert simulator.state["flight_time_seconds"] == 0
+
+    # Test mitigation
+    mit_res = execute_mitigation()
+    assert mit_res["status"] == "mitigation_applied"
+    assert simulator.state["activeScenario"] == "cruise"
+
+    # Test replay start/resume & pause
+    r_start = start_replay()
+    assert r_start["is_playing"] is True
+    r_pause = pause_replay()
+    assert r_pause["is_playing"] is False
+

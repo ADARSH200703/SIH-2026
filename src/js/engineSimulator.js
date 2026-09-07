@@ -75,6 +75,17 @@ export class EngineSimulator {
     clearInterval(this._interval);
   }
 
+  togglePause() {
+    this.state.isRunning = !this.state.isRunning;
+    if (this.state.isRunning) {
+      this._startTick();
+    } else {
+      clearInterval(this._interval);
+    }
+    this.notify();
+    return this.state.isRunning;
+  }
+
   _initHistory() {
     this.history = {
       labels: [], rpm: [], temperature: [], oilPressure: [],

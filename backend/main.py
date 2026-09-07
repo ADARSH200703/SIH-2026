@@ -70,6 +70,9 @@ class ReplaySpeedRequest(BaseModel):
 class FlightTimeResetRequest(BaseModel):
     seconds: int = Field(0, ge=0, description="Target seconds to reset mission flight time to")
 
+class StreamPauseRequest(BaseModel):
+    is_paused: Optional[bool] = Field(None, description="Explicit boolean pause state or toggle if None")
+
 
 # Connected WebSocket clients manager
 class ConnectionManager:
@@ -130,6 +133,7 @@ async def telemetry_broadcast_loop():
                                 "primary_evidence": pipeline_out.get("primary_evidence", []),
                                 "stream_metrics": status_info,
                                 "target_rate_hz": system_state.target_rate_hz,
+                                "is_paused": system_state.is_paused,
                             }
                             await manager.broadcast(payload)
                         elif live_source.is_stale():
@@ -141,6 +145,7 @@ async def telemetry_broadcast_loop():
                                 "message": f"LIVE DATA: STALE ({status_info.get('data_age_ms')} ms)",
                                 "status_details": status_info,
                                 "target_rate_hz": system_state.target_rate_hz,
+                                "is_paused": system_state.is_paused,
                                 "timestamp": time.time(),
                             }
                             await manager.broadcast(payload)
@@ -154,6 +159,7 @@ async def telemetry_broadcast_loop():
                             "message": "NO LIVE DATA — SOURCE DISCONNECTED",
                             "status_details": status_info,
                             "target_rate_hz": system_state.target_rate_hz,
+                            "is_paused": system_state.is_paused,
                             "timestamp": time.time(),
                         }
                         await manager.broadcast(payload)
@@ -190,6 +196,7 @@ async def telemetry_broadcast_loop():
                         "primary_evidence": pipeline_out.get("primary_evidence", []),
                         "stream_metrics": pipeline_out.get("stream_metrics", {}),
                         "target_rate_hz": system_state.target_rate_hz,
+                        "is_paused": system_state.is_paused,
                     }
                     await manager.broadcast(payload)
 
@@ -274,6 +281,21 @@ def set_target_rate(req: RateRequest):
     system_state.target_rate_hz = req.rate_hz
     log_event(f"Target Ingestion Frequency Set to {req.rate_hz} Hz", "info", "RateManager")
     return {"status": "rate_updated", "target_rate_hz": system_state.target_rate_hz}
+
+@app.post("/api/stream/pause")
+@app.post("/api/stream/toggle-pause")
+def toggle_stream_pause(req: Optional[StreamPauseRequest] = None):
+    """Pauses or resumes the real-time telemetry processing & evaluation broadcast."""
+    if req and req.is_paused is not None:
+        system_state.is_paused = req.is_paused
+    else:
+        system_state.is_paused = not system_state.is_paused
+    log_event(f"Telemetry Stream {'Paused' if system_state.is_paused else 'Resumed'}", "info", "StreamManager")
+    return {
+        "status": "stream_pause_updated",
+        "is_paused": system_state.is_paused,
+        "mode": system_state.mode
+    }
 
 @app.get("/api/stream/metrics")
 def get_stream_metrics():
@@ -918,6 +940,7 @@ def inject_fault(req: FaultInjectionRequest):
     return {"status": "fault_injected", "details": inj, "is_simulated": True}
 
 @app.post("/replay/start")
+@app.post("/replay/resume")
 def start_replay():
     res = replay_engine.start()
     log_event("Deterministic Replay Session Started", "info", "ReplayEngine")

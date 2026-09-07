@@ -28,12 +28,23 @@ document.addEventListener('DOMContentLoaded', () => {
   // Evaluation Mode State ('LIVE' vs 'SIMULATION')
   let evalMode = 'LIVE';
   let liveStreamConnected = false;
+  let isStreamPaused = false;
   let totalProcessedSamples = 0;
   let currentTargetRateHz = 10;
   let isReplaying = false;
 
   // Expose history filter to inline onclick handlers in HTML
-  window._histFilter = (f) => { histLog.setFilter(f); };
+  window._histFilter = (f) => {
+    histLog.setFilter(f);
+    ['all', 'warning', 'critical'].forEach(k => {
+      const btn = $(`hist-filter-${k}`);
+      if (btn) {
+        const isActive = k === f;
+        btn.style.borderColor = isActive ? 'var(--accent-cyan)' : 'var(--border)';
+        btn.style.color = isActive ? 'var(--accent-cyan)' : 'var(--text-secondary)';
+      }
+    });
+  };
 
   // 3D Twin is lazily created on first tab visit so canvas has real dimensions
   let twin = null;
@@ -1216,42 +1227,108 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ─── Audio Toggle ────────────────────────────────────────────────────────────
   $('audio-toggle-btn')?.addEventListener('click', () => {
-    audio.toggleMute();
-    const isOn = !audio.muted;
-    setText('audio-icon', isOn ? 'volume_up' : 'volume_off');
-    setText('audio-text', isOn ? 'Audio: Live' : 'Audio: Muted');
-    $('audio-toggle-btn')?.classList.toggle('active', isOn);
-    toast(isOn ? 'Avionics audio active' : 'Audio muted');
+    const isLive = audio.toggleMute();
+    setText('audio-icon', isLive ? 'volume_up' : 'volume_off');
+    setText('audio-text', isLive ? 'Audio: Live' : 'Audio: Muted');
+    $('audio-toggle-btn')?.classList.toggle('active', isLive);
+    toast(isLive ? 'Avionics sound synthesis active' : 'Avionics audio muted');
   });
 
-  // ─── Pause / Resume ──────────────────────────────────────────────────────────
-  $('pause-sim-btn')?.addEventListener('click', togglePause);
-
-  function togglePause() {
-    sim.state.isRunning = !sim.state.isRunning;
-    const running = sim.state.isRunning;
-    setText('sim-icon', running ? 'play_arrow' : 'pause');
-    setText('sim-text', running ? 'Running' : 'Paused');
-    $('pause-sim-btn')?.classList.toggle('active', !running);
-    toast(running ? 'Telemetry stream resumed' : 'Telemetry stream paused');
+  // ─── Pause / Resume Telemetry Stream ─────────────────────────────────────────
+  function updatePauseUI(isPaused) {
+    isStreamPaused = isPaused;
+    setText('sim-icon', isPaused ? 'play_arrow' : 'pause');
+    setText('sim-text', isPaused ? 'Stream Paused' : 'Running');
+    $('pause-sim-btn')?.classList.toggle('active', isPaused);
   }
 
-  // ─── Mitigation Command ───────────────────────────────────────────────────────
+  function togglePause() {
+    isStreamPaused = !isStreamPaused;
+    sim.state.isRunning = !isStreamPaused;
+    if (sim.state.isRunning) {
+      sim.start();
+    } else {
+      sim.stop();
+    }
+
+    // Sync state with backend via WebSocket and REST API
+    if (wsConnected) {
+      wsCmd({ action: 'PAUSE_STREAM' });
+    }
+    fetch(`${API_BASE_URL}/api/stream/pause`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_paused: isStreamPaused })
+    }).catch(() => {});
+
+    updatePauseUI(isStreamPaused);
+
+    if (isStreamPaused) {
+      toast(evalMode === 'LIVE' ? 'Live stream evaluation held' : 'Simulation telemetry stream paused');
+    } else {
+      toast(evalMode === 'LIVE' ? 'Live stream evaluation resumed' : 'Simulation telemetry stream resumed');
+    }
+  }
+
+  $('pause-sim-btn')?.addEventListener('click', togglePause);
+
+  // ─── Mission Clock Reset ───────────────────────────────────────────────────
+  $('header-mission-clock')?.addEventListener('click', async () => {
+    sim.resetFlightTime(0);
+    if (wsConnected) {
+      wsCmd({ action: 'RESET_MISSION_CLOCK', seconds: 0 });
+    }
+    try {
+      await fetch(`${API_BASE_URL}/api/flight-time/reset`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ seconds: 0 })
+      });
+    } catch (_) {}
+    setText('header-mission-clock', 'T+ 00:00:00');
+    setText('kpi-flight-time', '00:00:00');
+    toast('Mission flight clock reset to T+ 00:00:00');
+  });
+
+  // ─── Mitigation Command (Truthful Live vs Simulation Separation) ───────────
   function mitigate() {
-    sim.executeMitigation();
-    const dd = $('scenario-dropdown'); if (dd) dd.value = 'cruise';
-    wsCmd({ action: 'MITIGATE' });
-    if (audio._ready) audio.playSuccess();
-    toast('Telecommand Uplinked — Mitigation Applied');
+    if (evalMode === 'SIMULATION') {
+      sim.executeMitigation();
+      const dd = $('scenario-dropdown'); if (dd) dd.value = 'cruise';
+      if (wsConnected) wsCmd({ action: 'MITIGATE' });
+      fetch(`${API_BASE_URL}/api/mitigate`, { method: 'POST' }).catch(() => {});
+      if (audio._ready) audio.playSuccess();
+      toast('Simulation Mitigation Applied — Scenario Trimmed to Nominal Cruise');
+    } else {
+      // In LIVE mode: do NOT claim a physical UAV command was uplinked
+      if (audio._ready) audio.playSuccess();
+      toast('Mitigation Advisory Acknowledged (Simulation-only uplink in Test mode)');
+    }
   }
   $('quick-mitigate-btn')?.addEventListener('click', mitigate);
   $('btn-execute-mitigation')?.addEventListener('click', mitigate);
 
-  // ─── Keyboard Shortcuts ───────────────────────────────────────────────────────
+  // ─── Keyboard Shortcuts & Modal Dismissals ─────────────────────────────────
   window.addEventListener('keydown', e => {
-    if (e.target.tagName === 'INPUT') return;
-    if (e.code === 'Space') { e.preventDefault(); sim.togglePause(); }
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.code === 'Space') { e.preventDefault(); togglePause(); }
     if (e.code === 'KeyM')  { e.preventDefault(); $('audio-toggle-btn')?.click(); }
+    if (e.code === 'Escape') {
+      const whyModal = $('why-unhealthy-modal');
+      if (whyModal && whyModal.style.display !== 'none') whyModal.style.display = 'none';
+      const critModal = $('critical-alert-modal');
+      if (critModal && critModal.style.display !== 'none') critModal.style.display = 'none';
+    }
+  });
+
+  // Modal Backdrop Click to Close
+  ['why-unhealthy-modal', 'critical-alert-modal'].forEach(id => {
+    const modalEl = $(id);
+    modalEl?.addEventListener('click', (e) => {
+      if (e.target === modalEl) {
+        modalEl.style.display = 'none';
+      }
+    });
   });
 
   // ─── Export Mission Report ────────────────────────────────────────────────────
@@ -1896,12 +1973,23 @@ document.addEventListener('DOMContentLoaded', () => {
         setText('backend-status-text', 'FastAPI WS Connected');
         $('ws-status-dot')?.classList.add('connected');
         toast('Connected to FastAPI Real-Time Telemetry Engine');
+
+        fetch(`${API_BASE_URL}/api/mode`)
+          .then(r => r.json())
+          .then(d => {
+            if (typeof d.is_paused === 'boolean') updatePauseUI(d.is_paused);
+          })
+          .catch(() => {});
       };
 
       socket.onmessage = (event) => {
         try {
           const msg = JSON.parse(event.data);
           
+          if (typeof msg.is_paused === 'boolean' && msg.is_paused !== isStreamPaused) {
+            updatePauseUI(msg.is_paused);
+          }
+
           if (msg.type === 'LIVE_STREAM_STATUS') {
             liveStreamConnected = !!msg.connected;
             const banner = $('live-not-connected-banner');
