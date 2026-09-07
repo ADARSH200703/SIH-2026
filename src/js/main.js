@@ -899,52 +899,95 @@ document.addEventListener('DOMContentLoaded', () => {
     const h = canvas.height;
     ctx.clearRect(0, 0, w, h);
 
-    // Coordinate Grid
-    ctx.strokeStyle = 'rgba(38, 52, 73, 0.6)';
+    // Subtle background grid
+    ctx.strokeStyle = 'rgba(38, 52, 73, 0.45)';
     ctx.lineWidth = 1;
+    for (let x = 30; x < w; x += 30) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+    }
+    for (let y = 20; y < h; y += 20) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+    }
+
+    // Coordinate Axes
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.moveTo(w / 2, 0); ctx.lineTo(w / 2, h);
     ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2);
     ctx.stroke();
 
-    // Nominal cluster ellipse
-    ctx.fillStyle = 'rgba(34, 197, 94, 0.12)';
-    ctx.strokeStyle = 'rgba(34, 197, 94, 0.4)';
+    // 2-Sigma outer boundary
+    ctx.strokeStyle = 'rgba(100, 116, 139, 0.25)';
+    ctx.setLineDash([3, 3]);
     ctx.beginPath();
-    ctx.ellipse(w / 2, h / 2, 36, 24, 0, 0, Math.PI * 2);
+    ctx.ellipse(w / 2, h / 2, 75, 45, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Nominal 95% confidence cluster ellipse
+    ctx.fillStyle = 'rgba(34, 197, 94, 0.08)';
+    ctx.strokeStyle = 'rgba(34, 197, 94, 0.5)';
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.ellipse(w / 2, h / 2, 48, 30, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
 
     // Nominal cluster scatter dots
-    ctx.fillStyle = 'rgba(34, 197, 94, 0.65)';
-    const nominalPts = [[-12, 6], [14, -8], [-6, -11], [9, 10], [-18, -3], [5, 7], [20, -2], [-9, 15]];
+    ctx.fillStyle = 'rgba(34, 197, 94, 0.6)';
+    const nominalPts = [
+      [-22, 8], [24, -12], [-14, -18], [18, 16], [-30, -5],
+      [10, 12], [32, -4], [-16, 22], [5, -15], [-8, 2], [14, 5]
+    ];
     nominalPts.forEach(([x, y]) => {
       ctx.beginPath();
       ctx.arc(w / 2 + x, h / 2 + y, 2, 0, Math.PI * 2);
       ctx.fill();
     });
 
-    // Sensitivity boundary ring
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+    // Sensitivity boundary ring based on anomalyThreshold
+    const threshR = Math.max(25, Math.min(85, ((ai.anomalyThreshold || 0.045) / 0.08) * 90));
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.6)';
     ctx.setLineDash([4, 4]);
     ctx.beginPath();
-    ctx.arc(w / 2, h / 2, 48, 0, Math.PI * 2);
+    ctx.arc(w / 2, h / 2, threshR, 0, Math.PI * 2);
     ctx.stroke();
     ctx.setLineDash([]);
 
     // Live moving UAV state point
     const t = anomalyScore * 280;
-    const px = (w / 2) + Math.cos(Date.now() * 0.002) * (15 + t * 0.45);
-    const py = (h / 2) + Math.sin(Date.now() * 0.0015) * (10 + t * 0.4);
+    const px = (w / 2) + Math.cos(Date.now() * 0.002) * (18 + t * 0.5);
+    const py = (h / 2) + Math.sin(Date.now() * 0.0015) * (12 + t * 0.45);
 
     const isAnomaly = anomalyScore > (ai.anomalyThreshold || 0.045);
+    
+    // Dynamic cluster badge update
+    const clusterStatus = $('lab-cluster-status');
+    if (clusterStatus) {
+      clusterStatus.textContent = isAnomaly ? 'ANOMALY DETECTED' : 'IN-BOUNDS (NOMINAL)';
+      clusterStatus.style.color = isAnomaly ? 'var(--status-critical)' : 'var(--status-normal)';
+      clusterStatus.style.borderColor = isAnomaly ? 'rgba(239, 68, 68, 0.3)' : 'rgba(34, 197, 94, 0.3)';
+      clusterStatus.style.background = isAnomaly ? 'rgba(239, 68, 68, 0.15)' : 'rgba(34, 197, 94, 0.15)';
+    }
+
+    // Outer glow pulse
+    ctx.fillStyle = isAnomaly ? 'rgba(239, 68, 68, 0.25)' : 'rgba(56, 189, 248, 0.25)';
+    ctx.beginPath();
+    ctx.arc(px, py, 10, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Core state dot
     ctx.fillStyle = isAnomaly ? '#EF4444' : '#38BDF8';
-    ctx.shadowColor = isAnomaly ? '#EF4444' : '#38BDF8';
-    ctx.shadowBlur = 8;
     ctx.beginPath();
     ctx.arc(px, py, 4.5, 0, Math.PI * 2);
     ctx.fill();
-    ctx.shadowBlur = 0;
+
+    // Legend annotations
+    ctx.font = '9px "JetBrains Mono", monospace';
+    ctx.fillStyle = 'rgba(148, 163, 184, 0.7)';
+    ctx.fillText('95% Nominal Cluster', 8, 14);
+    ctx.fillStyle = isAnomaly ? '#EF4444' : '#38BDF8';
+    ctx.fillText('• Live State', 8, 26);
   }
 
   // ─── SVG Sparkline Generator ──────────────────────────────────────────────
