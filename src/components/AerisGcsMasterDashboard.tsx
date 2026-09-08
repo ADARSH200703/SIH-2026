@@ -25,45 +25,128 @@ import {
   Wrench, 
   BrainCircuit, 
   Workflow, 
-  History 
+  History,
+  Volume2,
+  VolumeX,
+  RefreshCw,
+  HelpCircle,
+  TrendingUp,
+  AlertCircle
 } from 'lucide-react';
-import { playTacticalClick, playWarningAlarm } from '../utils/tacticalAudio';
+import { playTacticalClick, playWarningAlarm, setAudioMuted, isAudioMuted } from '../utils/tacticalAudio';
 
 interface AerisGcsMasterDashboardProps {
   onSwitchToCockpit?: () => void;
 }
 
+interface TelemetryData {
+  rpm: number;
+  temperature: number;
+  oilPressure: number;
+  vibration: number;
+  fuelFlow: number;
+  engineLoad: number;
+  altitude_ft?: number;
+  ambient_temp_c?: number;
+}
+
+interface StreamMetrics {
+  status?: string;
+  source?: string;
+  fps?: number;
+  data_age_ms?: number;
+  packet_loss_pct?: number;
+  link_status?: string;
+  bus_latency_ms?: number;
+}
+
 export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = ({
   onSwitchToCockpit,
 }) => {
-  // Navigation sub-tab within AERIS GCS
+  // Navigation Sub-Tabs within AERIS GCS
   const [activeSubTab, setActiveSubTab] = useState<
     'mission' | 'telemetry' | 'twin' | 'prognostics' | 'pipeline' | 'replay'
   >('mission');
 
-  // Operating Mode
+  // Operating Mode: LIVE, SIMULATION, REPLAY
   const [operatingMode, setOperatingMode] = useState<'LIVE' | 'SIMULATION' | 'REPLAY'>('SIMULATION');
+  const [isLiveConnected, setIsLiveConnected] = useState<boolean>(false);
+  const [liveStatusMessage, setLiveStatusMessage] = useState<string>('SYNTHETIC RIG ACTIVE');
+  const [isStreamPaused, setIsStreamPaused] = useState<boolean>(false);
+  const [targetRateHz, setTargetRateHz] = useState<number>(10.0);
 
-  // Isolated Subsystem in 3D
+  // Audio State
+  const [muted, setMuted] = useState<boolean>(isAudioMuted());
+
+  // Real-time Telemetry State from Backend
+  const [telemetry, setTelemetry] = useState<TelemetryData>({
+    rpm: 5420,
+    temperature: 173.8,
+    oilPressure: 5.47,
+    vibration: 1.42,
+    fuelFlow: 24.6,
+    engineLoad: 84.2,
+    altitude_ft: 18500,
+    ambient_temp_c: -14.5,
+  });
+
+  // History Buffers for Rolling Sparklines (max 30 points)
+  const [rpmHistory, setRpmHistory] = useState<number[]>([5400, 5410, 5420, 5420, 5415, 5425, 5420]);
+  const [chtHistory, setChtHistory] = useState<number[]>([165, 168, 170, 172, 173.5, 174, 173.8]);
+  const [oilHistory, setOilHistory] = useState<number[]>([4.8, 5.0, 5.2, 5.4, 5.45, 5.48, 5.47]);
+  const [vibHistory, setVibHistory] = useState<number[]>([1.35, 1.38, 1.40, 1.42, 1.41, 1.43, 1.42]);
+  const [ffHistory, setFfHistory] = useState<number[]>([24.2, 24.4, 24.5, 24.6, 24.6, 24.7, 24.6]);
+  const [loadHistory, setLoadHistory] = useState<number[]>([82.0, 83.5, 84.0, 84.2, 84.0, 84.5, 84.2]);
+
+  // Executive Intelligence & AI Metrics
+  const [healthIndex, setHealthIndex] = useState<number>(88.5);
+  const [anomalyScore, setAnomalyScore] = useState<number>(0.58);
+  const [anomalyThreshold, setAnomalyThreshold] = useState<number>(0.65);
+  const [faultClass, setFaultClass] = useState<string>('SYNTHETIC TRANSDUCER DRIFT');
+  const [faultConfidence, setFaultConfidence] = useState<number>(72.4);
+  const [rulHours, setRulHours] = useState<number>(194.0);
+  const [sensorTrustScore, setSensorTrustScore] = useState<number>(78.2);
+  const [streamMetrics, setStreamMetrics] = useState<StreamMetrics>({
+    status: 'ACTIVE',
+    source: 'HIL RIG-04',
+    fps: 42.0,
+    data_age_ms: 1.2,
+    packet_loss_pct: 0.0,
+    link_status: 'CONNECTED',
+    bus_latency_ms: 1.2,
+  });
+
+  // Physics Residuals
+  const [residuals, setResiduals] = useState({
+    rpm: '+0.04%',
+    temperature: '+8.4 °C DISCREPANCY',
+    oilPressure: '+0.65 bar WARNING',
+    vibration: '+0.03 mm/s',
+    fuelFlow: '-0.02 L/h',
+    engineLoad: '+0.3%',
+  });
+
+  // AI Softmax Fault Distribution Probabilities
+  const [faultProbs, setFaultProbs] = useState({
+    sensorDrift: 72.4,
+    nominal: 18.2,
+    bearing: 5.1,
+    lubrication: 3.1,
+    thermal: 1.2,
+  });
+
+  // 3D Subsystem Isolation
   const [selectedSubsystem, setSelectedSubsystem] = useState<
     'HARNESS' | 'CRANKCASE' | 'CYLINDERS' | 'TURBO' | 'LUBE'
   >('HARNESS');
-
-  // 3D View Modes
   const [view3DMode, setView3DMode] = useState<'STANDARD' | 'HEATMAP' | 'EXPLODED'>('STANDARD');
 
-  // Timeline Scrubber State
-  const [isPlaying, setIsPlaying] = useState(true);
+  // Timeline & Replay Scrubber State
+  const [isPlaying, setIsPlaying] = useState<boolean>(true);
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1.0);
   const [progressPct, setProgressPct] = useState<number>(76.0);
-
-  // Live Jittered Telemetry
-  const [liveRpm, setLiveRpm] = useState(5420);
-  const [liveCht, setLiveCht] = useState(173.8);
-  const [liveOil, setLiveOil] = useState(5.47);
-  const [liveVib, setLiveVib] = useState(1.42);
-  const [liveFf, setLiveFf] = useState(24.6);
-  const [liveLoad, setLiveLoad] = useState(84.2);
+  const [metTimeStr, setMetTimeStr] = useState<string>('04:18:22 Z');
+  const [utcTimeStr, setUtcTimeStr] = useState<string>('14:22:08');
 
   // Three.js Canvas Container Reference
   const mountRef = useRef<HTMLDivElement>(null);
@@ -72,27 +155,296 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
   const bearingAlertRef = useRef<THREE.Mesh | null>(null);
   const propShaftRef = useRef<THREE.Mesh | null>(null);
   const warningLightRef = useRef<THREE.PointLight | null>(null);
+  const cylinderHeadMeshes = useRef<THREE.Mesh[]>([]);
+  const turboScrollRef = useRef<THREE.Mesh | null>(null);
 
-  // Micro-telemetry jitter interval
+  // WebSocket Reference
+  const wsRef = useRef<WebSocket | null>(null);
+
+  // UTC Clock
   useEffect(() => {
-    const timer = setInterval(() => {
-      setLiveRpm(5420 + Math.floor((Math.random() - 0.48) * 12));
-      setLiveCht(parseFloat((173.8 + (Math.random() * 0.6 - 0.3)).toFixed(1)));
-      setLiveOil(parseFloat((5.47 + (Math.random() * 0.04 - 0.02)).toFixed(2)));
-      setLiveVib(parseFloat((1.42 + (Math.random() * 0.04 - 0.02)).toFixed(2)));
-      setLiveFf(parseFloat((24.6 + (Math.random() * 0.4 - 0.2)).toFixed(1)));
-      setLiveLoad(parseFloat((84.2 + (Math.random() * 0.8 - 0.4)).toFixed(1)));
+    const clockTimer = setInterval(() => {
+      const now = new Date();
+      setUtcTimeStr(now.toISOString().substring(11, 19));
+    }, 1000);
+    return () => clearInterval(clockTimer);
+  }, []);
 
-      if (isPlaying) {
-        setProgressPct((prev) => {
-          const next = prev + 0.05 * playbackSpeed;
-          return next >= 100 ? 0 : parseFloat(next.toFixed(2));
-        });
+  // ==========================================================================
+  // REAL-TIME WEBSOCKET GATEWAY CONNECTION (AERIS-TWIN BACKEND)
+  // ==========================================================================
+  useEffect(() => {
+    let isMounted = true;
+    let reconnectTimeout: NodeJS.Timeout | null = null;
+
+    const connectWebSocket = () => {
+      const isDevPort = window.location.port === '3000' || window.location.port === '5173';
+      const wsHost = isDevPort
+        ? `${window.location.hostname || 'localhost'}:8000`
+        : window.location.host;
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${wsProtocol}//${wsHost}/ws/telemetry`;
+
+      try {
+        const ws = new WebSocket(wsUrl);
+        wsRef.current = ws;
+
+        ws.onopen = () => {
+          if (!isMounted) return;
+          console.log('[AERIS-TWIN WS] Connected to Telemetry Gateway:', wsUrl);
+        };
+
+        ws.onmessage = (event) => {
+          if (!isMounted) return;
+          try {
+            const msg = JSON.parse(event.data);
+
+            if (msg.type === 'TELEMETRY_UPDATE') {
+              const raw = msg.state || msg.data?.raw_telemetry || {};
+              const inf = msg.inference || msg.data?.inference || {};
+              const twin = msg.twin_state || msg.data?.twin_state || {};
+              const db = msg.dashboard_view || msg.data?.dashboard_view || {};
+              const res = msg.residuals || msg.data?.residuals || {};
+              const trust = msg.sensor_trust || msg.data?.sensor_trust || {};
+
+              setIsLiveConnected(true);
+              if (msg.mode) setOperatingMode(msg.mode);
+
+              // Update Live Telemetry
+              const newRpm = raw.rpm || db.rpm || 5420;
+              const newCht = raw.temperature || raw.cht_c || db.temperature || 173.8;
+              const newOil = raw.oilPressure || raw.oil_pressure_bar || db.oilPressure || 5.47;
+              const newVib = raw.vibration || raw.vibration_mms || db.vibration || 1.42;
+              const newFf = raw.fuelFlow || raw.fuel_flow_lh || db.fuelFlow || 24.6;
+              const newLoad = raw.throttle || raw.engine_load_pct || db.engineLoad || 84.2;
+
+              setTelemetry({
+                rpm: Math.round(newRpm),
+                temperature: parseFloat(newCht.toFixed(1)),
+                oilPressure: parseFloat(newOil.toFixed(2)),
+                vibration: parseFloat(newVib.toFixed(2)),
+                fuelFlow: parseFloat(newFf.toFixed(1)),
+                engineLoad: parseFloat(newLoad.toFixed(1)),
+                altitude_ft: raw.altitude_ft || 18500,
+                ambient_temp_c: raw.ambient_temperature_c || -14.5,
+              });
+
+              // Rolling Sparkline History
+              setRpmHistory((prev) => [...prev.slice(-20), Math.round(newRpm)]);
+              setChtHistory((prev) => [...prev.slice(-20), parseFloat(newCht.toFixed(1))]);
+              setOilHistory((prev) => [...prev.slice(-20), parseFloat(newOil.toFixed(2))]);
+              setVibHistory((prev) => [...prev.slice(-20), parseFloat(newVib.toFixed(2))]);
+              setFfHistory((prev) => [...prev.slice(-20), parseFloat(newFf.toFixed(1))]);
+              setLoadHistory((prev) => [...prev.slice(-20), parseFloat(newLoad.toFixed(1))]);
+
+              // Update AI & Prognostics Metrics from Backend
+              if (twin.health_state?.value?.health_index !== undefined) {
+                setHealthIndex(parseFloat(twin.health_state.value.health_index.toFixed(1)));
+              } else if (db.health_score !== undefined) {
+                setHealthIndex(parseFloat(db.health_score.toFixed(1)));
+              }
+
+              if (inf.anomalyScore !== undefined) {
+                setAnomalyScore(parseFloat(inf.anomalyScore.toFixed(2)));
+              }
+              if (inf.anomalyThreshold !== undefined) {
+                setAnomalyThreshold(parseFloat(inf.anomalyThreshold.toFixed(2)));
+              }
+              if (inf.possibleIssue) {
+                setFaultClass(inf.possibleIssue.replace(/_/g, ' ').toUpperCase());
+              }
+              if (inf.confidencePct !== undefined) {
+                setFaultConfidence(parseFloat(inf.confidencePct.toFixed(1)));
+              }
+
+              if (twin.rul_state?.value?.rul_estimate_hours !== undefined) {
+                setRulHours(parseFloat(twin.rul_state.value.rul_estimate_hours.toFixed(1)));
+              }
+
+              if (trust.overall_trust_score !== undefined) {
+                setSensorTrustScore(parseFloat((trust.overall_trust_score * 100).toFixed(1)));
+              }
+
+              // Update Stream Metrics
+              if (msg.stream_metrics) {
+                setStreamMetrics((prev) => ({ ...prev, ...msg.stream_metrics }));
+              }
+
+              // Update MET Flight Time
+              if (raw.flight_time_seconds) {
+                const totalSec = Math.floor(raw.flight_time_seconds);
+                const hrs = Math.floor(totalSec / 3600).toString().padStart(2, '0');
+                const mins = Math.floor((totalSec % 3600) / 60).toString().padStart(2, '0');
+                const secs = (totalSec % 60).toString().padStart(2, '0');
+                setMetTimeStr(`${hrs}:${mins}:${secs} Z`);
+              }
+            } else if (msg.type === 'LIVE_STREAM_STATUS') {
+              setIsLiveConnected(msg.connected);
+              setLiveStatusMessage(msg.message || msg.status || 'NO DATA');
+              if (msg.status_details) {
+                setStreamMetrics((prev) => ({ ...prev, ...msg.status_details }));
+              }
+            }
+          } catch (err) {
+            console.error('[AERIS-TWIN WS] JSON Parse Error:', err);
+          }
+        };
+
+        ws.onclose = () => {
+          if (!isMounted) return;
+          console.warn('[AERIS-TWIN WS] Disconnected. Retrying in 2.5s...');
+          reconnectTimeout = setTimeout(connectWebSocket, 2500);
+        };
+
+        ws.onerror = () => {
+          ws.close();
+        };
+      } catch (e) {
+        console.error('[AERIS-TWIN WS] Connection Exception:', e);
+        reconnectTimeout = setTimeout(connectWebSocket, 2500);
       }
-    }, 400);
+    };
 
-    return () => clearInterval(timer);
-  }, [isPlaying, playbackSpeed]);
+    connectWebSocket();
+
+    return () => {
+      isMounted = false;
+      if (reconnectTimeout) clearTimeout(reconnectTimeout);
+      if (wsRef.current) wsRef.current.close();
+    };
+  }, []);
+
+  // Operating Mode Switch Action
+  const handleModeSwitch = async (newMode: 'LIVE' | 'SIMULATION' | 'REPLAY') => {
+    playTacticalClick();
+    setOperatingMode(newMode);
+
+    const isDevPort = window.location.port === '3000' || window.location.port === '5173';
+    const host = isDevPort
+      ? `${window.location.hostname || 'localhost'}:8000`
+      : window.location.host;
+    const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+
+    try {
+      await fetch(`${protocol}//${host}/api/mode`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: newMode === 'SIMULATION' ? 'SIMULATION' : newMode }),
+      });
+
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({ action: 'SET_MODE', mode: newMode }));
+      }
+    } catch (e) {
+      console.warn('[AERIS-TWIN API] Mode switch REST call error:', e);
+    }
+  };
+
+  // Replay Control Action
+  const handleReplayToggle = async () => {
+    playTacticalClick();
+    const nextState = !isPlaying;
+    setIsPlaying(nextState);
+
+    const isDevPort = window.location.port === '3000' || window.location.port === '5173';
+    const host = isDevPort
+      ? `${window.location.hostname || 'localhost'}:8000`
+      : window.location.host;
+    const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+
+    try {
+      await fetch(`${protocol}//${host}/replay/${nextState ? 'resume' : 'pause'}`, {
+        method: 'POST',
+      });
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({ action: nextState ? 'REPLAY_START' : 'REPLAY_PAUSE' }));
+      }
+    } catch (e) {
+      console.warn('[AERIS-TWIN API] Replay toggle error:', e);
+    }
+  };
+
+  // Replay Speed Multiplier Action
+  const handleSpeedCycle = async () => {
+    playTacticalClick();
+    const nextSpeed = playbackSpeed === 1.0 ? 2.0 : playbackSpeed === 2.0 ? 5.0 : 1.0;
+    setPlaybackSpeed(nextSpeed);
+
+    const isDevPort = window.location.port === '3000' || window.location.port === '5173';
+    const host = isDevPort
+      ? `${window.location.hostname || 'localhost'}:8000`
+      : window.location.host;
+    const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+
+    try {
+      await fetch(`${protocol}//${host}/replay/speed`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ speed: nextSpeed }),
+      });
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({ action: 'REPLAY_SPEED', speed: nextSpeed }));
+      }
+    } catch (e) {
+      console.warn('[AERIS-TWIN API] Replay speed error:', e);
+    }
+  };
+
+  // Blackbox HDF5 Export
+  const handleExportBlackbox = () => {
+    playTacticalClick();
+    const blackboxPayload = {
+      header: {
+        system: 'AERIS-TWIN GCS v2.5.0-PROD',
+        tail: 'UAV-MALE-TX07',
+        airframe: 'DRDO TAPAS-BH-201 / HERMES MQ-9',
+        powerplant: 'ROTAX 915-iS TURBOCHARGED',
+        export_format: 'HDF5_DATA_FRAME_V2',
+        timestamp: new Date().toISOString(),
+      },
+      telemetry: {
+        rpm: telemetry.rpm,
+        temperature_c: telemetry.temperature,
+        oil_pressure_bar: telemetry.oilPressure,
+        vibration_mms: telemetry.vibration,
+        fuel_flow_lh: telemetry.fuelFlow,
+        engine_load_pct: telemetry.engineLoad,
+      },
+      intelligence: {
+        health_index: healthIndex,
+        anomaly_score: anomalyScore,
+        fault_class: faultClass,
+        fault_confidence_pct: faultConfidence,
+        rul_estimate_hours: rulHours,
+        sensor_trust_score_pct: sensorTrustScore,
+      },
+      residuals,
+      history_buffers: {
+        rpm: rpmHistory,
+        temperature: chtHistory,
+        oil_pressure: oilHistory,
+        vibration: vibHistory,
+        fuel_flow: ffHistory,
+        engine_load: loadHistory,
+      },
+    };
+
+    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(blackboxPayload, null, 2));
+    const a = document.createElement('a');
+    a.href = dataStr;
+    a.download = `AERIS_TWIN_BLACKBOX_${Date.now()}.hdf5.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  // Toggle Audio
+  const handleToggleAudio = () => {
+    const nextMuted = !muted;
+    setMuted(nextMuted);
+    setAudioMuted(nextMuted);
+    if (!nextMuted) playTacticalClick();
+  };
 
   // Three.js 3D Engine Digital Twin Lifecycle
   useEffect(() => {
@@ -163,6 +515,8 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
       { x: 4.5, y: 0.6, z: 2.8, angle: Math.PI / 2 }
     ];
 
+    cylinderHeadMeshes.current = [];
+
     cylPositions.forEach((pos, idx) => {
       const cylBank = new THREE.Group();
       cylBank.position.set(pos.x, pos.y, pos.z);
@@ -180,6 +534,7 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
       const head = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.0, 2.6), idx === 0 ? matTurbo : matCylinderHead);
       head.position.y = 2.0;
       cylBank.add(head);
+      cylinderHeadMeshes.current.push(head);
 
       engineGroup.add(cylBank);
     });
@@ -207,6 +562,7 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
     turboScroll.rotation.y = Math.PI / 2;
     turboScroll.position.set(0, 3.2, -4.6);
     engineGroup.add(turboScroll);
+    turboScrollRef.current = turboScroll;
 
     const turboCenter = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, 1.4, 24), matCylinderHead);
     turboCenter.rotation.z = Math.PI / 2;
@@ -368,10 +724,7 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
             {/* Mode Pills */}
             <div className="flex items-center p-1 bg-[#0b0e13] rounded gap-1">
               <button
-                onClick={() => {
-                  playTacticalClick();
-                  setOperatingMode('LIVE');
-                }}
+                onClick={() => handleModeSwitch('LIVE')}
                 className={`px-3 py-1 font-mono text-[10px] uppercase rounded transition-all ${
                   operatingMode === 'LIVE' ? 'bg-[#4cd7f6] text-[#003640] font-bold shadow' : 'text-[#bcc9cd] hover:text-white'
                 }`}
@@ -379,10 +732,7 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
                 LIVE
               </button>
               <button
-                onClick={() => {
-                  playTacticalClick();
-                  setOperatingMode('SIMULATION');
-                }}
+                onClick={() => handleModeSwitch('SIMULATION')}
                 className={`flex items-center gap-1.5 px-3 py-1 font-mono text-[10px] uppercase rounded font-bold transition-all ${
                   operatingMode === 'SIMULATION' ? 'bg-[#ee9800] text-[#5b3800] shadow' : 'text-[#bcc9cd] hover:text-white'
                 }`}
@@ -391,10 +741,7 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
                 SIMULATION ACTIVE
               </button>
               <button
-                onClick={() => {
-                  playTacticalClick();
-                  setOperatingMode('REPLAY');
-                }}
+                onClick={() => handleModeSwitch('REPLAY')}
                 className={`px-3 py-1 font-mono text-[10px] uppercase rounded transition-all ${
                   operatingMode === 'REPLAY' ? 'bg-[#4edea3] text-[#003824] font-bold shadow' : 'text-[#bcc9cd] hover:text-white'
                 }`}
@@ -406,12 +753,12 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
             {/* HIL Status Stats */}
             <div className="flex items-center gap-3 px-3 py-1 bg-[#32353b] rounded font-mono text-[10px]">
               <div className="flex flex-col">
-                <span className="text-[#ffb95f] text-[9px]">SOURCE: HIL RIG-04</span>
-                <span className="text-[#ffb95f] font-bold text-[11px]">SYNTHETIC 42 Hz</span>
+                <span className="text-[#ffb95f] text-[9px]">SOURCE: {streamMetrics.source || 'HIL RIG-04'}</span>
+                <span className="text-[#ffb95f] font-bold text-[11px]">{streamMetrics.fps ? `${streamMetrics.fps} Hz` : '42 Hz'}</span>
               </div>
               <div className="flex flex-col">
                 <span className="text-[#bcc9cd] text-[9px]">LATENCY</span>
-                <span className="text-white font-semibold text-[11px]">1.2 ms (BUS)</span>
+                <span className="text-white font-semibold text-[11px]">{streamMetrics.bus_latency_ms || 1.2} ms (BUS)</span>
               </div>
               <div className="flex flex-col">
                 <span className="text-[#bcc9cd] text-[9px]">INJECTION</span>
@@ -429,15 +776,15 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
             <div className="hidden lg:flex items-center gap-3 px-3 py-1 bg-[#32353b] rounded font-mono text-[10px]">
               <div className="flex flex-col text-right">
                 <span className="text-[#bcc9cd] text-[9px]">MET</span>
-                <span className="text-white font-bold text-[11px]">04:18:22 Z</span>
+                <span className="text-white font-bold text-[11px]">{metTimeStr}</span>
               </div>
               <div className="flex flex-col text-right">
                 <span className="text-[#bcc9cd] text-[9px]">UTC CLOCK</span>
-                <span className="text-[#bcc9cd] font-medium text-[11px]">14:22:08</span>
+                <span className="text-[#bcc9cd] font-medium text-[11px]">{utcTimeStr}</span>
               </div>
               <div className="flex flex-col text-right">
                 <span className="text-[#bcc9cd] text-[9px]">TRUST SCORE</span>
-                <span className="text-[#4edea3] font-bold text-[11px]">98.4%</span>
+                <span className="text-[#4edea3] font-bold text-[11px]">{sensorTrustScore.toFixed(1)}%</span>
               </div>
             </div>
 
@@ -447,7 +794,15 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
               <div className="px-2 py-1 bg-[#0b0e13] text-[#ffb95f] rounded border border-[#ee9800] animate-pulse">M-CAUT</div>
             </div>
 
-            {/* Operator Badge */}
+            {/* Audio & Operator Badge */}
+            <button
+              onClick={handleToggleAudio}
+              title={muted ? 'Unmute Audio' : 'Mute Tactical Audio'}
+              className="p-1.5 bg-[#32353b] hover:bg-[#3d494c] rounded text-[#4cd7f6] transition-all"
+            >
+              {muted ? <VolumeX className="w-3.5 h-3.5 text-[#bcc9cd]" /> : <Volume2 className="w-3.5 h-3.5 text-[#4cd7f6]" />}
+            </button>
+
             <div className="flex items-center gap-2 pl-2 border-l border-[#3d494c]">
               <div className="flex flex-col text-right font-mono">
                 <span className="text-[#4cd7f6] font-bold text-[10px]">FLT-ENG. J. VANCE</span>
@@ -518,9 +873,15 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
         <div className="w-full bg-[#191c21] px-4 py-2 rounded flex flex-wrap items-center justify-between gap-3 shadow border border-[#1d2025]">
           <div className="flex items-center gap-4 text-xs font-mono">
             <div className="flex items-center gap-2">
-              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#ffb95f] animate-pulse" />
-              <span className="text-[#ffb95f] font-bold tracking-widest uppercase">
-                ▲ MODE: SIMULATION RUNNING // BENCHMARK SCENARIO #04: SYNTHETIC SENSOR DRIFT
+              <span className={`inline-block w-2.5 h-2.5 rounded-full animate-pulse ${
+                operatingMode === 'LIVE' ? (isLiveConnected ? 'bg-[#4cd7f6]' : 'bg-[#ef4444]') : 'bg-[#ffb95f]'
+              }`} />
+              <span className={`font-bold tracking-widest uppercase ${
+                operatingMode === 'LIVE' ? (isLiveConnected ? 'text-[#4cd7f6]' : 'text-[#ef4444]') : 'text-[#ffb95f]'
+              }`}>
+                {operatingMode === 'LIVE'
+                  ? (isLiveConnected ? '▲ MODE: LIVE UAV TELEMETRY STREAM' : '▲ MODE: WAITING FOR LIVE TELEMETRY')
+                  : '▲ MODE: SIMULATION RUNNING // BENCHMARK SCENARIO #04: SYNTHETIC SENSOR DRIFT'}
               </span>
             </div>
             <span className="text-[#3d494c]">|</span>
@@ -554,10 +915,10 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
             <div className="flex items-center gap-2">
               <Wrench className="w-4 h-4 text-[#ffb95f]" />
               <h2 className="font-tech text-sm text-white tracking-wide uppercase font-bold">
-                01 // EXECUTIVE HEALTH &amp; MASTER ANNUNCIATOR [SIMULATION]
+                01 // EXECUTIVE HEALTH &amp; MASTER ANNUNCIATOR [{operatingMode}]
               </h2>
               <span className="font-mono text-[9px] bg-[#272a30] px-2 py-0.5 text-[#ffb95f] rounded font-bold">
-                SENSOR TRUST: 78.2%
+                SENSOR TRUST: {sensorTrustScore.toFixed(1)}%
               </span>
             </div>
             <div className="flex items-center gap-2 font-mono text-[10px] text-[#bcc9cd]">
@@ -586,13 +947,13 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
                       r="42"
                       stroke="currentColor"
                       strokeDasharray="264"
-                      strokeDashoffset="30"
+                      strokeDashoffset={264 - (264 * healthIndex) / 100}
                       strokeLinecap="round"
                       strokeWidth="8"
                     />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-center font-mono">
-                    <span className="text-2xl font-bold text-white leading-none">88.5</span>
+                    <span className="text-2xl font-bold text-white leading-none">{healthIndex.toFixed(1)}</span>
                     <span className="text-[9px] text-[#ffb95f] mt-1 font-bold">INDEX / 100</span>
                   </div>
                 </div>
@@ -603,7 +964,7 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[#bcc9cd] text-[9px]">SENSOR TRUST</span>
-                    <span className="text-[#ffb95f] font-bold">78.2% (DRIFT)</span>
+                    <span className="text-[#ffb95f] font-bold">{sensorTrustScore.toFixed(1)}% (DRIFT)</span>
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[#bcc9cd] text-[9px]">SIM STATUS</span>
@@ -612,7 +973,7 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
                 </div>
               </div>
               <div className="w-full bg-[#32353b] h-1.5 rounded-full overflow-hidden">
-                <div className="bg-[#ffb95f] h-full" style={{ width: '88.5%' }} />
+                <div className="bg-[#ffb95f] h-full" style={{ width: `${healthIndex}%` }} />
               </div>
             </div>
 
@@ -621,22 +982,22 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
               <div className="flex items-center justify-between font-mono text-xs">
                 <span className="text-[#bcc9cd] text-[10px] uppercase">ANOMALY &amp; RISK LEVEL</span>
                 <span className="text-[#ffb95f] bg-[#32353b] px-1.5 py-0.5 rounded text-[9px] font-bold">
-                  DRIFT PROB: 72.4%
+                  DRIFT PROB: {faultConfidence.toFixed(1)}%
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-3 my-2 font-mono">
                 <div className="flex flex-col bg-[#0b0e13] p-2.5 rounded border border-[#272a30]">
                   <span className="text-[#bcc9cd] text-[9px]">ANOMALY SCORE</span>
                   <div className="flex items-baseline gap-1 mt-1">
-                    <span className="text-xl font-bold text-[#ffb95f]">0.58</span>
-                    <span className="text-[9px] text-[#bcc9cd]">/ THRESH 0.65</span>
+                    <span className="text-xl font-bold text-[#ffb95f]">{anomalyScore.toFixed(2)}</span>
+                    <span className="text-[9px] text-[#bcc9cd]">/ THRESH {anomalyThreshold.toFixed(2)}</span>
                   </div>
                   <span className="text-[9px] text-[#ffb95f] mt-1 font-bold">APPROACHING THRESHOLD</span>
                 </div>
                 <div className="flex flex-col bg-[#0b0e13] p-2.5 rounded border border-[#272a30]">
                   <span className="text-[#bcc9cd] text-[9px]">DIAGNOSTIC FAULT ID</span>
                   <span className="text-[11px] text-[#ffb95f] font-bold mt-1 leading-tight">
-                    SYNTHETIC TRANSDUCER DRIFT
+                    {faultClass}
                   </span>
                   <span className="text-[8px] text-[#bcc9cd] mt-1">CHT &amp; OIL PRESS TRANSDUCERS</span>
                 </div>
@@ -661,14 +1022,14 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
                 <div className="flex flex-col">
                   <span className="text-[#bcc9cd] text-[9px]">ESTIMATED MECHANICAL RUL</span>
                   <div className="flex items-baseline gap-1 mt-1">
-                    <span className="text-3xl font-bold text-[#4edea3]">194.0</span>
+                    <span className="text-3xl font-bold text-[#4edea3]">{rulHours.toFixed(1)}</span>
                     <span className="text-xs text-[#bcc9cd]">HRS</span>
                     <span className="text-[10px] text-[#4cd7f6] ml-2 font-bold">[HARDWARE NOMINAL]</span>
                   </div>
                 </div>
                 <div className="text-right flex flex-col text-[10px]">
                   <span className="text-[#bcc9cd] text-[9px]">SENSOR FAULT CONFIDENCE</span>
-                  <span className="text-[#ffb95f] font-bold text-xs">72.4% DECALIBRATION</span>
+                  <span className="text-[#ffb95f] font-bold text-xs">{faultConfidence.toFixed(1)}% DECALIBRATION</span>
                   <span className="text-[8px] text-[#bcc9cd]">SYNTHETIC DRIFT INJECTION</span>
                 </div>
               </div>
@@ -710,7 +1071,7 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
               </div>
               <div className="my-2">
                 <div className="flex items-baseline justify-between">
-                  <span className="text-2xl font-bold text-white">{liveRpm.toLocaleString()}</span>
+                  <span className="text-2xl font-bold text-white">{telemetry.rpm.toLocaleString()}</span>
                   <span className="text-[10px] text-[#bcc9cd]">RPM</span>
                 </div>
                 <div className="flex items-center justify-between text-[9px] text-[#bcc9cd] mt-0.5">
@@ -720,12 +1081,18 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
               </div>
               <div className="h-8 w-full">
                 <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 30">
-                  <polyline className="text-[#4cd7f6]" fill="none" points="0,15 15,14 30,16 45,15 60,13 75,15 90,14 100,15" stroke="currentColor" strokeWidth="1.5" />
+                  <polyline
+                    className="text-[#4cd7f6]"
+                    fill="none"
+                    points={rpmHistory.map((val, idx) => `${(idx / (rpmHistory.length - 1 || 1)) * 100},${30 - ((val - 5000) / 1000) * 30}`).join(' ')}
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  />
                 </svg>
               </div>
               <div className="mt-1 bg-[#0b0e13] px-2 py-1 rounded text-[9px] flex justify-between">
                 <span className="text-[#bcc9cd]">PHYSICS RESIDUAL:</span>
-                <span className="text-[#4cd7f6] font-semibold">+0.04%</span>
+                <span className="text-[#4cd7f6] font-semibold">{residuals.rpm}</span>
               </div>
             </div>
 
@@ -737,7 +1104,7 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
               </div>
               <div className="my-2">
                 <div className="flex items-baseline justify-between">
-                  <span className="text-2xl font-bold text-[#ffb95f]">{liveCht}</span>
+                  <span className="text-2xl font-bold text-[#ffb95f]">{telemetry.temperature.toFixed(1)}</span>
                   <span className="text-[10px] text-[#bcc9cd]">°C</span>
                 </div>
                 <div className="flex items-center justify-between text-[9px] text-[#bcc9cd] mt-0.5">
@@ -747,12 +1114,18 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
               </div>
               <div className="h-8 w-full">
                 <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 30">
-                  <polyline className="text-[#ffb95f]" fill="none" points="0,24 15,22 30,19 45,16 60,13 75,9 90,7 100,5" stroke="currentColor" strokeWidth="1.5" />
+                  <polyline
+                    className="text-[#ffb95f]"
+                    fill="none"
+                    points={chtHistory.map((val, idx) => `${(idx / (chtHistory.length - 1 || 1)) * 100},${30 - ((val - 150) / 40) * 30}`).join(' ')}
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  />
                 </svg>
               </div>
               <div className="mt-1 bg-[#0b0e13] px-2 py-1 rounded text-[9px] flex justify-between">
                 <span className="text-[#bcc9cd]">PHYSICS RESIDUAL:</span>
-                <span className="text-[#ffb95f] font-bold">+8.4 °C DISC</span>
+                <span className="text-[#ffb95f] font-bold">{residuals.temperature}</span>
               </div>
             </div>
 
@@ -764,7 +1137,7 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
               </div>
               <div className="my-2">
                 <div className="flex items-baseline justify-between">
-                  <span className="text-2xl font-bold text-[#ffb95f]">{liveOil}</span>
+                  <span className="text-2xl font-bold text-[#ffb95f]">{telemetry.oilPressure.toFixed(2)}</span>
                   <span className="text-[10px] text-[#bcc9cd]">BAR</span>
                 </div>
                 <div className="flex items-center justify-between text-[9px] text-[#bcc9cd] mt-0.5">
@@ -774,12 +1147,18 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
               </div>
               <div className="h-8 w-full">
                 <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 30">
-                  <polyline className="text-[#ffb95f]" fill="none" points="0,20 15,19 30,16 45,12 60,10 75,7 90,6 100,5" stroke="currentColor" strokeWidth="1.5" />
+                  <polyline
+                    className="text-[#ffb95f]"
+                    fill="none"
+                    points={oilHistory.map((val, idx) => `${(idx / (oilHistory.length - 1 || 1)) * 100},${30 - ((val - 4.0) / 3.0) * 30}`).join(' ')}
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  />
                 </svg>
               </div>
               <div className="mt-1 bg-[#0b0e13] px-2 py-1 rounded text-[9px] flex justify-between">
                 <span className="text-[#bcc9cd]">SENSOR VARIANCE:</span>
-                <span className="text-[#ffb95f] font-bold">+0.65 bar WARN</span>
+                <span className="text-[#ffb95f] font-bold">{residuals.oilPressure}</span>
               </div>
             </div>
 
@@ -791,7 +1170,7 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
               </div>
               <div className="my-2">
                 <div className="flex items-baseline justify-between">
-                  <span className="text-2xl font-bold text-white">{liveVib}</span>
+                  <span className="text-2xl font-bold text-white">{telemetry.vibration.toFixed(2)}</span>
                   <span className="text-[10px] text-[#bcc9cd]">MM/S</span>
                 </div>
                 <div className="flex items-center justify-between text-[9px] text-[#bcc9cd] mt-0.5">
@@ -801,12 +1180,18 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
               </div>
               <div className="h-8 w-full">
                 <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 30">
-                  <polyline className="text-[#4edea3]" fill="none" points="0,16 15,15 30,17 45,15 60,16 75,15 90,14 100,15" stroke="currentColor" strokeWidth="1.5" />
+                  <polyline
+                    className="text-[#4edea3]"
+                    fill="none"
+                    points={vibHistory.map((val, idx) => `${(idx / (vibHistory.length - 1 || 1)) * 100},${30 - (val / 4.0) * 30}`).join(' ')}
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  />
                 </svg>
               </div>
               <div className="mt-1 bg-[#0b0e13] px-2 py-1 rounded text-[9px] flex justify-between">
                 <span className="text-[#bcc9cd]">HARMONIC RESIDUAL:</span>
-                <span className="text-[#4cd7f6] font-semibold">+0.03 mm/s</span>
+                <span className="text-[#4cd7f6] font-semibold">{residuals.vibration}</span>
               </div>
             </div>
 
@@ -818,7 +1203,7 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
               </div>
               <div className="my-2">
                 <div className="flex items-baseline justify-between">
-                  <span className="text-2xl font-bold text-white">{liveFf}</span>
+                  <span className="text-2xl font-bold text-white">{telemetry.fuelFlow.toFixed(1)}</span>
                   <span className="text-[10px] text-[#bcc9cd]">L/HR</span>
                 </div>
                 <div className="flex items-center justify-between text-[9px] text-[#bcc9cd] mt-0.5">
@@ -828,12 +1213,18 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
               </div>
               <div className="h-8 w-full">
                 <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 30">
-                  <polyline className="text-[#4edea3]" fill="none" points="0,16 15,15 30,17 45,16 60,16 75,15 90,16 100,15" stroke="currentColor" strokeWidth="1.5" />
+                  <polyline
+                    className="text-[#4edea3]"
+                    fill="none"
+                    points={ffHistory.map((val, idx) => `${(idx / (ffHistory.length - 1 || 1)) * 100},${30 - ((val - 15) / 20) * 30}`).join(' ')}
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  />
                 </svg>
               </div>
               <div className="mt-1 bg-[#0b0e13] px-2 py-1 rounded text-[9px] flex justify-between">
                 <span className="text-[#bcc9cd]">BSFC RESIDUAL:</span>
-                <span className="text-[#4edea3] font-semibold">-0.02 L/h</span>
+                <span className="text-[#4edea3] font-semibold">{residuals.fuelFlow}</span>
               </div>
             </div>
 
@@ -845,7 +1236,7 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
               </div>
               <div className="my-2">
                 <div className="flex items-baseline justify-between">
-                  <span className="text-2xl font-bold text-white">{liveLoad}</span>
+                  <span className="text-2xl font-bold text-white">{telemetry.engineLoad.toFixed(1)}</span>
                   <span className="text-[10px] text-[#bcc9cd]">%</span>
                 </div>
                 <div className="flex items-center justify-between text-[9px] text-[#bcc9cd] mt-0.5">
@@ -855,12 +1246,18 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
               </div>
               <div className="h-8 w-full">
                 <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 30">
-                  <polyline className="text-[#4edea3]" fill="none" points="0,18 15,16 30,15 45,14 60,15 75,14 90,14 100,15" stroke="currentColor" strokeWidth="1.5" />
+                  <polyline
+                    className="text-[#4edea3]"
+                    fill="none"
+                    points={loadHistory.map((val, idx) => `${(idx / (loadHistory.length - 1 || 1)) * 100},${30 - (val / 100) * 30}`).join(' ')}
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  />
                 </svg>
               </div>
               <div className="mt-1 bg-[#0b0e13] px-2 py-1 rounded text-[9px] flex justify-between">
                 <span className="text-[#bcc9cd]">LOAD RESIDUAL:</span>
-                <span className="text-[#4edea3] font-semibold">+0.3%</span>
+                <span className="text-[#4edea3] font-semibold">{residuals.engineLoad}</span>
               </div>
             </div>
           </div>
@@ -1010,7 +1407,7 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
                 <span className="w-2 h-2 rounded-full bg-[#4cd7f6]" />
                 <span className="text-[#4cd7f6] font-bold">CYLINDER #3 HEAD</span>
               </div>
-              <span className="text-white">CHT: 174.1 °C | EGT: 780 °C</span>
+              <span className="text-white">CHT: {telemetry.temperature.toFixed(1)} °C | EGT: 780 °C</span>
               <span className="text-[#bcc9cd] text-[9px]">THERMAL RESIDUAL: +5.7 °C</span>
             </div>
 
@@ -1018,7 +1415,7 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
             <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between pointer-events-none font-mono text-[9px]">
               <div className="bg-[#0b0e13]/80 px-3 py-1 rounded backdrop-blur border border-[#1d2025]">
                 <span className="text-[#bcc9cd]">
-                  TELEMETRY LINK: PHYSICS-INFORMED RESIDUAL STREAM (REF FREQ: 42.0 Hz)
+                  TELEMETRY LINK: PHYSICS-INFORMED RESIDUAL STREAM (REF FREQ: {streamMetrics.fps ? `${streamMetrics.fps} Hz` : '42.0 Hz'})
                 </span>
               </div>
               <div className="bg-[#0b0e13]/80 px-3 py-1 rounded backdrop-blur border border-[#1d2025]">
@@ -1036,7 +1433,7 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
             <div className="flex items-center gap-2">
               <BrainCircuit className="w-4 h-4 text-[#ffb95f]" />
               <h2 className="font-tech text-sm text-white tracking-wide uppercase font-bold">
-                04 // AI &amp; MACHINE LEARNING PROGNOSTICS LAB [SIMULATION]
+                04 // AI &amp; MACHINE LEARNING PROGNOSTICS LAB [{operatingMode}]
               </h2>
             </div>
             <span className="font-mono text-[9px] bg-[#32353b] px-2 py-0.5 text-[#ffb95f] rounded font-bold">
@@ -1100,50 +1497,50 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
                 <div className="flex flex-col gap-1 bg-[#32353b]/40 p-2 rounded border border-[#ee9800]/40">
                   <div className="flex justify-between text-[10px]">
                     <span className="text-[#ffb95f] font-bold">SENSOR DRIFT (SYNTHETIC)</span>
-                    <span className="text-[#ffb95f] font-bold">72.4% [ACTIVE TRACK]</span>
+                    <span className="text-[#ffb95f] font-bold">{faultProbs.sensorDrift.toFixed(1)}% [ACTIVE TRACK]</span>
                   </div>
                   <div className="w-full bg-[#0b0e13] h-2 rounded overflow-hidden">
-                    <div className="bg-[#ee9800] h-full" style={{ width: '72.4%' }} />
+                    <div className="bg-[#ee9800] h-full" style={{ width: `${faultProbs.sensorDrift}%` }} />
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-1">
                   <div className="flex justify-between text-[10px]">
                     <span className="text-[#e1e2ea]">NOMINAL OPERATION</span>
-                    <span className="text-[#4edea3] font-bold">18.2%</span>
+                    <span className="text-[#4edea3] font-bold">{faultProbs.nominal.toFixed(1)}%</span>
                   </div>
                   <div className="w-full bg-[#0b0e13] h-1.5 rounded overflow-hidden">
-                    <div className="bg-[#4edea3] h-full" style={{ width: '18.2%' }} />
+                    <div className="bg-[#4edea3] h-full" style={{ width: `${faultProbs.nominal}%` }} />
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-1">
                   <div className="flex justify-between text-[10px]">
                     <span className="text-[#bcc9cd]">BEARING DEGRADATION</span>
-                    <span className="text-[#e1e2ea]">5.1%</span>
+                    <span className="text-[#e1e2ea]">{faultProbs.bearing.toFixed(1)}%</span>
                   </div>
                   <div className="w-full bg-[#0b0e13] h-1.5 rounded overflow-hidden">
-                    <div className="bg-[#4cd7f6] h-full" style={{ width: '5.1%' }} />
+                    <div className="bg-[#4cd7f6] h-full" style={{ width: `${faultProbs.bearing}%` }} />
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-1">
                   <div className="flex justify-between text-[10px]">
                     <span className="text-[#bcc9cd]">LUBRICATION DEGRADATION</span>
-                    <span className="text-[#e1e2ea]">3.1%</span>
+                    <span className="text-[#e1e2ea]">{faultProbs.lubrication.toFixed(1)}%</span>
                   </div>
                   <div className="w-full bg-[#0b0e13] h-1.5 rounded overflow-hidden">
-                    <div className="bg-[#4cd7f6] h-full" style={{ width: '3.1%' }} />
+                    <div className="bg-[#4cd7f6] h-full" style={{ width: `${faultProbs.lubrication}%` }} />
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-1">
                   <div className="flex justify-between text-[10px]">
                     <span className="text-[#bcc9cd]">THERMAL OVERHEAT</span>
-                    <span className="text-[#e1e2ea]">1.2%</span>
+                    <span className="text-[#e1e2ea]">{faultProbs.thermal.toFixed(1)}%</span>
                   </div>
                   <div className="w-full bg-[#0b0e13] h-1.5 rounded overflow-hidden">
-                    <div className="bg-[#4cd7f6] h-full" style={{ width: '1.2%' }} />
+                    <div className="bg-[#4cd7f6] h-full" style={{ width: `${faultProbs.thermal}%` }} />
                   </div>
                 </div>
               </div>
@@ -1197,13 +1594,13 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
 
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2 font-mono">
             {[
-              { idx: '01', title: 'REAL TELEMETRY', sub: '42 Hz CAN-bus downlink', badge: 'RATE: 1.2 MB/s', color: '#4cd7f6' },
+              { idx: '01', title: 'REAL TELEMETRY', sub: `${streamMetrics.fps || 42} Hz CAN downlink`, badge: 'RATE: 1.2 MB/s', color: '#4cd7f6' },
               { idx: '02', title: 'DATA VALIDATION', sub: 'Packet drop & CRC check', badge: 'CRC: 100% PASS', color: '#4cd7f6' },
-              { idx: '03', title: 'SENSOR TRUST', sub: 'Dual cross-correlation', badge: '78.2% DRIFT', color: '#ffb95f' },
+              { idx: '03', title: 'SENSOR TRUST', sub: 'Dual cross-correlation', badge: `${sensorTrustScore.toFixed(1)}% TRUST`, color: sensorTrustScore < 85 ? '#ffb95f' : '#4edea3' },
               { idx: '04', title: 'PHYSICS TWIN', sub: 'Thermodynamic solver', badge: 'SOLVER: OK', color: '#4cd7f6' },
               { idx: '05', title: 'RESIDUAL DELTA', sub: 'Model vs synthetic bias', badge: 'RMS: 0.184 BIAS', color: '#ffb95f' },
               { idx: '06', title: 'AI ENSEMBLE', sub: 'Temporal CNN+Transformer', badge: 'INFER: 8.2ms', color: '#4cd7f6' },
-              { idx: '07', title: 'RUL ESTIMATION', sub: 'Weibull degradation fit', badge: '142.5 HRS', color: '#4edea3' },
+              { idx: '07', title: 'RUL ESTIMATION', sub: 'Weibull degradation fit', badge: `${rulHours.toFixed(1)} HRS`, color: '#4edea3' },
               { idx: '08', title: 'DECISION SUPPORT', sub: 'M-12 action dispatch', badge: 'ACTIVE', color: '#4cd7f6' },
             ].map((step) => (
               <div
@@ -1235,7 +1632,7 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
             </div>
             <div className="flex items-center bg-[#0b0e13] p-1 rounded gap-1 font-mono text-[10px]">
               <button
-                onClick={() => setOperatingMode('LIVE')}
+                onClick={() => handleModeSwitch('LIVE')}
                 className={`px-3 py-1 rounded transition-all uppercase ${
                   operatingMode === 'LIVE' ? 'bg-[#4cd7f6] text-[#003640] font-bold' : 'text-[#bcc9cd]'
                 }`}
@@ -1243,7 +1640,7 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
                 LIVE FLIGHT
               </button>
               <button
-                onClick={() => setOperatingMode('SIMULATION')}
+                onClick={() => handleModeSwitch('SIMULATION')}
                 className={`px-3 py-1 rounded flex items-center gap-1 font-bold transition-all uppercase ${
                   operatingMode === 'SIMULATION' ? 'bg-[#ee9800] text-[#5b3800]' : 'text-[#bcc9cd]'
                 }`}
@@ -1252,7 +1649,7 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
                 SIMULATION ACTIVE
               </button>
               <button
-                onClick={() => setOperatingMode('REPLAY')}
+                onClick={() => handleModeSwitch('REPLAY')}
                 className={`px-3 py-1 rounded transition-all uppercase ${
                   operatingMode === 'REPLAY' ? 'bg-[#4edea3] text-[#003824] font-bold' : 'text-[#bcc9cd]'
                 }`}
@@ -1277,7 +1674,7 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
                 </div>
                 <div className="flex items-center gap-1">
                   <span>MET:</span>
-                  <span className="text-white font-bold">04:18:22 Z</span>
+                  <span className="text-white font-bold">{metTimeStr}</span>
                 </div>
               </div>
             </div>
@@ -1288,11 +1685,24 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
                 onClick={(e) => {
                   const rect = e.currentTarget.getBoundingClientRect();
                   const clickPct = ((e.clientX - rect.left) / rect.width) * 100;
-                  setProgressPct(Math.max(0, Math.min(100, clickPct)));
+                  const clamped = Math.max(0, Math.min(100, clickPct));
+                  setProgressPct(clamped);
+
+                  const isDevPort = window.location.port === '3000' || window.location.port === '5173';
+                  const host = isDevPort
+                    ? `${window.location.hostname || 'localhost'}:8000`
+                    : window.location.host;
+                  const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+
+                  fetch(`${protocol}//${host}/replay/seek`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ position: clamped }),
+                  }).catch(() => {});
                 }}
                 className="w-full bg-[#32353b] h-3.5 rounded relative cursor-pointer"
               >
-                {/* Progress bar */}
+                {/* Progress Bar */}
                 <div className="bg-[#4cd7f6] h-full rounded transition-all" style={{ width: `${progressPct}%` }} />
 
                 {/* Event Markers */}
@@ -1326,29 +1736,29 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
                   onClick={() => {
                     playTacticalClick();
                     setProgressPct(0);
+                    const isDevPort = window.location.port === '3000' || window.location.port === '5173';
+                    const host = isDevPort
+                      ? `${window.location.hostname || 'localhost'}:8000`
+                      : window.location.host;
+                    const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+                    fetch(`${protocol}//${host}/replay/reset`, { method: 'POST' }).catch(() => {});
                   }}
                   className="w-8 h-8 bg-[#32353b] hover:bg-[#36393f] rounded flex items-center justify-center text-white"
                 >
                   <Rewind className="w-3.5 h-3.5" />
                 </button>
                 <button
-                  onClick={() => {
-                    playTacticalClick();
-                    setIsPlaying(!isPlaying);
-                  }}
+                  onClick={handleReplayToggle}
                   className="w-8 h-8 bg-[#4cd7f6] hover:bg-[#06b6d4] text-[#003640] rounded flex items-center justify-center font-bold shadow"
                 >
                   {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                 </button>
                 <button
-                  onClick={() => {
-                    playTacticalClick();
-                    setPlaybackSpeed(playbackSpeed === 1 ? 2 : playbackSpeed === 2 ? 5 : 1);
-                  }}
+                  onClick={handleSpeedCycle}
                   className="px-2.5 h-8 bg-[#32353b] hover:bg-[#36393f] rounded text-[10px] font-bold text-white flex items-center gap-1"
                 >
                   <FastForward className="w-3 h-3 text-[#4cd7f6]" />
-                  <span>{playbackSpeed}x</span>
+                  <span>{playbackSpeed.toFixed(1)}x</span>
                 </button>
               </div>
 
@@ -1357,20 +1767,7 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
                   FLIGHT DURATION: 05:38:00 (EST. REMAINING: 01:19:38)
                 </span>
                 <button
-                  onClick={() => {
-                    playTacticalClick();
-                    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify({
-                      tail: 'UAV-MALE-TX07',
-                      rpm: liveRpm,
-                      cht: liveCht,
-                      oil: liveOil,
-                      timestamp: Date.now()
-                    }, null, 2));
-                    const a = document.createElement('a');
-                    a.href = dataStr;
-                    a.download = `BLACKBOX_AERIS_TWIN_${Date.now()}.hdf5.json`;
-                    a.click();
-                  }}
+                  onClick={handleExportBlackbox}
                   className="px-3 py-1.5 bg-[#32353b] hover:bg-[#36393f] text-[#4cd7f6] font-bold text-[10px] rounded transition-all flex items-center gap-1.5"
                 >
                   <Download className="w-3 h-3" />
@@ -1387,7 +1784,7 @@ export const AerisGcsMasterDashboard: React.FC<AerisGcsMasterDashboardProps> = (
           ========================================================================== */}
       <footer className="w-full h-8 px-4 bg-[#0b0e13] border-t border-[#1d2025] flex items-center justify-between text-[#bcc9cd] font-mono text-[9px]">
         <div className="flex items-center gap-2">
-          <span className="text-[#869397]">AERIS-TWIN GCS v2.4.1-PROD</span>
+          <span className="text-[#869397]">AERIS-TWIN GCS v2.5.0-PROD</span>
           <span className="text-[#869397]">//</span>
           <span className="text-[#ffb95f] font-bold">CLASSIFICATION: NATO RESTRICTED / RESEARCH DEMONSTRATOR</span>
         </div>
