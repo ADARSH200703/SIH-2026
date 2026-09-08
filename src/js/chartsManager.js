@@ -7,15 +7,15 @@ Chart.register(...registerables);
  */
 
 const DATASETS = [
-  { label: 'RPM',          color: '#2DD4BF', yAxis: 'yRPM',  min: 2000, max: 6000  },
-  { label: 'Temperature',  color: '#EF4444', yAxis: 'yTemp', min: 50,   max: 120   },
-  { label: 'Oil Pressure', color: '#38BDF8', yAxis: 'yOil',  min: 1.0,  max: 6.5   },
-  { label: 'Vibration',    color: '#F59E0B', yAxis: 'yVib',  min: 0.5,  max: 6.0   },
+  { label: 'RPM',          color: '#4cd7f6', yAxis: 'yRPM',  min: 2000, max: 6000  },
+  { label: 'Temperature',  color: '#ee9800', yAxis: 'yTemp', min: 50,   max: 120   },
+  { label: 'Oil Pressure', color: '#4edea3', yAxis: 'yOil',  min: 1.0,  max: 6.5   },
+  { label: 'Vibration',    color: '#ff5449', yAxis: 'yVib',  min: 0.5,  max: 6.0   },
 ];
 
 function makeGradient(ctx, color) {
   const g = ctx.createLinearGradient(0, 0, 0, 250);
-  g.addColorStop(0, color + '30');   // soft glow opacity at top
+  g.addColorStop(0, color + '35');   // soft glow opacity at top
   g.addColorStop(1, color + '00');   // transparent at bottom
   return g;
 }
@@ -50,10 +50,10 @@ export class ChartsManager {
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: 'rgba(23, 32, 51, 0.96)',
-            titleColor: '#38BDF8',
-            bodyColor: '#E5E7EB',
-            borderColor: '#263449',
+            backgroundColor: 'rgba(25, 28, 33, 0.96)',
+            titleColor: '#4cd7f6',
+            bodyColor: '#bcc9cd',
+            borderColor: '#1d2025',
             borderWidth: 1,
             padding: 10,
             cornerRadius: 6,
@@ -70,9 +70,9 @@ export class ChartsManager {
         },
         scales: {
           x: {
-            grid:  { color: 'rgba(38, 52, 73, 0.6)' },
-            ticks: { color: '#94A3B8', font: { family: 'JetBrains Mono', size: 10 }, maxTicksLimit: 6 },
-            title: { display: true, text: 'Mission Flight Time (min)', color: '#94A3B8', font: { family: 'Inter', size: 11 } },
+            grid:  { color: 'rgba(255, 255, 255, 0.06)' },
+            ticks: { color: '#869397', font: { family: 'JetBrains Mono', size: 10 }, maxTicksLimit: 6 },
+            title: { display: true, text: 'Mission Flight Time (min)', color: '#869397', font: { family: 'Inter', size: 11 } },
           },
           ...Object.fromEntries(DATASETS.map(d => [
             d.yAxis, { type: 'linear', display: false, min: d.min, max: d.max }
@@ -116,10 +116,10 @@ export class AITrendChartManager {
     this.maxPoints = 300;
 
     const datasets = [
-      { label: 'Anomaly Score',    color: '#38BDF8', yAxis: 'yScore',  min: 0, max: 1.0  },
-      { label: 'Health Index %',   color: '#2DD4BF', yAxis: 'yHealth', min: 0, max: 100  },
-      { label: 'Max Residual (σ)', color: '#EF4444', yAxis: 'ySigma',  min: 0, max: 6.0  },
-      { label: 'Hazard Rate',      color: '#F59E0B', yAxis: 'yHazard', min: 0, max: 0.02 },
+      { label: 'Anomaly Score',    color: '#4cd7f6', yAxis: 'yScore',  min: 0, max: 1.0  },
+      { label: 'Health Index %',   color: '#4edea3', yAxis: 'yHealth', min: 0, max: 100  },
+      { label: 'Max Residual (σ)', color: '#ff5449', yAxis: 'ySigma',  min: 0, max: 6.0  },
+      { label: 'Hazard Rate',      color: '#ee9800', yAxis: 'yHazard', min: 0, max: 0.02 },
     ];
 
     this.chart = new Chart(ctx, {
@@ -146,10 +146,10 @@ export class AITrendChartManager {
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: 'rgba(23, 32, 51, 0.96)',
-            titleColor: '#38BDF8',
-            bodyColor: '#E5E7EB',
-            borderColor: '#263449',
+            backgroundColor: 'rgba(25, 28, 33, 0.96)',
+            titleColor: '#4cd7f6',
+            bodyColor: '#bcc9cd',
+            borderColor: '#1d2025',
             borderWidth: 1,
             padding: 8,
             cornerRadius: 6,
@@ -166,9 +166,9 @@ export class AITrendChartManager {
         },
         scales: {
           x: {
-            grid:  { color: 'rgba(38, 52, 73, 0.5)' },
-            ticks: { color: '#94A3B8', font: { family: 'JetBrains Mono', size: 9 }, maxTicksLimit: 6 },
-            title: { display: true, text: 'Mission Timeline', color: '#94A3B8', font: { family: 'Inter', size: 10 } },
+            grid:  { color: 'rgba(255, 255, 255, 0.06)' },
+            ticks: { color: '#869397', font: { family: 'JetBrains Mono', size: 9 }, maxTicksLimit: 6 },
+            title: { display: true, text: 'Mission Timeline', color: '#869397', font: { family: 'Inter', size: 10 } },
           },
           ...Object.fromEntries(datasets.map(d => [
             d.yAxis, { type: 'linear', display: false, min: d.min, max: d.max }

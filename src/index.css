@@ -1,84 +1,87 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=Orbitron:wght@500;600;700;800&family=Rajdhani:wght@500;600;700&display=swap');
 
 /* ==========================================================================
-   AERIS-TWIN DEFENCE & AEROSPACE TELEMETRY COLOR SYSTEM
+   AERIS-TWIN DEFENCE & AEROSPACE TELEMETRY COLOR SYSTEM (STITCH DESIGN TOKENS)
    Core Palette:
-     - Main Background:        #0B1120
-     - Secondary Background:   #111827
-     - Cards / Panels Surface: #172033
-     - Borders / Dividers:     #263449
-     - Primary Cyan:           #38BDF8
-     - Secondary Teal:         #2DD4BF
-     - Primary Text:           #E5E7EB
-     - Secondary Text:         #94A3B8
-     - Dim / Unknown Text:     #64748B
-     - Healthy / Success:      #22C55E
-     - Warning / Degraded:     #F59E0B
-     - Fault / Critical:       #EF4444
-     - Unknown / Offline:      #64748B
+     - Main Background:        #0B0E13
+     - Secondary Background:   #111419
+     - Cards / Panels Surface: #191C21
+     - Elevated / Inner Box:   #1D2025
+     - Pills / Subtle Borders: #272A30
+     - High Surface:           #32353B
+     - Primary Cyan:           #4CD7F6
+     - Secondary Emerald:      #4EDEA3
+     - Warning Amber:          #EE9800
+     - Alert Coral / Red:      #FF5449
+     - Primary Text:           #E1E2E8
+     - Secondary Text:         #BCC9CD
+     - Muted Text:             #869397
    ========================================================================== */
 :root {
   /* Semantic Core Surfaces */
-  --background: #0B1120;
-  --background-secondary: #111827;
-  --surface: #172033;
-  --surface-hover: #1E293B;
-  --surface-elevated: #1E293B;
-  --surface-sunken: #0F172A;
+  --background: #0B0E13;
+  --background-secondary: #111419;
+  --surface: #191C21;
+  --surface-hover: #22262C;
+  --surface-elevated: #1D2025;
+  --surface-sunken: #0B0E13;
+  --surface-high: #32353B;
 
   /* Backward Compatibility Aliases */
   --bg-primary: var(--background);
   --bg-secondary: var(--background-secondary);
   --bg-card: var(--surface);
   --bg-card-hover: var(--surface-hover);
-  --bg-glass: #172033;
-  --bg-glass-heavy: #111827;
+  --bg-glass: rgba(25, 28, 33, 0.85);
+  --bg-glass-heavy: rgba(17, 20, 25, 0.95);
 
   /* Semantic Borders & Dividers */
-  --border: #263449;
-  --border-subtle: #263449;
-  --border-medium: #334155;
-  --border-bright: #38BDF8;
-  --border-glow: rgba(56, 189, 248, 0.25);
+  --border: #1D2025;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-medium: #272A30;
+  --border-bright: #4CD7F6;
+  --border-glow: rgba(76, 215, 246, 0.25);
 
   /* Primary Accents */
-  --primary: #38BDF8;
-  --secondary: #2DD4BF;
-  --accent-cyan: #38BDF8;
-  --accent-teal: #2DD4BF;
-  --accent-blue: #38BDF8;
-  --accent-indigo: #172033;
+  --primary: #4CD7F6;
+  --secondary: #4EDEA3;
+  --accent-cyan: #4CD7F6;
+  --accent-teal: #4EDEA3;
+  --accent-amber: #EE9800;
+  --accent-coral: #FF5449;
+  --accent-blue: #4CD7F6;
+  --accent-indigo: #1D2025;
 
   /* Semantic Typography */
-  --text-primary: #E5E7EB;
-  --text-secondary: #94A3B8;
-  --text-main: #E5E7EB;
-  --text-muted: #94A3B8;
-  --text-dim: #64748B;
-  --text-cyan: #38BDF8;
-  --text-teal: #2DD4BF;
+  --text-primary: #E1E2E8;
+  --text-secondary: #BCC9CD;
+  --text-main: #E1E2E8;
+  --text-muted: #869397;
+  --text-dim: #5A6468;
+  --text-cyan: #4CD7F6;
+  --text-teal: #4EDEA3;
   --text-disabled: #475569;
 
   /* Strict Semantic System States */
-  --success: #22C55E;
-  --warning: #F59E0B;
-  --danger: #EF4444;
-  --unknown: #64748B;
+  --success: #4EDEA3;
+  --warning: #EE9800;
+  --danger: #FF5449;
+  --unknown: #869397;
 
-  --status-normal: #22C55E;
-  --status-normal-glow: rgba(34, 197, 94, 0.25);
-  --status-warning: #F59E0B;
-  --status-warning-glow: rgba(245, 158, 11, 0.25);
-  --status-critical: #EF4444;
-  --status-critical-glow: rgba(239, 68, 68, 0.25);
-  --status-offline: #64748B;
-  --status-offline-glow: rgba(100, 116, 139, 0.25);
+  --status-normal: #4EDEA3;
+  --status-normal-glow: rgba(78, 222, 163, 0.25);
+  --status-warning: #EE9800;
+  --status-warning-glow: rgba(238, 152, 0, 0.25);
+  --status-critical: #FF5449;
+  --status-critical-glow: rgba(255, 84, 73, 0.25);
+  --status-offline: #869397;
+  --status-offline-glow: rgba(134, 147, 151, 0.25);
 
   /* Typography Fonts */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-tech: 'Orbitron', sans-serif;
+  --font-tech: 'Space Grotesk', 'Orbitron', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
-  --font-display: 'Orbitron', sans-serif;
+  --font-display: 'Space Grotesk', 'Orbitron', sans-serif;
 
   /* Geometry & Physics */
   --radius-xs: 4px;
@@ -89,15 +92,15 @@
   --radius-full: 9999px;
 
   /* Clean Engineering Shadows */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.45);
-  --shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.6);
-  --shadow-hud: 0 12px 36px rgba(0, 0, 0, 0.75);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.65);
+  --shadow-hud: 0 12px 36px rgba(0, 0, 0, 0.85);
   --shadow-glow: none;
-  --glow-cyan: 0 0 12px rgba(56, 189, 248, 0.25);
-  --glow-green: 0 0 12px rgba(34, 197, 94, 0.25);
-  --glow-amber: 0 0 12px rgba(245, 158, 11, 0.25);
-  --glow-red: 0 0 12px rgba(239, 68, 68, 0.25);
+  --glow-cyan: 0 0 12px rgba(76, 215, 246, 0.25);
+  --glow-green: 0 0 12px rgba(78, 222, 163, 0.25);
+  --glow-amber: 0 0 12px rgba(238, 152, 0, 0.25);
+  --glow-red: 0 0 12px rgba(255, 84, 73, 0.25);
 }
 
 /* ==========================================================================
