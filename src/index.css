@@ -2955,7 +2955,7 @@ body {
 
 .landing-hero-grid {
   display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
+  grid-template-columns: 1.05fr 0.95fr;
   gap: 3rem;
   align-items: center;
 }
@@ -2991,6 +2991,12 @@ body {
   animation: heroFadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.25s backwards;
 }
 
+.hero-tagline {
+  font-size: 2.1rem;
+  font-weight: 700;
+  color: #E2E8F0;
+}
+
 .landing-hero-title .highlight-cyan {
   color: var(--primary);
 }
@@ -3015,146 +3021,40 @@ body {
   animation: heroFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.55s backwards;
 }
 
-.landing-hero-metrics-strip {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--border);
-  animation: heroFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.7s backwards;
-}
-
-.hero-metric-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
+/* Aerospace Engine Hero Visual Frame */
+.landing-hero-visual-wrap {
   position: relative;
-  cursor: pointer;
-  padding: 0.4rem 0.6rem;
-  border-radius: var(--radius-sm);
-  transition: background 0.18s ease, transform 0.18s ease;
-  outline: none;
+  animation: heroScaleIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.35s backwards;
 }
 
-.hero-metric-item:hover,
-.hero-metric-item:focus-visible,
-.hero-metric-item.active-touch {
-  background: rgba(38, 52, 73, 0.4);
-  transform: translateY(-2px);
-}
-
-.hero-metric-val {
-  font-family: var(--font-tech);
-  font-size: 1.35rem;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.hero-metric-lbl {
-  font-size: 0.72rem;
-  font-family: var(--font-mono);
-  color: var(--text-secondary);
-  text-transform: uppercase;
-}
-
-.hero-metric-tooltip {
-  position: absolute;
-  bottom: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%) translateY(4px) scale(0.96);
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  background: var(--surface);
-  border: 1px solid var(--primary);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
-  border-radius: var(--radius-sm);
-  padding: 0.6rem 0.8rem;
-  width: 220px;
-  font-size: 0.72rem;
-  font-family: var(--font-sans);
-  color: var(--text-secondary);
-  line-height: 1.4;
-  z-index: 120;
-  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.2s ease;
-}
-
-.hero-metric-tooltip::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 5px solid transparent;
-  border-top-color: var(--primary);
-}
-
-.hero-metric-item:hover .hero-metric-tooltip,
-.hero-metric-item:focus-within .hero-metric-tooltip,
-.hero-metric-item.active-touch .hero-metric-tooltip {
-  opacity: 1;
-  visibility: visible;
-  transform: translateX(-50%) translateY(0) scale(1);
-}
-
-/* Hero Right Visual Card with Subtle Float */
-.landing-hero-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
+.hero-engine-frame {
+  position: relative;
   border-radius: var(--radius-lg);
-  padding: 1.25rem;
-  position: relative;
-  box-shadow: var(--shadow-lg);
-  overflow: visible;
-  animation: heroScaleIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.35s backwards, subtleFloat 7s ease-in-out 1.2s infinite;
-}
-
-.hero-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 0.85rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.hero-card-title {
-  font-family: var(--font-tech);
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.hero-card-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.7rem;
-  font-family: var(--font-mono);
-  color: var(--success);
-  background: rgba(34, 197, 94, 0.12);
-  border: 1px solid rgba(34, 197, 94, 0.25);
-  padding: 0.2rem 0.6rem;
-  border-radius: var(--radius-full);
-}
-
-.hero-card-body {
-  position: relative;
-  height: 260px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--background-secondary);
-  border-radius: var(--radius-md);
-  margin: 0.85rem 0;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  background: #0B1120;
   overflow: hidden;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.65), 0 0 30px rgba(56, 189, 248, 0.12);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.schematic-scan-line {
+.hero-engine-frame:hover {
+  border-color: rgba(56, 189, 248, 0.5);
+  box-shadow: 0 24px 55px rgba(0, 0, 0, 0.75), 0 0 35px rgba(56, 189, 248, 0.22);
+}
+
+.hero-engine-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero-engine-frame:hover .hero-engine-img {
+  transform: scale(1.02);
+}
+
+.hero-engine-scanline {
   position: absolute;
   left: 0;
   right: 0;
@@ -3163,96 +3063,60 @@ body {
   opacity: 0.65;
   pointer-events: none;
   animation: scanRadar 5s ease-in-out infinite;
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.6);
+  z-index: 5;
 }
 
-.hero-uav-blueprint {
-  width: 80%;
-  height: 80%;
-  color: var(--primary);
-  opacity: 0.88;
-}
-
-/* Hero Telemetry Status Tags Strip */
-.hero-telemetry-tags {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-}
-
-.telemetry-status-tag {
+/* Floating Real-Time Aerospace Telemetry Overlays */
+.hero-overlay-tag {
+  position: absolute;
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  font-size: 0.68rem;
-  font-family: var(--font-mono);
-  color: var(--text-secondary);
-  background: var(--background-secondary);
-  border: 1px solid var(--border);
-  padding: 0.25rem 0.6rem;
+  padding: 0.35rem 0.75rem;
+  background: rgba(11, 17, 32, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(56, 189, 248, 0.35);
   border-radius: var(--radius-full);
-  cursor: default;
-  transition: border-color 0.18s ease, color 0.18s ease;
-}
-
-.telemetry-status-tag:hover {
-  border-color: var(--primary);
-  color: var(--text-primary);
-}
-
-.telemetry-status-tag .pulse-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--secondary);
-  animation: telemetryPulse 2.5s ease-in-out infinite;
-}
-
-.hero-card-telemetry {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.6rem;
-}
-
-.hero-telem-box {
-  background: var(--background-secondary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 0.5rem 0.6rem;
-  cursor: default;
-  transition: border-color 0.18s ease, transform 0.18s ease;
-}
-
-.hero-telem-box:hover {
-  border-color: var(--primary);
-  transform: translateY(-2px);
-}
-
-.hero-telem-label {
-  font-size: 0.65rem;
-  color: var(--text-secondary);
   font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  letter-spacing: 0.5px;
+  z-index: 6;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
 }
 
-.hero-telem-val {
-  font-size: 0.95rem;
-  font-weight: 700;
-  font-family: var(--font-mono);
-  color: var(--text-primary);
+.hero-overlay-tr {
+  top: 14px;
+  right: 14px;
+  border-color: rgba(34, 197, 94, 0.45);
+}
+
+.hero-overlay-bl {
+  bottom: 14px;
+  left: 14px;
+}
+
+.hero-overlay-br {
+  bottom: 14px;
+  right: 14px;
+  border-color: rgba(45, 212, 191, 0.45);
 }
 
 /* ───────────────────────────────────────────────────────────────────────────
-   5. LANDING SECTION HEADERS & PIPELINE ANIMATION
+   5. LANDING SECTION HEADERS & PIPELINE FLOW
    ─────────────────────────────────────────────────────────────────────────── */
 .landing-section {
-  padding: 4rem 0;
+  padding: 4.5rem 0;
   border-top: 1px solid var(--border);
 }
 
 .landing-section-header {
   text-align: center;
-  max-width: 720px;
+  max-width: 680px;
   margin: 0 auto 3rem;
 }
 
@@ -3262,7 +3126,7 @@ body {
   font-size: 0.72rem;
   color: var(--primary);
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
   margin-bottom: 0.5rem;
 }
 
@@ -3271,121 +3135,104 @@ body {
   font-size: 1.85rem;
   font-weight: 700;
   color: #FFFFFF;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.6rem;
 }
 
 .landing-section-desc {
-  font-size: 0.92rem;
+  font-size: 0.95rem;
   color: var(--text-secondary);
-  line-height: 1.55;
+  line-height: 1.6;
 }
 
-/* Pipeline Flow with Traveling Signal */
-.landing-pipeline-flow {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1.25rem;
+/* Section 2: Clean Core Pipeline Flow */
+.landing-core-pipeline-flow {
+  display: flex;
   align-items: center;
-  position: relative;
+  justify-content: space-between;
+  gap: 0.85rem;
 }
 
-.pipeline-node-card {
+.pipeline-flow-card {
+  flex: 1;
+  min-width: 0;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: 1.5rem 1.25rem;
+  padding: 1.75rem 1.25rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 0.6rem;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  gap: 0.75rem;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease, box-shadow 0.22s ease, background-color 0.22s ease;
   position: relative;
-  cursor: pointer;
-  outline: none;
+  cursor: default;
 }
 
-.pipeline-node-card:nth-child(1) { animation: pipelineSignal 4s ease-in-out infinite 0.0s; }
-.pipeline-node-card:nth-child(2) { animation: pipelineSignal 4s ease-in-out infinite 1.0s; }
-.pipeline-node-card:nth-child(3) { animation: pipelineSignal 4s ease-in-out infinite 2.0s; }
-.pipeline-node-card:nth-child(4) { animation: pipelineSignal 4s ease-in-out infinite 3.0s; }
-
-.pipeline-node-card:focus-visible {
+.pipeline-flow-card:hover {
   border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45), 0 0 12px rgba(56, 189, 248, 0.2);
+  background: var(--surface-hover);
 }
 
-.pipeline-node-card:hover,
-.pipeline-node-card:focus-within,
-.pipeline-node-card.active-touch {
-  border-color: var(--primary) !important;
-  background: var(--surface-hover) !important;
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55), 0 0 14px rgba(56, 189, 248, 0.3);
-  z-index: 10;
-}
-
-/* Connected Stage Neighbor Highlight */
-.landing-pipeline-flow.has-active .pipeline-node-card.is-neighbor {
-  border-color: rgba(45, 212, 191, 0.45);
-  box-shadow: 0 0 10px rgba(45, 212, 191, 0.15);
-}
-
-.pipeline-node-num {
-  font-size: 0.72rem;
+.pipeline-card-step {
   font-family: var(--font-mono);
-  color: var(--primary);
+  font-size: 0.7rem;
   font-weight: 700;
+  color: var(--primary);
+  opacity: 0.85;
 }
 
-.pipeline-node-icon {
-  font-size: 28px;
-  color: var(--secondary);
+.pipeline-card-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
 }
 
-.pipeline-node-title {
+.pipeline-card-name {
   font-family: var(--font-tech);
-  font-size: 0.92rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: var(--text-primary);
-  line-height: 1.2;
+  letter-spacing: 0.5px;
+  line-height: 1.3;
 }
 
-.pipeline-node-sub {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
+.pipeline-flow-arrow {
+  color: var(--primary);
+  opacity: 0.6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pipeline-flow-card-accent {
+  border-color: rgba(45, 212, 191, 0.4);
+  background: rgba(45, 212, 191, 0.04);
 }
 
 /* ───────────────────────────────────────────────────────────────────────────
-   6. CAPABILITIES GRID & CARDS
+   6. CAPABILITIES GRID & CARDS (3 Core Pillars)
    ─────────────────────────────────────────────────────────────────────────── */
-.landing-capabilities-grid {
+.landing-capabilities-grid.lp-cap-3 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1.25rem;
-}
-
-.landing-capabilities-grid.lp-cap-4 {
-  grid-template-columns: repeat(4, 1fr);
-}
-
-@media (max-width: 1024px) {
-  .landing-capabilities-grid.lp-cap-4 {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 640px) {
-  .landing-capabilities-grid.lp-cap-4 {
-    grid-template-columns: 1fr;
-  }
+  gap: 1.5rem;
 }
 
 .capability-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+  padding: 2.25rem 1.75rem;
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
@@ -3394,28 +3241,7 @@ body {
   position: relative;
   outline: none;
   cursor: pointer;
-  transform-style: preserve-3d;
-  will-change: transform;
   overflow: hidden;
-}
-
-.capability-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border-radius: inherit;
-  background: radial-gradient(
-    380px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-    rgba(56, 189, 248, 0.12),
-    transparent 65%
-  );
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-  z-index: 1;
 }
 
 .capability-card:focus-visible {
@@ -3424,28 +3250,31 @@ body {
 }
 
 .capability-card:hover,
-.capability-card:focus-within,
-.capability-card.active-touch {
+.capability-card:focus-within {
   border-color: rgba(56, 189, 248, 0.6);
   background: var(--surface-hover);
   box-shadow: 0 14px 32px rgba(0, 0, 0, 0.55), 0 0 16px rgba(56, 189, 248, 0.18);
-  z-index: 50;
+  transform: translateY(-4px);
 }
 
-.capability-card:hover::before,
-.capability-card:focus-within::before,
-.capability-card.active-touch::before {
-  opacity: 1;
+.capability-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
 }
 
-.capability-card > * {
-  position: relative;
-  z-index: 2;
+.capability-num {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: 1px;
 }
 
 .capability-icon-wrap {
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   border-radius: var(--radius-sm);
   background: rgba(56, 189, 248, 0.12);
   border: 1px solid rgba(56, 189, 248, 0.25);
@@ -3454,12 +3283,9 @@ body {
   align-items: center;
   justify-content: center;
   transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
-  transform: translateZ(10px);
 }
 
-.capability-card:hover .capability-icon-wrap,
-.capability-card:focus-within .capability-icon-wrap,
-.capability-card.active-touch .capability-icon-wrap {
+.capability-card:hover .capability-icon-wrap {
   background: rgba(56, 189, 248, 0.22);
   border-color: var(--primary);
   transform: scale(1.08);
@@ -3467,434 +3293,117 @@ body {
 
 .capability-card-title {
   font-family: var(--font-tech);
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.capability-card-desc {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  line-height: 1.5;
-}
-
-.capability-card-tag {
-  font-size: 0.68rem;
-  font-family: var(--font-mono);
-  color: var(--secondary);
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-}
-
-/* Capability Hover Pop-Up Technical Details Panel */
-.capability-hover-popup {
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid rgba(56, 189, 248, 0.25);
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-  opacity: 0;
-  max-height: 0;
-  overflow: hidden;
-  transform: translateY(4px);
-  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), max-height 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.capability-card:hover .capability-hover-popup,
-.capability-card:focus-within .capability-hover-popup,
-.capability-card.active-touch .capability-hover-popup {
-  opacity: 1;
-  max-height: 240px;
-  transform: translateY(0);
-}
-
-.capability-popup-item {
-  display: flex;
-  align-items: baseline;
-  gap: 0.45rem;
-  font-size: 0.75rem;
-  line-height: 1.4;
-}
-
-.capability-popup-key {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: var(--primary);
-  white-space: nowrap;
-}
-
-.capability-popup-desc {
-  color: var(--text-secondary);
-  font-size: 0.72rem;
-}
-
-/* ───────────────────────────────────────────────────────────────────────────
-   7. PREDICTIVE MAINTENANCE TIMELINE & CONVERGENCE
-   ─────────────────────────────────────────────────────────────────────────── */
-.landing-timeline-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 1.75rem;
-  margin-top: 2rem;
-  box-shadow: var(--shadow-sm);
-}
-
-.timeline-track-wrap {
-  position: relative;
-  margin: 1.5rem 0 1rem;
-}
-
-.timeline-rail {
-  height: 4px;
-  background: var(--border);
-  border-radius: var(--radius-full);
-  position: relative;
-  overflow: hidden;
-}
-
-.timeline-signal-beam {
-  position: absolute;
-  top: 0;
-  height: 100%;
-  width: 25%;
-  background: linear-gradient(90deg, transparent, var(--primary), var(--secondary), transparent);
-  animation: timelineTravel 6s ease-in-out infinite;
-}
-
-.timeline-nodes-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
-
-.timeline-node-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 0.35rem;
-}
-
-.timeline-node-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: var(--surface-hover);
-  border: 2px solid var(--border);
-  transition: all 0.2s ease;
-}
-
-.timeline-node-item:hover .timeline-node-dot {
-  border-color: var(--primary);
-  background: var(--primary);
-  transform: scale(1.2);
-}
-
-.timeline-node-lbl {
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  color: var(--text-secondary);
-}
-
-/* Convergence Architecture Diagram */
-.convergence-grid {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  gap: 1.5rem;
-  align-items: center;
-  margin-top: 2rem;
-  padding: 1.5rem;
-  background: var(--background-secondary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-}
-
-.convergence-pillars {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.convergence-pillar-item {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 0.75rem 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  font-family: var(--font-tech);
-  font-size: 0.85rem;
-  color: var(--text-primary);
-  transition: all 0.2s ease;
-}
-
-.convergence-pillar-item:hover {
-  border-color: var(--primary);
-  transform: translateX(4px);
-}
-
-.convergence-arrow-col {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: var(--primary);
-}
-
-.convergence-target-box {
-  background: var(--surface);
-  border: 1px solid var(--primary);
-  box-shadow: 0 0 16px rgba(56, 189, 248, 0.15);
-  border-radius: var(--radius-md);
-  padding: 1.5rem;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-/* ───────────────────────────────────────────────────────────────────────────
-   8. DIGITAL TWIN PREVIEW SECTION
-   ─────────────────────────────────────────────────────────────────────────── */
-.landing-preview-box {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 2.5rem;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2.5rem;
-  align-items: center;
-}
-
-.preview-content {
-  display: flex;
-  flex-direction: column;
-  gap: 1.15rem;
-}
-
-.preview-badge {
-  font-size: 0.72rem;
-  font-family: var(--font-mono);
-  color: var(--secondary);
-  display: inline-block;
-}
-
-.preview-title {
-  font-family: var(--font-tech);
-  font-size: 1.65rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: #FFFFFF;
 }
 
-.preview-desc {
+.capability-card-desc {
   font-size: 0.92rem;
   color: var(--text-secondary);
   line-height: 1.6;
 }
 
-.preview-features-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  font-size: 0.84rem;
-  color: var(--text-primary);
+/* ───────────────────────────────────────────────────────────────────────────
+   7. IMPACT STATEMENT SECTION
+   ─────────────────────────────────────────────────────────────────────────── */
+.landing-impact-section {
+  padding: 4.5rem 0;
 }
 
-.preview-features-list li {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.preview-features-list .material-symbols-outlined {
-  font-size: 16px;
-  color: var(--success);
-}
-
-.preview-visual-card {
-  background: var(--background-secondary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.landing-impact-box {
+  background: radial-gradient(ellipse at center, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.9) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: var(--radius-xl);
+  padding: 4rem 2.5rem;
   text-align: center;
-  gap: 1rem;
-  position: relative;
-  overflow: visible;
-}
-
-.preview-schematic {
-  width: 100%;
-  height: 200px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-sm);
-  background: var(--surface-sunken);
-  border: 1px solid var(--border);
-  position: relative;
-  overflow: visible;
+  gap: 2rem;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
 }
 
-/* Interactive Component Hotspots on Preview Schematic */
-.schematic-hotspot {
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: rgba(56, 189, 248, 0.18);
-  border: 1.5px solid var(--primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 15;
-  outline: none;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.schematic-hotspot::before {
-  content: '';
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--primary);
-  box-shadow: 0 0 6px var(--primary);
-}
-
-.schematic-hotspot:hover,
-.schematic-hotspot:focus-visible,
-.schematic-hotspot.active-touch {
-  transform: scale(1.35);
-  background: rgba(56, 189, 248, 0.45);
-  box-shadow: 0 0 14px var(--primary);
-  z-index: 60;
-}
-
-.hotspot-popup {
-  position: absolute;
-  bottom: calc(100% + 10px);
-  left: 50%;
-  transform: translateX(-50%) translateY(6px) scale(0.96);
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  background: rgba(17, 24, 39, 0.98);
-  border: 1px solid var(--primary);
-  border-radius: var(--radius-sm);
-  padding: 0.65rem 0.85rem;
-  width: 220px;
-  text-align: left;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.65), 0 0 12px rgba(56, 189, 248, 0.25);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  z-index: 100;
-  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.2s ease;
-}
-
-.hotspot-popup::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 5px solid transparent;
-  border-top-color: var(--primary);
-}
-
-.schematic-hotspot:hover .hotspot-popup,
-.schematic-hotspot:focus-within .hotspot-popup,
-.schematic-hotspot.active-touch .hotspot-popup {
-  opacity: 1;
-  visibility: visible;
-  transform: translateX(-50%) translateY(0) scale(1);
-  pointer-events: auto;
-}
-
-.hotspot-name {
+.landing-impact-quote {
   font-family: var(--font-tech);
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--primary);
-  margin-bottom: 0.2rem;
+  font-size: 2.15rem;
+  font-weight: 800;
+  line-height: 1.3;
+  color: #FFFFFF;
+  max-width: 820px;
+  letter-spacing: -0.5px;
+}
+
+.landing-impact-keywords {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
 }
 
-.hotspot-status {
+.impact-keyword {
   font-family: var(--font-mono);
-  font-size: 0.62rem;
-  color: var(--success);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--primary);
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  padding: 0.45rem 1.15rem;
+  border-radius: var(--radius-full);
 }
 
-.hotspot-sub {
-  font-size: 0.68rem;
-  color: var(--text-secondary);
-  line-height: 1.35;
-  margin-bottom: 0.35rem;
-}
-
-.hotspot-metrics {
-  font-family: var(--font-mono);
-  font-size: 0.64rem;
-  color: var(--secondary);
-  border-top: 1px dashed var(--border);
-  padding-top: 0.3rem;
+.impact-keyword-sep {
+  color: var(--text-dim);
+  font-size: 0.9rem;
 }
 
 /* ───────────────────────────────────────────────────────────────────────────
-   9. FINAL CTA & FOOTER
+   8. FINAL CTA & FOOTER
    ─────────────────────────────────────────────────────────────────────────── */
+.landing-final-cta-section {
+  padding: 3rem 0 5rem;
+}
+
 .landing-cta-banner {
   background: linear-gradient(135deg, rgba(23, 32, 51, 0.95), rgba(17, 24, 39, 0.95));
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 3.5rem 2rem;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: var(--radius-xl);
+  padding: 4rem 2rem;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.25rem;
-  box-shadow: var(--shadow-lg);
+  gap: 1rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .landing-cta-banner:hover {
-  border-color: rgba(56, 189, 248, 0.35);
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+  border-color: rgba(56, 189, 248, 0.5);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 24px rgba(56, 189, 248, 0.2);
 }
 
 .landing-cta-title {
   font-family: var(--font-tech);
-  font-size: 2rem;
+  font-size: 2.2rem;
   font-weight: 800;
   color: #FFFFFF;
 }
 
 .landing-cta-desc {
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   color: var(--text-secondary);
-  max-width: 600px;
-  line-height: 1.55;
+  max-width: 550px;
+  line-height: 1.6;
+  margin-bottom: 0.75rem;
 }
 
 .landing-footer {
   background: var(--background-secondary);
   border-top: 1px solid var(--border);
   padding: 2rem 0;
-  margin-top: 4rem;
   font-size: 0.78rem;
   color: var(--text-secondary);
 }
@@ -3925,31 +3434,22 @@ body {
 }
 
 /* ───────────────────────────────────────────────────────────────────────────
-   10. RESPONSIVE BREAKPOINTS & REDUCED MOTION
+   9. RESPONSIVE BREAKPOINTS & REDUCED MOTION
    ─────────────────────────────────────────────────────────────────────────── */
 @media (max-width: 1080px) {
   .landing-hero-grid {
     grid-template-columns: 1fr;
     gap: 2.5rem;
   }
-  .landing-capabilities-grid {
+  .landing-capabilities-grid.lp-cap-3 {
     grid-template-columns: repeat(2, 1fr);
   }
-  .landing-preview-box {
-    grid-template-columns: 1fr;
+  .landing-core-pipeline-flow {
+    flex-wrap: wrap;
+    justify-content: center;
   }
-  .landing-pipeline-flow {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0.75rem;
-  }
-  .timeline-nodes-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-  .convergence-grid {
-    grid-template-columns: 1fr;
-  }
-  .convergence-arrow-col {
-    transform: rotate(90deg);
+  .pipeline-flow-card {
+    min-width: 220px;
   }
 }
 
@@ -3960,20 +3460,34 @@ body {
   .landing-hero-title {
     font-size: 2.1rem;
   }
-  .landing-capabilities-grid {
+  .hero-tagline {
+    font-size: 1.65rem;
+  }
+  .landing-capabilities-grid.lp-cap-3 {
     grid-template-columns: 1fr;
   }
-  .landing-pipeline-flow {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .timeline-nodes-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .hero-telemetry-tags {
+  .landing-core-pipeline-flow {
     flex-direction: column;
+    width: 100%;
   }
-  .landing-hero-metrics-strip {
-    grid-template-columns: 1fr;
+  .pipeline-flow-card {
+    width: 100%;
+  }
+  .pipeline-flow-arrow {
+    transform: rotate(90deg);
+    margin: 0.25rem 0;
+  }
+  .landing-impact-quote {
+    font-size: 1.5rem;
+  }
+  .landing-impact-box {
+    padding: 2.5rem 1.5rem;
+  }
+  .landing-cta-banner {
+    padding: 2.5rem 1.5rem;
+  }
+  .landing-cta-title {
+    font-size: 1.65rem;
   }
   .landing-hero-buttons {
     flex-direction: column;
@@ -3999,32 +3513,21 @@ body {
   .landing-hero-title,
   .landing-hero-subtitle,
   .landing-hero-buttons,
-  .landing-hero-metrics-strip,
-  .landing-hero-card {
+  .landing-hero-visual-wrap {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
   }
-  .hero-parallax-layer,
   .capability-card,
-  .landing-btn {
+  .landing-btn,
+  .pipeline-flow-card {
     transform: none !important;
     transition: none !important;
   }
-  .landing-ambient-glow,
-  .capability-card::before {
+  .landing-ambient-glow {
     display: none !important;
   }
-  .pipeline-node-card {
-    animation: none !important;
-  }
-  .schematic-scan-line {
-    display: none !important;
-  }
-  .telemetry-status-tag .pulse-dot {
-    animation: none !important;
-  }
-  .timeline-signal-beam {
+  .hero-engine-scanline {
     display: none !important;
   }
 }

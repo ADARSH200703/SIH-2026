@@ -36,19 +36,18 @@
           </a>
 
           <ul class="landing-nav-links">
+            <li><a href="#pipeline-section" class="landing-nav-link">Pipeline</a></li>
             <li><a href="#capabilities-section" class="landing-nav-link">Capabilities</a></li>
-            <li><a href="#how-it-works-section" class="landing-nav-link">How It Works</a></li>
-            <li><a href="#architecture-section" class="landing-nav-link">Architecture</a></li>
-            <li><a href="#data-modes-section" class="landing-nav-link">Data Modes</a></li>
+            <li><a href="#impact-section" class="landing-nav-link">Impact</a></li>
           </ul>
 
           <div class="landing-nav-actions">
-            <a href="/realtime" class="landing-btn landing-btn-secondary" data-route="/realtime">
-              <span class="material-symbols-outlined" style="font-size:16px;">show_chart</span>
-              <span>Live Monitor</span>
+            <a href="/pipeline" class="landing-btn landing-btn-secondary" data-route="/pipeline">
+              <span class="material-symbols-outlined" style="font-size:16px;">account_tree</span>
+              <span>View Architecture</span>
             </a>
             <a href="/overview" class="landing-btn landing-btn-primary" data-route="/overview">
-              <span>Ground Station</span>
+              <span>Explore the Digital Twin</span>
               <span class="material-symbols-outlined" style="font-size:16px;">arrow_forward</span>
             </a>
           </div>
@@ -58,111 +57,62 @@
 
     <!-- Landing Main Content -->
     <main>
-      <!-- Hero Section -->
+      <!-- ====================================================================
+           SECTION 1 — HERO
+           ==================================================================== -->
       <section class="landing-hero" id="landing-hero-section">
         <div class="landing-container">
           <div class="landing-hero-grid">
-            <div class="landing-hero-content">
-              <!-- Research / Prototype badge -->
+            <div class="landing-hero-content landing-reveal">
               <div class="landing-hero-badge">
                 <span class="lp-badge-dot" aria-hidden="true"></span>
-                <span>TECHNOLOGY DEMONSTRATOR &nbsp;&middot;&nbsp; SIH 2026 &nbsp;&middot;&nbsp; DRDO SIH26054</span>
+                <span>AEROSPACE PROPULSION INTELLIGENCE &nbsp;&middot;&nbsp; SIH 2026</span>
               </div>
 
               <h1 class="landing-hero-title">
                 AERIS-TWIN <br>
-                <span class="highlight-cyan">Intelligent Digital Twin</span> <br>
-                <span class="highlight-teal">for UAV Aero Engines</span>
+                <span class="hero-tagline">Predict the Engine. <br><span class="highlight-cyan">Before It Fails.</span></span>
               </h1>
 
               <p class="landing-hero-subtitle">
-                A physics-informed digital twin and AI platform for real-time health monitoring,
-                anomaly detection, fault diagnosis, degradation tracking and remaining useful life
-                estimation of aero-piston engines in MALE UAV platforms (Rotax 914 reference powerplant).
+                An AI-powered Digital Twin for real-time health monitoring and predictive maintenance of aero-piston engines.
               </p>
 
               <div class="landing-hero-buttons">
                 <a href="/overview" class="landing-btn landing-btn-primary landing-btn-lg" data-route="/overview">
-                  <span>OPEN GROUND STATION</span>
+                  <span>Explore the Digital Twin</span>
                   <span class="material-symbols-outlined" style="font-size: 18px;">arrow_forward</span>
                 </a>
-                <a href="/realtime" class="landing-btn landing-btn-secondary landing-btn-lg" data-route="/realtime">
-                  <span class="material-symbols-outlined" style="font-size: 18px;">show_chart</span>
-                  <span>6-CH MONITOR</span>
-                </a>
-                <a href="/twin" class="landing-btn landing-btn-secondary landing-btn-lg" data-route="/twin">
-                  <span class="material-symbols-outlined" style="font-size: 18px;">deployed_code</span>
-                  <span>3D TWIN</span>
+                <a href="/pipeline" class="landing-btn landing-btn-secondary landing-btn-lg" data-route="/pipeline">
+                  <span class="material-symbols-outlined" style="font-size: 18px;">account_tree</span>
+                  <span>View Architecture</span>
                 </a>
               </div>
             </div>
 
-            <!-- Hero Right — Clean Data-flow Pipeline Card -->
-            <div class="landing-hero-card" id="landing-hero-card">
-              <div class="hero-card-header">
-                <div class="hero-card-title">
-                  <span class="material-symbols-outlined" style="font-size: 16px; color: var(--primary);">memory</span>
-                  <span>CONTINUOUS EVALUATION PIPELINE</span>
-                </div>
-                <div class="hero-card-status">
+            <!-- Hero Right — Aerospace Engine Digital Twin Visual -->
+            <div class="landing-hero-visual-wrap landing-reveal stagger-2">
+              <div class="hero-engine-frame">
+                <img 
+                  src="./src/assets/aeris_digital_twin_hero.jpg" 
+                  alt="AERIS-TWIN Aero Propulsion Engine Digital Twin Visual Cutaway" 
+                  class="hero-engine-img"
+                  loading="eager"
+                />
+                <div class="hero-engine-scanline" aria-hidden="true"></div>
+                
+                <!-- Floating Real-Time Aerospace Telemetry Overlays -->
+                <div class="hero-overlay-tag hero-overlay-tr">
                   <span class="live-pulse-dot" style="width: 6px; height: 6px;"></span>
-                  <span>DEMONSTRATOR</span>
+                  <span>HEALTH INDEX 98.4%</span>
                 </div>
-              </div>
-
-              <div class="hero-card-body lp-hero-pipe-body">
-                <div class="lp-hero-pipe-flow">
-                  <div class="lp-hero-pipe-step">
-                    <span class="material-symbols-outlined lp-hero-pipe-icon">precision_manufacturing</span>
-                    <div class="lp-hero-pipe-text">
-                      <span class="lp-hero-pipe-label">ENGINE &amp; SENSORS</span>
-                      <span class="lp-hero-pipe-sub">Rotax 914 Aero Piston Engine &middot; CAN / Telemetry</span>
-                    </div>
-                  </div>
-                  <div class="lp-hero-pipe-arrow">&darr;</div>
-                  <div class="lp-hero-pipe-step">
-                    <span class="material-symbols-outlined lp-hero-pipe-icon">verified_user</span>
-                    <div class="lp-hero-pipe-text">
-                      <span class="lp-hero-pipe-label">TELEMETRY &amp; SENSOR TRUST</span>
-                      <span class="lp-hero-pipe-sub">Quality check: range, stuck, noise, jump, drift</span>
-                    </div>
-                  </div>
-                  <div class="lp-hero-pipe-arrow">&darr;</div>
-                  <div class="lp-hero-pipe-step">
-                    <span class="material-symbols-outlined lp-hero-pipe-icon">deployed_code</span>
-                    <div class="lp-hero-pipe-text">
-                      <span class="lp-hero-pipe-label">PHYSICS DIGITAL TWIN</span>
-                      <span class="lp-hero-pipe-sub">Mean-value physics &middot; Residuals (Δ, σ, slope)</span>
-                    </div>
-                  </div>
-                  <div class="lp-hero-pipe-arrow">&darr;</div>
-                  <div class="lp-hero-pipe-step">
-                    <span class="material-symbols-outlined lp-hero-pipe-icon">psychology</span>
-                    <div class="lp-hero-pipe-text">
-                      <span class="lp-hero-pipe-label">AI PROGNOSTICS &amp; RUL</span>
-                      <span class="lp-hero-pipe-sub">Isolation Forest &middot; Fault classifier &middot; RUL interval</span>
-                    </div>
-                  </div>
-                  <div class="lp-hero-pipe-arrow">&darr;</div>
-                  <div class="lp-hero-pipe-step lp-hero-pipe-step-out">
-                    <span class="material-symbols-outlined lp-hero-pipe-icon">shield</span>
-                    <div class="lp-hero-pipe-text">
-                      <span class="lp-hero-pipe-label">GROUND STATION DECISION</span>
-                      <span class="lp-hero-pipe-sub">Health Index &middot; Explainable evidence &middot; Closed-loop</span>
-                    </div>
-                  </div>
+                <div class="hero-overlay-tag hero-overlay-bl">
+                  <span class="material-symbols-outlined" style="font-size: 13px; color: var(--primary);">tune</span>
+                  <span>PHYSICS RESIDUAL &Delta; &middot; &sigma;-NORMALIZED</span>
                 </div>
-              </div>
-
-              <div class="hero-telemetry-tags">
-                <div class="telemetry-status-tag">
-                  <span class="pulse-dot"></span><span>PHYSICS RESIDUALS</span>
-                </div>
-                <div class="telemetry-status-tag">
-                  <span class="pulse-dot"></span><span>SENSOR TRUST</span>
-                </div>
-                <div class="telemetry-status-tag">
-                  <span class="pulse-dot"></span><span>10Hz STREAM</span>
+                <div class="hero-overlay-tag hero-overlay-br">
+                  <span class="material-symbols-outlined" style="font-size: 13px; color: var(--secondary);">verified_user</span>
+                  <span>SENSOR TRUST 0.99</span>
                 </div>
               </div>
             </div>
@@ -170,260 +120,149 @@
         </div>
       </section>
 
-      <!-- ── System Status Strip ────────────────────────────────────────── -->
-      <section class="lp-status-strip" aria-label="Module implementation status">
+      <!-- ====================================================================
+           SECTION 2 — CORE PIPELINE
+           ==================================================================== -->
+      <section class="landing-section" id="pipeline-section">
         <div class="landing-container">
-          <div class="lp-status-grid">
-            <div class="lp-status-item">
-              <span class="lp-status-label">DIGITAL TWIN</span>
-              <span class="lp-status-val lp-status-ok">ACTIVE</span>
+          <div class="landing-section-header landing-reveal">
+            <span class="landing-section-tag">INTELLIGENCE PIPELINE</span>
+            <h2 class="landing-section-title">One Continuous Pipeline</h2>
+            <p class="landing-section-desc">
+              From engine telemetry to predictive insight through one continuous intelligence pipeline.
+            </p>
+          </div>
+
+          <div class="landing-core-pipeline-flow landing-reveal stagger-2">
+            <div class="pipeline-flow-card">
+              <div class="pipeline-card-step">01</div>
+              <div class="pipeline-card-icon-wrap">
+                <span class="material-symbols-outlined">sensors</span>
+              </div>
+              <div class="pipeline-card-name">REAL-TIME TELEMETRY</div>
             </div>
-            <div class="lp-status-divider" aria-hidden="true"></div>
-            <div class="lp-status-item">
-              <span class="lp-status-label">AI PIPELINE</span>
-              <span class="lp-status-val lp-status-ok">ACTIVE</span>
+
+            <div class="pipeline-flow-arrow" aria-hidden="true">
+              <span class="material-symbols-outlined">east</span>
             </div>
-            <div class="lp-status-divider" aria-hidden="true"></div>
-            <div class="lp-status-item">
-              <span class="lp-status-label">TELEMETRY INGESTION</span>
-              <span class="lp-status-val lp-status-ok">ACTIVE</span>
+
+            <div class="pipeline-flow-card">
+              <div class="pipeline-card-step">02</div>
+              <div class="pipeline-card-icon-wrap">
+                <span class="material-symbols-outlined">deployed_code</span>
+              </div>
+              <div class="pipeline-card-name">DIGITAL TWIN</div>
             </div>
-            <div class="lp-status-divider" aria-hidden="true"></div>
-            <div class="lp-status-item">
-              <span class="lp-status-label">3D ENGINE TWIN</span>
-              <span class="lp-status-val lp-status-ok">ACTIVE</span>
+
+            <div class="pipeline-flow-arrow" aria-hidden="true">
+              <span class="material-symbols-outlined">east</span>
             </div>
-            <div class="lp-status-divider" aria-hidden="true"></div>
-            <div class="lp-status-item">
-              <span class="lp-status-label">SYSTEM CLASSIFICATION</span>
-              <span class="lp-status-val lp-status-demo">TECHNOLOGY DEMONSTRATOR</span>
+
+            <div class="pipeline-flow-card">
+              <div class="pipeline-card-step">03</div>
+              <div class="pipeline-card-icon-wrap">
+                <span class="material-symbols-outlined">psychology</span>
+              </div>
+              <div class="pipeline-card-name">AI PROGNOSTICS</div>
+            </div>
+
+            <div class="pipeline-flow-arrow" aria-hidden="true">
+              <span class="material-symbols-outlined">east</span>
+            </div>
+
+            <div class="pipeline-flow-card pipeline-flow-card-accent">
+              <div class="pipeline-card-step">04</div>
+              <div class="pipeline-card-icon-wrap">
+                <span class="material-symbols-outlined">shield</span>
+              </div>
+              <div class="pipeline-card-name">ACTIONABLE INSIGHT</div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- ── Core Capabilities Section (4 Concise High-Impact Modules) ───── -->
+      <!-- ====================================================================
+           SECTION 3 — THREE CORE CAPABILITIES
+           ==================================================================== -->
       <section class="landing-section" id="capabilities-section">
         <div class="landing-container">
-          <div class="landing-section-header">
+          <div class="landing-section-header landing-reveal">
             <span class="landing-section-tag">CAPABILITIES</span>
-            <h2 class="landing-section-title">Core Intelligence Modules</h2>
-            <p class="landing-section-desc">
-              Four interconnected engineering pillars transforming raw sensor packets into actionable propulsion health intelligence.
-            </p>
+            <h2 class="landing-section-title">Three Core Pillars</h2>
           </div>
 
-          <div class="landing-capabilities-grid lp-cap-4">
-            <div class="capability-card" tabindex="0">
-              <div class="capability-icon-wrap"><span class="material-symbols-outlined">deployed_code</span></div>
-              <h3 class="capability-card-title">Physics-Informed Digital Twin</h3>
-              <p class="capability-card-desc">Mean-value thermodynamic and kinematic state-space model of the Rotax 914 engine estimating real-time expected CHT, oil pressure, vibration, fuel flow and RPM.</p>
-              <div class="capability-card-tag">
-                <span class="material-symbols-outlined" style="font-size:14px;">check_circle</span>
-                <span>ISA Atmosphere &middot; BSFC &middot; Thermal Balance</span>
+          <div class="landing-capabilities-grid lp-cap-3">
+            <div class="capability-card landing-reveal stagger-1" tabindex="0">
+              <div class="capability-card-header">
+                <span class="capability-num">01 &mdash; SEE</span>
+                <div class="capability-icon-wrap">
+                  <span class="material-symbols-outlined">visibility</span>
+                </div>
               </div>
+              <h3 class="capability-card-title">Real-Time Engine State</h3>
+              <p class="capability-card-desc">Monitor critical engine parameters as they change.</p>
             </div>
 
-            <div class="capability-card" tabindex="0">
-              <div class="capability-icon-wrap"><span class="material-symbols-outlined">verified_user</span></div>
-              <h3 class="capability-card-title">Sensor Trust &amp; Residuals</h3>
-              <p class="capability-card-desc">Validates each sensor channel for range, stuck values, jump discontinuities, and drift before computing normalized z-scores (σ) and trend slopes.</p>
-              <div class="capability-card-tag">
-                <span class="material-symbols-outlined" style="font-size:14px;">check_circle</span>
-                <span>6 Transducers &middot; Weighted Trust Score</span>
+            <div class="capability-card landing-reveal stagger-2" tabindex="0">
+              <div class="capability-card-header">
+                <span class="capability-num">02 &mdash; PREDICT</span>
+                <div class="capability-icon-wrap">
+                  <span class="material-symbols-outlined">psychology</span>
+                </div>
               </div>
+              <h3 class="capability-card-title">AI-Powered Prognostics</h3>
+              <p class="capability-card-desc">Detect anomalies, identify emerging faults and track degradation.</p>
             </div>
 
-            <div class="capability-card" tabindex="0">
-              <div class="capability-icon-wrap"><span class="material-symbols-outlined">psychology</span></div>
-              <h3 class="capability-card-title">AI Anomaly &amp; Fault Diagnosis</h3>
-              <p class="capability-card-desc">Unsupervised Isolation Forest and multi-class physics signature classifier detect anomalies and identify specific mechanical, thermal, or lubrication fault modes.</p>
-              <div class="capability-card-tag">
-                <span class="material-symbols-outlined" style="font-size:14px;">check_circle</span>
-                <span>Isolation Forest &middot; Multi-Class Classifier</span>
+            <div class="capability-card landing-reveal stagger-3" tabindex="0">
+              <div class="capability-card-header">
+                <span class="capability-num">03 &mdash; ACT</span>
+                <div class="capability-icon-wrap">
+                  <span class="material-symbols-outlined">bolt</span>
+                </div>
               </div>
-            </div>
-
-            <div class="capability-card" tabindex="0">
-              <div class="capability-icon-wrap"><span class="material-symbols-outlined">shield</span></div>
-              <h3 class="capability-card-title">Predictive Health &amp; RUL</h3>
-              <p class="capability-card-desc">Tracks composite engine degradation velocity dD/dt to project Remaining Useful Life (RUL) hours with bounded prediction intervals and closed-loop mitigation advice.</p>
-              <div class="capability-card-tag">
-                <span class="material-symbols-outlined" style="font-size:14px;">check_circle</span>
-                <span>Health Index &middot; RUL Interval &middot; Mitigations</span>
-              </div>
+              <h3 class="capability-card-title">Maintenance Intelligence</h3>
+              <p class="capability-card-desc">Turn engine health data into clear maintenance and mission decisions.</p>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- ── How It Works Section ───────────────────────────────────────── -->
-      <section class="landing-section" id="how-it-works-section">
+      <!-- ====================================================================
+           SECTION 4 — IMPACT STATEMENT
+           ==================================================================== -->
+      <section class="landing-section landing-impact-section" id="impact-section">
         <div class="landing-container">
-          <div class="landing-section-header">
-            <span class="landing-section-tag">HOW IT WORKS</span>
-            <h2 class="landing-section-title">Telemetry to Health Intelligence</h2>
-            <p class="landing-section-desc">
-              Six-stage continuous evaluation cycle running at up to 20Hz on the ground station backend.
-            </p>
-          </div>
-
-          <div class="lp-hiw-grid">
-            <div class="lp-hiw-step">
-              <span class="lp-hiw-num">01</span>
-              <div class="lp-hiw-content">
-                <h3 class="lp-hiw-title">INGESTION</h3>
-                <p class="lp-hiw-desc">Engine telemetry packets arrive via continuous WebSocket or REST stream (or controlled test scenario in Simulation mode).</p>
-              </div>
-            </div>
-            <div class="lp-hiw-step">
-              <span class="lp-hiw-num">02</span>
-              <div class="lp-hiw-content">
-                <h3 class="lp-hiw-title">VALIDATION</h3>
-                <p class="lp-hiw-desc">Each channel undergoes range, noise, frozen-signal, and drift checks to compute the aggregate Sensor Trust Score.</p>
-              </div>
-            </div>
-            <div class="lp-hiw-step">
-              <span class="lp-hiw-num">03</span>
-              <div class="lp-hiw-content">
-                <h3 class="lp-hiw-title">PHYSICS TWIN</h3>
-                <p class="lp-hiw-desc">Physics model computes expected engine state under current throttle/altitude and evaluates normalized residuals (Δ, σ, slope).</p>
-              </div>
-            </div>
-            <div class="lp-hiw-step">
-              <span class="lp-hiw-num">04</span>
-              <div class="lp-hiw-content">
-                <h3 class="lp-hiw-title">DIAGNOSIS</h3>
-                <p class="lp-hiw-desc">Isolation Forest and physics rules classify anomalies into specific failure modes with multi-source consensus confirmation.</p>
-              </div>
-            </div>
-            <div class="lp-hiw-step">
-              <span class="lp-hiw-num">05</span>
-              <div class="lp-hiw-content">
-                <h3 class="lp-hiw-title">PROGNOSTICS</h3>
-                <p class="lp-hiw-desc">Degradation dynamics estimate Remaining Useful Life (RUL) hours and evaluate mission reliability risk.</p>
-              </div>
-            </div>
-            <div class="lp-hiw-step">
-              <span class="lp-hiw-num">06</span>
-              <div class="lp-hiw-content">
-                <h3 class="lp-hiw-title">DECISION</h3>
-                <p class="lp-hiw-desc">GCS displays actionable status, explainable evidence chains ("Why?"), and automated mitigation telecommands.</p>
-              </div>
+          <div class="landing-impact-box landing-reveal">
+            <h2 class="landing-impact-quote">
+              &ldquo;Don&rsquo;t wait for failure.<br>
+              <span class="highlight-cyan">Understand degradation while it is happening.&rdquo;</span>
+            </h2>
+            <div class="landing-impact-keywords">
+              <span class="impact-keyword">REAL-TIME</span>
+              <span class="impact-keyword-sep" aria-hidden="true">&bull;</span>
+              <span class="impact-keyword">PHYSICS-INFORMED</span>
+              <span class="impact-keyword-sep" aria-hidden="true">&bull;</span>
+              <span class="impact-keyword">AI-ASSISTED</span>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- ── Architecture Section ───────────────────────────────────────── -->
-      <section class="landing-section" id="architecture-section">
+      <!-- ====================================================================
+           SECTION 5 — FINAL CTA
+           ==================================================================== -->
+      <section class="landing-section landing-final-cta-section" id="final-cta-section">
         <div class="landing-container">
-          <div class="landing-section-header">
-            <span class="landing-section-tag">ARCHITECTURE</span>
-            <h2 class="landing-section-title">System Architecture</h2>
-            <p class="landing-section-desc">
-              Linear data pipeline from UAV propulsion hardware to Operator Ground Station.
-            </p>
-          </div>
-
-          <div class="lp-arch-flow">
-            <div class="lp-arch-top-box">
-              <span class="lp-arch-box-label">UAV PROPULSION SYSTEM &amp; SENSORS</span>
-              <span class="lp-arch-box-sub">Rotax 914 Turbocharged Aero Engine &middot; CAN / MAVLink / Telemetry</span>
-            </div>
-            <div class="lp-arch-connector">&darr; &nbsp; Continuous Telemetry Stream &nbsp; &darr;</div>
-            <div class="lp-arch-row">
-              <div class="lp-arch-box">
-                <span class="lp-arch-box-label">1. SENSOR TRUST ENGINE</span>
-                <span class="lp-arch-box-sub">Quality check: range, stuck, noise, jump, drift</span>
-              </div>
-              <div class="lp-arch-box lp-arch-box-primary">
-                <span class="lp-arch-box-label">2. PHYSICS DIGITAL TWIN</span>
-                <span class="lp-arch-box-sub">Thermodynamic &amp; kinematic residual analysis</span>
-              </div>
-            </div>
-            <div class="lp-arch-connector">&darr; &nbsp; Physics Residuals (Δ, σ, slope) &nbsp; &darr;</div>
-            <div class="lp-arch-row">
-              <div class="lp-arch-box">
-                <span class="lp-arch-box-label">3. AI ANOMALY &amp; FAULT CLASSIFIER</span>
-                <span class="lp-arch-box-sub">Isolation Forest &middot; Signature matching</span>
-              </div>
-              <div class="lp-arch-box">
-                <span class="lp-arch-box-label">4. PROGNOSTICS &amp; RUL ENGINE</span>
-                <span class="lp-arch-box-sub">Degradation tracking &middot; RUL uncertainty intervals</span>
-              </div>
-            </div>
-            <div class="lp-arch-connector">&darr; &nbsp; Fast WebSocket &amp; REST Dispatch &nbsp; &darr;</div>
-            <div class="lp-arch-output-box">
-              <span class="lp-arch-box-label">5. OPERATOR GROUND STATION COCKPIT</span>
-              <span class="lp-arch-box-sub">Real-Time Telemetry &middot; 3D Engine Twin &middot; Diagnostics &middot; Mission Replay</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ── Data Modes Section ─────────────────────────────────────────── -->
-      <section class="landing-section" id="data-modes-section">
-        <div class="landing-container">
-          <div class="landing-section-header">
-            <span class="landing-section-tag">DATA MODES</span>
-            <h2 class="landing-section-title">Operating Modes</h2>
-            <p class="landing-section-desc">
-              Strictly segregated data modes with distinct visual indicators.
-            </p>
-          </div>
-
-          <div class="lp-modes-grid">
-            <div class="lp-mode-card">
-              <div class="lp-mode-badge lp-mode-live">
-                <span class="live-pulse-dot" style="width:8px;height:8px;flex-shrink:0;"></span>
-                <span>LIVE</span>
-              </div>
-              <h3 class="lp-mode-title">Live Telemetry</h3>
-              <p class="lp-mode-desc">Consumes real incoming telemetry packets. If the stream stops or is absent, the system indicates WAITING / DISCONNECTED rather than showing synthetic fallback data.</p>
-            </div>
-
-            <div class="lp-mode-card">
-              <div class="lp-mode-badge lp-mode-sim">
-                <span class="material-symbols-outlined" style="font-size:14px;">science</span>
-                <span>SIMULATION</span>
-              </div>
-              <h3 class="lp-mode-title">Simulation / Test Mode</h3>
-              <p class="lp-mode-desc">Deterministic physics simulation for testing failure injections (bearing wear, cylinder overheat, lubrication loss, misfire). Clearly watermarked as SIMULATED.</p>
-            </div>
-
-            <div class="lp-mode-card">
-              <div class="lp-mode-badge lp-mode-replay">
-                <span class="material-symbols-outlined" style="font-size:14px;">replay</span>
-                <span>REPLAY</span>
-              </div>
-              <h3 class="lp-mode-title">Historical Replay</h3>
-              <p class="lp-mode-desc">Replays recorded session telemetry from the database with scrubbing and speed controls for post-mission incident analysis and verification.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ── Final CTA ──────────────────────────────────────────────────── -->
-      <section class="landing-section" style="padding-bottom: 3.5rem;">
-        <div class="landing-container">
-          <div class="landing-cta-banner">
-            <h2 class="landing-cta-title">AEROSPACE PROPULSION INTELLIGENCE</h2>
+          <div class="landing-cta-banner landing-reveal">
+            <h2 class="landing-cta-title">The engine is telling you something.</h2>
             <p class="landing-cta-desc">
-              Launch the AERIS-TWIN Ground Station cockpit to evaluate real-time telemetry, interactive 3D digital twin, and AI prognostics.
+              AERIS-TWIN helps you understand it.
             </p>
             <div class="lp-cta-actions">
               <a href="/overview" class="landing-btn landing-btn-primary landing-btn-lg" data-route="/overview">
-                <span>OPEN GROUND STATION</span>
+                <span>Enter the Digital Twin</span>
                 <span class="material-symbols-outlined" style="font-size: 20px;">arrow_forward</span>
-              </a>
-              <a href="/realtime" class="landing-btn landing-btn-secondary landing-btn-lg" data-route="/realtime">
-                <span class="material-symbols-outlined" style="font-size:18px;">show_chart</span>
-                <span>6-CH MONITOR</span>
-              </a>
-              <a href="/twin" class="landing-btn landing-btn-secondary landing-btn-lg" data-route="/twin">
-                <span class="material-symbols-outlined" style="font-size:18px;">deployed_code</span>
-                <span>3D TWIN</span>
               </a>
             </div>
           </div>
@@ -431,7 +270,7 @@
       </section>
     </main>
 
-    <!-- Landing Footer & Compact Safety Disclaimer -->
+    <!-- Landing Footer & Safety Notice -->
     <footer class="landing-footer">
       <div class="landing-container">
         <div class="landing-footer-grid">
