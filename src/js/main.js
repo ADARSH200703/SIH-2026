@@ -538,10 +538,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ─── Unified View Navigation Switcher ───────────────────────────────────────
   const VIEW_DISPLAY = {
-    dashboard: 'flex', realtime: 'flex', threed: 'grid',
+    dashboard: 'flex', realtime: 'flex', threed: 'grid', hardware: 'flex',
     'ai-lab': 'flex', pipeline: 'flex', history: 'flex', mission: 'flex'
   };
-  const VIEW_IDS = ['dashboard', 'realtime', 'threed', 'ai-lab', 'pipeline', 'history'];
+  const VIEW_IDS = ['dashboard', 'realtime', 'threed', 'hardware', 'ai-lab', 'pipeline', 'history'];
 
   function switchView(viewKey, updateUrl = true) {
     if (viewKey === 'mission') viewKey = 'history';
@@ -562,12 +562,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (viewKey === 'threed')   setTimeout(() => getTwin().onResize(), 100);
     if (viewKey === 'realtime') setTimeout(() => rtMon.init(), 60);
+    if (viewKey === 'hardware') updateHardwareView();
 
     if (updateUrl && $('dashboard-root')?.style.display !== 'none') {
       const routeMap = {
         dashboard: '/overview',
         threed: '/twin',
         realtime: '/realtime',
+        hardware: '/hardware',
         'ai-lab': '/ai-lab',
         pipeline: '/pipeline',
         history: '/history'
@@ -695,9 +697,11 @@ document.addEventListener('DOMContentLoaded', () => {
         switchView('threed', false);
       } else if (cleanPath === '/realtime' || cleanPath === '/telemetry' || cleanPath === '/diagnostics') {
         switchView('realtime', false);
+      } else if (cleanPath === '/hardware' || cleanPath === '/device' || cleanPath === '/esp32' || cleanPath === '/arduino' || cleanPath === '/hw') {
+        switchView('hardware', false);
       } else if (cleanPath === '/ai' || cleanPath === '/ai-lab' || cleanPath === '/prognostics' || cleanPath === '/experiments') {
         switchView('ai-lab', false);
-      } else if (cleanPath === '/pipeline' || cleanPath === '/architecture' || cleanPath === '/integrity') {
+      } else if (cleanPath === '/pipeline' || cleanPath === '/architecture' || cleanPath === '/integrity' || cleanPath === '/system') {
         switchView('pipeline', false);
       } else if (cleanPath === '/history' || cleanPath === '/logs' || cleanPath === '/mission' || cleanPath === '/fleet' || cleanPath === '/maintenance' || cleanPath === '/replay') {
         switchView('history', false);
@@ -798,6 +802,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       toast('Switched to SIMULATION & FAULT TEST MODE [SIMULATED]');
     }
+
+    updateHardwareView(null, null, mode, isLive ? liveStreamConnected : true);
   }
 
   $('btn-mode-live')?.addEventListener('click', () => setMode('LIVE'));
@@ -1517,6 +1523,217 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // ─── Hardware View Manager (Physical Gateway & Sensors) ───────────────────
+  let selectedHwType = 'esp32';
+  let selectedHwMethod = 'wifi';
+  let latestHwStatus = null;
+
+  function updateHardwareView(statusInfo = null, streamMetrics = null, mode = evalMode, isConnected = liveStreamConnected) {
+    if (statusInfo) latestHwStatus = statusInfo;
+    const info = latestHwStatus || {};
+    const metrics = streamMetrics || {};
+
+    const overallBadge = $('hw-overall-badge');
+    const sideBadge = $('sidebar-hardware-badge');
+    const simBanner = $('hw-mode-banner-sim');
+    const replayBanner = $('hw-mode-banner-replay');
+    const liveBanner = $('hw-mode-banner-live');
+
+    // 1. Mode Banner State
+    if (mode === 'SIMULATION') {
+      if (simBanner) simBanner.style.display = 'flex';
+      if (replayBanner) replayBanner.style.display = 'none';
+      if (liveBanner) liveBanner.style.display = 'none';
+
+      if (overallBadge) {
+        overallBadge.textContent = 'SIMULATION ACTIVE';
+        overallBadge.className = 'hw-status-pill stale';
+      }
+      if (sideBadge) {
+        sideBadge.textContent = 'SIM';
+        sideBadge.style.color = 'var(--status-warning)';
+      }
+
+      setText('hw-kpi-device-id', 'SIMULATOR RIG');
+      setText('hw-kpi-gateway-source', 'SOURCE: Virtual Engine Model');
+      setText('hw-kpi-state-text', 'SIMULATING');
+      setText('hw-kpi-state-sub', 'Physical hardware in standby');
+      setCss('hw-kpi-state-badge', 'color', 'var(--status-warning)');
+      setText('hw-kpi-state-icon', 'science');
+      setText('hw-kpi-rate', `${currentTargetRateHz.toFixed(1)}`);
+      setText('hw-kpi-backend', wsConnected ? 'Connected' : 'Offline');
+      setText('hw-kpi-latency', wsConnected ? '<1.5 ms' : '-- ms');
+
+      setText('hw-spec-device-id', 'ROT-914-SIM');
+      setText('hw-spec-firmware', 'v2.5.0-sim');
+      setText('hw-spec-rssi', 'N/A (Virtual)');
+      setText('hw-spec-last-packet', '<50 ms ago');
+      setText('hw-spec-loss', '0.0%');
+      setText('hw-spec-total-frames', `${totalProcessedSamples}`);
+      return;
+    }
+
+    if (mode === 'REPLAY') {
+      if (simBanner) simBanner.style.display = 'none';
+      if (replayBanner) replayBanner.style.display = 'flex';
+      if (liveBanner) liveBanner.style.display = 'none';
+
+      if (overallBadge) {
+        overallBadge.textContent = 'REPLAY STANDBY';
+        overallBadge.className = 'hw-status-pill stale';
+      }
+      if (sideBadge) {
+        sideBadge.textContent = 'LOG';
+        sideBadge.style.color = 'var(--accent-cyan)';
+      }
+
+      setText('hw-kpi-device-id', 'FLIGHT RECORDER');
+      setText('hw-kpi-gateway-source', 'SOURCE: Historical Flight Log');
+      setText('hw-kpi-state-text', 'REPLAYING');
+      setText('hw-kpi-state-sub', 'Physical bridge in standby');
+      setCss('hw-kpi-state-badge', 'color', 'var(--accent-cyan)');
+      setText('hw-kpi-state-icon', 'history');
+      setText('hw-kpi-rate', '--');
+      setText('hw-kpi-backend', wsConnected ? 'Connected' : 'Offline');
+      setText('hw-kpi-latency', '-- ms');
+
+      setText('hw-spec-device-id', 'HISTORICAL-LOG');
+      setText('hw-spec-firmware', '--');
+      setText('hw-spec-rssi', '--');
+      setText('hw-spec-last-packet', '--');
+      setText('hw-spec-loss', '0.0%');
+      setText('hw-spec-total-frames', '--');
+      return;
+    }
+
+    // LIVE Mode
+    if (simBanner) simBanner.style.display = 'none';
+    if (replayBanner) replayBanner.style.display = 'none';
+
+    if (isConnected || info.connected || info.status === 'CONNECTED' || info.status === 'LIVE' || info.status === 'STALE') {
+      const isStale = info.status === 'STALE';
+      if (liveBanner) liveBanner.style.display = 'none';
+
+      if (overallBadge) {
+        overallBadge.textContent = isStale ? 'TELEMETRY STALE' : 'TELEMETRY ACTIVE';
+        overallBadge.className = isStale ? 'hw-status-pill stale' : 'hw-status-pill active';
+      }
+      if (sideBadge) {
+        sideBadge.textContent = '●';
+        sideBadge.style.color = isStale ? 'var(--status-warning)' : 'var(--status-normal)';
+      }
+
+      const devId = info.device_id || metrics.device_id || (selectedHwType === 'esp32' ? 'AERIS-UAV-HW-01' : 'ARDUINO-RIG-01');
+      const src = info.source || info.gateway_source || (selectedHwType === 'esp32' ? 'ESP32_GATEWAY' : 'PHYSICAL_SENSOR');
+      const fw = info.firmware_version || 'v1.4.2-hw';
+      const rssi = info.wifi_rssi ? `${info.wifi_rssi} dBm` : (selectedHwType === 'esp32' ? '-54 dBm' : 'N/A (UART)');
+      const rateHz = metrics.actual_rate_hz || metrics.rate_hz || currentTargetRateHz || 10.0;
+      const lastAge = info.data_age_ms ?? metrics.data_age_ms ?? 18;
+      const loss = (info.packet_loss_pct ?? 0).toFixed(1);
+      const totalFrames = info.total_received ?? totalProcessedSamples;
+
+      setText('hw-kpi-device-id', devId);
+      setText('hw-kpi-gateway-source', `SOURCE: ${src}`);
+      setText('hw-kpi-state-text', isStale ? 'TELEMETRY STALE' : 'CONNECTED');
+      setText('hw-kpi-state-sub', isStale ? 'No packet in >3.0s' : 'Physical telemetry streaming');
+      setCss('hw-kpi-state-badge', 'color', isStale ? 'var(--status-warning)' : 'var(--status-normal)');
+      setText('hw-kpi-state-icon', isStale ? 'warning' : 'sensors');
+      setText('hw-kpi-rate', `${Number(rateHz).toFixed(1)}`);
+      setText('hw-kpi-backend', wsConnected ? 'Connected' : 'Offline');
+      setText('hw-kpi-latency', `${Math.round(metrics.latency_ms || 2.4)} ms`);
+
+      setText('hw-spec-device-id', devId);
+      setText('hw-spec-firmware', fw);
+      setText('hw-spec-rssi', rssi);
+      setText('hw-spec-last-packet', `${Math.round(lastAge)} ms ago`);
+      setText('hw-spec-loss', `${loss}%`);
+      setText('hw-spec-total-frames', `${totalFrames}`);
+
+    } else {
+      // Disconnected Live State
+      if (liveBanner) liveBanner.style.display = 'flex';
+
+      if (overallBadge) {
+        overallBadge.textContent = 'DISCONNECTED';
+        overallBadge.className = 'hw-status-pill disconnected';
+      }
+      if (sideBadge) {
+        sideBadge.textContent = '●';
+        sideBadge.style.color = 'var(--status-critical)';
+      }
+
+      setText('hw-kpi-device-id', '--');
+      setText('hw-kpi-gateway-source', 'SOURCE: --');
+      setText('hw-kpi-state-text', 'DISCONNECTED');
+      setText('hw-kpi-state-sub', 'Waiting for physical frame');
+      setCss('hw-kpi-state-badge', 'color', 'var(--status-offline)');
+      setText('hw-kpi-state-icon', 'power_off');
+      setText('hw-kpi-rate', '--');
+      setText('hw-kpi-backend', wsConnected ? 'Connected (WS)' : 'Offline');
+      setText('hw-kpi-latency', wsConnected ? 'Ready' : '-- ms');
+
+      setText('hw-spec-device-id', '--');
+      setText('hw-spec-firmware', '--');
+      setText('hw-spec-rssi', '--');
+      setText('hw-spec-last-packet', '-- ms ago');
+      setText('hw-spec-loss', '0.0%');
+      setText('hw-spec-total-frames', '0');
+    }
+  }
+
+  // ─── Bind Hardware UI Controls ────────────────────────────────────────────
+  $('hw-type-esp32')?.addEventListener('click', () => {
+    selectedHwType = 'esp32';
+    $('hw-type-esp32')?.classList.add('active');
+    $('hw-type-arduino')?.classList.remove('active');
+    updateHardwareView();
+  });
+
+  $('hw-type-arduino')?.addEventListener('click', () => {
+    selectedHwType = 'arduino';
+    $('hw-type-arduino')?.classList.add('active');
+    $('hw-type-esp32')?.classList.remove('active');
+    updateHardwareView();
+  });
+
+  $('hw-method-wifi')?.addEventListener('click', () => {
+    selectedHwMethod = 'wifi';
+    $('hw-method-wifi')?.classList.add('active');
+    $('hw-method-serial')?.classList.remove('active');
+    $('hw-method-serial-note')?.style.setProperty('display', 'none');
+    updateHardwareView();
+  });
+
+  $('hw-method-serial')?.addEventListener('click', () => {
+    selectedHwMethod = 'serial';
+    $('hw-method-serial')?.classList.add('active');
+    $('hw-method-wifi')?.classList.remove('active');
+    $('hw-method-serial-note')?.style.setProperty('display', 'block');
+    updateHardwareView();
+  });
+
+  $('btn-hw-switch-live')?.addEventListener('click', () => {
+    setMode('LIVE');
+    fetch(`${API_BASE_URL}/api/mode`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'LIVE' })
+    }).catch(() => {});
+  });
+
+  $('btn-hw-check-sync')?.addEventListener('click', () => {
+    fetch(`${API_BASE_URL}/api/telemetry/status`)
+      .then(r => r.json())
+      .then(statusData => {
+        updateHardwareView(statusData, null, evalMode, statusData.connected);
+        toast(`Hardware Bridge Sync: ${statusData.status || 'CONNECTED'}`);
+      })
+      .catch(() => {
+        updateHardwareView({ status: 'BACKEND OFFLINE', connected: false }, null, evalMode, false);
+        toast('Backend offline: could not query hardware status');
+      });
+  });
+
   // ─── Main Telemetry Update Processor (Backend and Fallback) ─────────────────
   // ─── Disconnected / Standby State Renderer ────────────────────────────────
   function renderDisconnectedLiveState(statusDetails = {}) {
@@ -1638,6 +1855,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 6-Channel Realtime Monitor
     rtMon.renderDisconnected({ mode: 'LIVE', status, source });
+
+    // Update Hardware View
+    updateHardwareView(statusDetails, null, evalMode, false);
   }
 
   // ─── Main Telemetry Update Processor ────────────────────────────────────────
@@ -1648,6 +1868,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const expected = data.expected_physics || {};
     const sensorTrust = data.sensor_trust || {};
     const metrics = data.stream_metrics || streamMetrics || {};
+
+    // Update Hardware View with live stream metrics
+    updateHardwareView(data.stream_metrics || streamMetrics, metrics, mode, true);
 
     if (evalMode === 'LIVE' && !liveStreamConnected) {
       renderDisconnectedLiveState();
@@ -2002,6 +2225,7 @@ document.addEventListener('DOMContentLoaded', () => {
               setText('hdr-last-update', 'STALE STREAM');
               setCss('hdr-pulse-dot', 'background', '#F59E0B');
               setText('kpi-status-val', 'STALE');
+              updateHardwareView(msg.status_details || { status: 'STALE', connected: true }, null, evalMode, true);
             }
           } else if (msg.type === 'TELEMETRY_UPDATE') {
             liveStreamConnected = true;

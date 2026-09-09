@@ -4355,3 +4355,61 @@ body {
   }
 }
 
+/* ==========================================================================
+   VIEW 8: PHYSICAL HARDWARE CONNECTION & TELEMETRY GATEWAY
+   ========================================================================== */
+.hw-status-pill {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-transform: uppercase;
+  border: 1px solid var(--border-medium);
+  background: var(--surface);
+  color: var(--text-dim);
+  transition: all 0.2s ease;
+}
+
+.hw-status-pill.connected {
+  background: rgba(78, 222, 163, 0.15);
+  border-color: var(--status-normal);
+  color: var(--status-normal);
+}
+
+.hw-status-pill.active {
+  background: rgba(76, 215, 246, 0.18);
+  border-color: var(--primary);
+  color: var(--primary);
+  box-shadow: 0 0 8px rgba(76, 215, 246, 0.2);
+}
+
+.hw-status-pill.stale {
+  background: rgba(238, 152, 0, 0.18);
+  border-color: var(--status-warning);
+  color: var(--status-warning);
+}
+
+.hw-status-pill.disconnected {
+  background: rgba(255, 84, 73, 0.12);
+  border-color: rgba(255, 84, 73, 0.4);
+  color: var(--status-critical);
+}
+
+.hw-status-pill.connecting {
+  background: rgba(76, 215, 246, 0.12);
+  border-color: rgba(76, 215, 246, 0.4);
+  color: var(--primary);
+}
+
+@media (max-width: 1024px) {
+  #view-hardware > div[style*="grid-template-columns: 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+
