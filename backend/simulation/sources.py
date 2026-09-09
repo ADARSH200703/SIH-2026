@@ -55,9 +55,13 @@ class LiveStreamSource(TelemetrySource):
         self.total_received: int = 0
         self.total_dropped: int = 0
         self.last_frame: Optional[Dict[str, Any]] = None
+        self.last_device_id: Optional[str] = None
+        self.last_source: str = "LIVE"
+        self.last_wifi_rssi: Optional[int] = None
+        self.last_firmware_version: Optional[str] = None
 
     def get_source_type(self) -> str:
-        return "LIVE"
+        return self.last_source or "LIVE"
 
     def push_frame(self, raw_frame: Dict[str, Any]) -> Dict[str, Any]:
         """Called when an external live telemetry frame is received."""
@@ -74,9 +78,17 @@ class LiveStreamSource(TelemetrySource):
         ts = raw_frame.get("timestamp", now)
         self.last_packet_timestamp = ts
 
+        # Track hardware gateway metadata
+        self.last_device_id = raw_frame.get("device_id", "AERIS-PROTOTYPE-01")
+        self.last_source = raw_frame.get("source", "LIVE")
+        self.last_wifi_rssi = raw_frame.get("wifi_rssi", None)
+        self.last_firmware_version = raw_frame.get("firmware_version", None)
+
         # Tag normalized frame
         raw_frame["_ingest_time"] = now
-        raw_frame["source"] = "LIVE"
+        raw_frame["source"] = self.last_source
+        raw_frame["device_id"] = self.last_device_id
+        raw_frame["is_simulated"] = False
         self.last_frame = raw_frame
         self._buffer.append(raw_frame)
         return raw_frame
@@ -116,7 +128,8 @@ class LiveStreamSource(TelemetrySource):
         loss_rate = round((self.total_dropped / max(1, total_expected)) * 100.0, 2)
 
         return {
-            "source": "LIVE",
+            "source": self.last_source,
+            "device_id": self.last_device_id,
             "status": status,
             "connected": self.is_connected(),
             "packet_age_seconds": age_sec,
@@ -126,7 +139,23 @@ class LiveStreamSource(TelemetrySource):
             "packet_loss_pct": loss_rate,
             "last_sequence": self.last_sequence_num,
             "last_packet_time": self.last_received_time,
+            "wifi_rssi": self.last_wifi_rssi,
+            "firmware_version": self.last_firmware_version,
         }
+
+    def reset(self):
+        """Reset live stream telemetry state and buffer."""
+        self._buffer.clear()
+        self.last_received_time = None
+        self.last_packet_timestamp = None
+        self.last_sequence_num = -1
+        self.total_received = 0
+        self.total_dropped = 0
+        self.last_frame = None
+        self.last_device_id = None
+        self.last_source = "LIVE"
+        self.last_wifi_rssi = None
+        self.last_firmware_version = None
 
 
 class SimulationSource(TelemetrySource):

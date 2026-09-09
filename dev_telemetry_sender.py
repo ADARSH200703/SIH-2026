@@ -16,9 +16,11 @@ Usage Examples:
 import argparse
 import json
 import math
+import os
 import sys
 import time
 import httpx
+
 
 
 def generate_frame(seq: int, scenario: str = "nominal", elapsed_s: float = 0.0, custom_params: dict = None) -> dict:
@@ -80,17 +82,22 @@ def generate_frame(seq: int, scenario: str = "nominal", elapsed_s: float = 0.0, 
         "egt_c": round(egt_c, 1),
         "altitude_ft": round(altitude_ft, 1),
         "ambient_temperature_c": round(ambient_temp_c, 1),
-        "source": "LIVE_PRODUCER",
+        "source": custom_params.get("source", "LIVE_PRODUCER") if custom_params else "LIVE_PRODUCER",
+        "device_id": custom_params.get("device_id", "AERIS-PROTOTYPE-01") if custom_params else "AERIS-PROTOTYPE-01",
         "is_simulated": False
     }
 
 
 def run_producer(args):
-    url = f"{args.host.rstrip('/')}/api/telemetry/live"
+    endpoint = args.endpoint.lstrip('/')
+    url = f"{args.host.rstrip('/')}/{endpoint}"
     print(f"[*] AERIS-TWIN Telemetry Producer starting...")
     print(f"[*] Target Endpoint: {url}")
+    print(f"[*] Device ID: {args.device_id} | Source: {args.source}")
     print(f"[*] Mode: {'SINGLE-FRAME' if args.single else f'CONTINUOUS @ {args.rate} Hz'}")
     print(f"[*] Scenario: {args.scenario}")
+    if args.api_key:
+        print(f"[*] Device Authentication: API Key configured ({args.api_key[:4]}***)")
 
     custom_params = {
         "rpm": args.rpm,
@@ -98,10 +105,16 @@ def run_producer(args):
         "oil": args.oil,
         "vib": args.vib,
         "fuel": args.fuel,
-        "load": args.load
+        "load": args.load,
+        "source": args.source,
+        "device_id": args.device_id
     }
 
-    client = httpx.Client(timeout=4.0)
+    headers = {"Content-Type": "application/json"}
+    if args.api_key:
+        headers["X-Device-API-Key"] = args.api_key
+
+    client = httpx.Client(timeout=4.0, headers=headers)
     seq = 1
     start_time = time.time()
 
@@ -109,6 +122,8 @@ def run_producer(args):
         while True:
             elapsed = time.time() - start_time
             packet = generate_frame(seq, args.scenario, elapsed, custom_params)
+            if args.api_key:
+                packet["api_key"] = args.api_key
             
             t0 = time.perf_counter()
             resp = client.post(url, json=packet)
@@ -116,7 +131,7 @@ def run_producer(args):
 
             if resp.status_code == 200:
                 res_data = resp.json()
-                print(f"[+] Frame #{seq:04d} transmitted | Latency: {latency_ms:.1f}ms | Health: {res_data.get('health_index', '--')}% | Fault: {res_data.get('fault_class', 'NOMINAL')}")
+                print(f"[+] Frame #{seq:04d} transmitted | Latency: {latency_ms:.1f}ms | Source: {res_data.get('source', args.source)} | Health: {res_data.get('health_index', '--')}% | Fault: {res_data.get('fault_class', 'NOMINAL')}")
             else:
                 print(f"[-] Frame #{seq:04d} failed: HTTP {resp.status_code} - {resp.text}")
 
@@ -135,18 +150,22 @@ def run_producer(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="AERIS-TWIN Development Telemetry Producer")
+    parser = argparse.ArgumentParser(description="AERIS-TWIN Development & Hardware Telemetry Producer")
     parser.add_argument("--host", default="http://127.0.0.1:8000", help="Backend base URL")
+    parser.add_argument("--endpoint", default="api/telemetry/live", choices=["api/telemetry/live", "api/telemetry/hardware", "api/telemetry"], help="Target REST endpoint")
     parser.add_argument("--rate", type=float, default=10.0, help="Transmission rate in Hz (default: 10.0)")
     parser.add_argument("--scenario", default="nominal", choices=["nominal", "bearing_wear", "thermal_overheat", "lubrication_loss", "spark_misfire"], help="Fault trajectory scenario")
     parser.add_argument("--single", action="store_true", help="Send exactly one frame and exit")
     parser.add_argument("--count", type=int, default=None, help="Stop after sending N frames")
+    parser.add_argument("--device-id", default="AERIS-PROTOTYPE-01", help="Hardware Device Identifier")
+    parser.add_argument("--source", default="LIVE_PRODUCER", help="Telemetry source tag (e.g. ESP32, ESP32_TEST, PHYSICAL_SENSOR, LIVE_PRODUCER)")
+    parser.add_argument("--api-key", default=os.getenv("AERIS_DEVICE_API_KEY", None), help="Device API authentication key")
     parser.add_argument("--rpm", type=float, default=None, help="Override RPM value")
     parser.add_argument("--cht", type=float, default=None, help="Override CHT (°C) value")
     parser.add_argument("--oil", type=float, default=None, help="Override Oil Pressure (Bar) value")
     parser.add_argument("--vib", type=float, default=None, help="Override Vibration (mm/s) value")
     parser.add_argument("--fuel", type=float, default=None, help="Override Fuel Flow (L/h) value")
-    parser.add_argument("--load", type=float, default=None, help="Override Engine Load (%) value")
+    parser.add_argument("--load", type=float, default=None, help="Override Engine Load (%%) value")
 
     args = parser.parse_args()
     run_producer(args)

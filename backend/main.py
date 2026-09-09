@@ -11,7 +11,7 @@ import time
 from contextlib import asynccontextmanager
 from typing import List, Dict, Any, Optional
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Query
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -344,21 +344,140 @@ def get_system_events(limit: int = 50):
 
 
 # ==========================================
-# 2. TELEMETRY INGEST (LIVE & REST)
+# 2. TELEMETRY INGEST & DEVICE AUTHENTICATION
 # ==========================================
+AERIS_DEVICE_API_KEY = os.getenv("AERIS_DEVICE_API_KEY", "").strip()
+
+def verify_device_authentication(request: Request, raw_packet: Optional[Dict[str, Any]] = None):
+    """
+    Validates physical prototype API key against configured AERIS_DEVICE_API_KEY environment variable.
+    If no key is configured, defaults to permissive mode for local dev.
+    """
+    expected_key = (AERIS_DEVICE_API_KEY or os.getenv("AERIS_DEVICE_API_KEY", "")).strip()
+    if not expected_key:
+        return True  # Dev mode: permissive when no secret is configured
+
+    # 1. Check HTTP Headers (X-Device-API-Key, X-API-Key, Authorization: Bearer <key>)
+    auth_header = (
+        request.headers.get("X-Device-API-Key")
+        or request.headers.get("X-API-Key")
+        or request.headers.get("Authorization", "")
+    )
+    if auth_header.startswith("Bearer "):
+        provided_key = auth_header[7:].strip()
+    else:
+        provided_key = auth_header.strip()
+
+    # 2. Fallback check inside JSON body
+    if not provided_key and raw_packet:
+        provided_key = str(raw_packet.get("api_key", "")).strip()
+
+    if provided_key != expected_key:
+        raise HTTPException(
+            status_code=401,
+            detail="Unauthorized: Invalid or missing device API key (Supply X-Device-API-Key header or api_key payload)"
+        )
+    return True
+
+
+@app.get("/api/telemetry/status")
+def get_telemetry_status():
+    """Returns the live hardware telemetry stream connection status and metrics."""
+    return live_source.get_status()
+
+
+
+def normalize_telemetry_packet(raw_packet: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Normalizes physical sensor and hardware gateway field names to AERIS-TWIN schema.
+    """
+    packet = dict(raw_packet)
+
+    # RPM
+    if "rpm" in packet and packet["rpm"] is not None:
+        try:
+            packet["rpm"] = float(packet["rpm"])
+        except (ValueError, TypeError):
+            packet["rpm"] = 0.0
+
+    # Temperature / CHT
+    if "cht" in packet and "temperature" not in packet:
+        packet["temperature"] = float(packet["cht"]) if packet["cht"] is not None else 78.4
+    elif "cht_c" in packet and "temperature" not in packet:
+        packet["temperature"] = float(packet["cht_c"]) if packet["cht_c"] is not None else 78.4
+
+    # Oil Pressure
+    if "oil_pressure" in packet and "oilPressure" not in packet:
+        packet["oilPressure"] = float(packet["oil_pressure"]) if packet["oil_pressure"] is not None else 4.3
+    elif "oil_pressure_bar" in packet and "oilPressure" not in packet:
+        packet["oilPressure"] = float(packet["oil_pressure_bar"]) if packet["oil_pressure_bar"] is not None else 4.3
+
+    # Vibration
+    if "vibration_mms" in packet and "vibration" not in packet:
+        packet["vibration"] = float(packet["vibration_mms"]) if packet["vibration_mms"] is not None else 1.6
+
+    # Fuel Flow
+    if "fuel_flow" in packet and "fuelFlow" not in packet:
+        packet["fuelFlow"] = float(packet["fuel_flow"]) if packet["fuel_flow"] is not None else 5.2
+
+    # Engine Load / Throttle
+    if "engine_load" in packet and "engineLoad" not in packet:
+        packet["engineLoad"] = float(packet["engine_load"]) if packet["engine_load"] is not None else 62.0
+    elif "throttle" in packet and "engineLoad" not in packet:
+        packet["engineLoad"] = float(packet["throttle"]) if packet["throttle"] is not None else 62.0
+
+    # Metadata & Origin Tagging
+    packet["source"] = packet.get("source", "ESP32")
+    packet["device_id"] = packet.get("device_id", "AERIS-PROTOTYPE-01")
+    packet["is_simulated"] = False
+
+    if "timestamp" not in packet or not packet["timestamp"]:
+        packet["timestamp"] = time.time()
+
+    return packet
+
+
 @app.post("/api/telemetry/live")
 @app.post("/telemetry/live")
-def ingest_live_telemetry(raw_packet: Dict[str, Any]):
+def ingest_live_telemetry(raw_packet: Dict[str, Any], request: Request):
     """
-    Direct ingestion endpoint for continuous external live telemetry streams.
+    Direct ingestion endpoint for continuous external live telemetry streams (ESP32 Gateway / Producers).
     """
-    raw_packet["source"] = "LIVE"
-    raw_packet["is_simulated"] = False
-    pushed = live_source.push_frame(raw_packet)
+    verify_device_authentication(request, raw_packet)
+    normalized = normalize_telemetry_packet(raw_packet)
+    pushed = live_source.push_frame(normalized)
     pipeline_out = twin_service.process_telemetry_frame(pushed)
     return {
         "status": "ingested",
         "mode": "LIVE",
+        "device_id": pushed.get("device_id", "AERIS-PROTOTYPE-01"),
+        "source": pushed.get("source", "LIVE"),
+        "sequence_number": pushed.get("sequence_number", 0),
+        "latency_ms": pipeline_out["twin_state"]["processing_latency_ms"],
+        "data_age_ms": pipeline_out["dashboard_view"].get("stream_metrics", {}).get("data_age_ms", 0),
+        "health_index": pipeline_out["twin_state"]["health_state"]["value"]["health_index"],
+        "anomaly_score": pipeline_out["inference"]["anomalyScore"],
+        "fault_class": pipeline_out["inference"]["possibleIssue"],
+    }
+
+
+@app.post("/api/telemetry/hardware")
+@app.post("/telemetry/hardware")
+def ingest_hardware_telemetry(raw_packet: Dict[str, Any], request: Request):
+    """
+    Dedicated physical prototype telemetry gateway ingestion endpoint for Arduino + ESP32.
+    """
+    verify_device_authentication(request, raw_packet)
+    if not raw_packet.get("source"):
+        raw_packet["source"] = "PHYSICAL_SENSOR"
+    normalized = normalize_telemetry_packet(raw_packet)
+    pushed = live_source.push_frame(normalized)
+    pipeline_out = twin_service.process_telemetry_frame(pushed)
+    return {
+        "status": "ingested",
+        "mode": "LIVE",
+        "device_id": pushed.get("device_id", "AERIS-PROTOTYPE-01"),
+        "source": pushed.get("source", "PHYSICAL_SENSOR"),
         "sequence_number": pushed.get("sequence_number", 0),
         "latency_ms": pipeline_out["twin_state"]["processing_latency_ms"],
         "data_age_ms": pipeline_out["dashboard_view"].get("stream_metrics", {}).get("data_age_ms", 0),
@@ -1100,10 +1219,18 @@ async def websocket_telemetry_endpoint(websocket: WebSocket):
                     )
                 elif action == "MITIGATE":
                     simulator.execute_mitigation()
-                elif action == "INGEST_LIVE":
+                elif action in ["INGEST_LIVE", "INGEST_HARDWARE"]:
+                    expected_key = os.getenv("AERIS_DEVICE_API_KEY", "").strip()
+                    provided_key = str(msg.get("api_key", "")).strip()
+                    if expected_key and provided_key != expected_key:
+                        log_event("Unauthorized WebSocket hardware telemetry attempt", "warning", "WebSocketAuth")
+                        continue
                     frame = msg.get("frame", {})
                     if frame:
-                        live_source.push_frame(frame)
+                        if action == "INGEST_HARDWARE" and "source" not in frame:
+                            frame["source"] = "PHYSICAL_SENSOR"
+                        normalized = normalize_telemetry_packet(frame)
+                        live_source.push_frame(normalized)
                 elif action == "REPLAY_START":
                     replay_engine.start()
                 elif action == "REPLAY_PAUSE":
