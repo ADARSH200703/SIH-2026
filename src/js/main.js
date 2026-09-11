@@ -1529,7 +1529,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let latestHwStatus = null;
 
   function updateHardwareView(statusInfo = null, streamMetrics = null, mode = evalMode, isConnected = liveStreamConnected) {
-    if (statusInfo) latestHwStatus = statusInfo;
+    if (statusInfo) latestHwStatus = { ...(latestHwStatus || {}), ...statusInfo };
     const info = latestHwStatus || {};
     const metrics = streamMetrics || {};
 
@@ -1564,12 +1564,24 @@ document.addEventListener('DOMContentLoaded', () => {
       setText('hw-kpi-backend', wsConnected ? 'Connected' : 'Offline');
       setText('hw-kpi-latency', wsConnected ? '<1.5 ms' : '-- ms');
 
+      setText('hw-spec-device', 'Simulator');
       setText('hw-spec-device-id', 'ROT-914-SIM');
+      setText('hw-spec-profile-val', 'AERO_ENGINE');
+      setText('hw-profile-badge', 'PROFILE: SIMULATION');
       setText('hw-spec-firmware', 'v2.5.0-sim');
       setText('hw-spec-rssi', 'N/A (Virtual)');
       setText('hw-spec-last-packet', '<50 ms ago');
       setText('hw-spec-loss', '0.0%');
       setText('hw-spec-total-frames', `${totalProcessedSamples}`);
+
+      // Clear prototype channels in simulation
+      setText('hw-val-rpm', '--');
+      setText('hw-val-current', '-- A');
+      setText('hw-val-voltage', '-- V');
+      setText('hw-val-power', '-- W');
+      setText('hw-val-temp', '-- °C');
+      setText('hw-val-vib', '---');
+      setText('hw-val-load', '-- %');
       return;
     }
 
@@ -1597,12 +1609,23 @@ document.addEventListener('DOMContentLoaded', () => {
       setText('hw-kpi-backend', wsConnected ? 'Connected' : 'Offline');
       setText('hw-kpi-latency', '-- ms');
 
+      setText('hw-spec-device', 'Flight Recorder');
       setText('hw-spec-device-id', 'HISTORICAL-LOG');
+      setText('hw-spec-profile-val', 'AERO_ENGINE');
+      setText('hw-profile-badge', 'PROFILE: REPLAY');
       setText('hw-spec-firmware', '--');
       setText('hw-spec-rssi', '--');
       setText('hw-spec-last-packet', '--');
       setText('hw-spec-loss', '0.0%');
       setText('hw-spec-total-frames', '--');
+
+      setText('hw-val-rpm', '--');
+      setText('hw-val-current', '-- A');
+      setText('hw-val-voltage', '-- V');
+      setText('hw-val-power', '-- W');
+      setText('hw-val-temp', '-- °C');
+      setText('hw-val-vib', '---');
+      setText('hw-val-load', '-- %');
       return;
     }
 
@@ -1610,7 +1633,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (simBanner) simBanner.style.display = 'none';
     if (replayBanner) replayBanner.style.display = 'none';
 
-    if (isConnected || info.connected || info.status === 'CONNECTED' || info.status === 'LIVE' || info.status === 'STALE') {
+    const isLiveActive = isConnected || info.connected || info.status === 'CONNECTED' || info.status === 'LIVE' || info.status === 'STALE';
+
+    if (isLiveActive) {
       const isStale = info.status === 'STALE';
       if (liveBanner) liveBanner.style.display = 'none';
 
@@ -1623,10 +1648,11 @@ document.addEventListener('DOMContentLoaded', () => {
         sideBadge.style.color = isStale ? 'var(--status-warning)' : 'var(--status-normal)';
       }
 
-      const devId = info.device_id || metrics.device_id || (selectedHwType === 'esp32' ? 'AERIS-UAV-HW-01' : 'ARDUINO-RIG-01');
-      const src = info.source || info.gateway_source || (selectedHwType === 'esp32' ? 'ESP32_GATEWAY' : 'PHYSICAL_SENSOR');
-      const fw = info.firmware_version || 'v1.4.2-hw';
-      const rssi = info.wifi_rssi ? `${info.wifi_rssi} dBm` : (selectedHwType === 'esp32' ? '-54 dBm' : 'N/A (UART)');
+      const devId = info.device_id || metrics.device_id || 'AERIS-ESP32-001';
+      const profile = info.profile || metrics.profile || 'MOTOR_PROTOTYPE';
+      const src = info.source || info.gateway_source || 'ESP32';
+      const fw = info.firmware_version || 'v1.4.2-motor';
+      const rssi = info.wifi_rssi ? `${info.wifi_rssi} dBm` : '-58 dBm';
       const rateHz = metrics.actual_rate_hz || metrics.rate_hz || currentTargetRateHz || 10.0;
       const lastAge = info.data_age_ms ?? metrics.data_age_ms ?? 18;
       const loss = (info.packet_loss_pct ?? 0).toFixed(1);
@@ -1634,20 +1660,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
       setText('hw-kpi-device-id', devId);
       setText('hw-kpi-gateway-source', `SOURCE: ${src}`);
-      setText('hw-kpi-state-text', isStale ? 'TELEMETRY STALE' : 'CONNECTED');
-      setText('hw-kpi-state-sub', isStale ? 'No packet in >3.0s' : 'Physical telemetry streaming');
+      setText('hw-kpi-state-text', isStale ? 'TELEMETRY STALE' : '● Connected');
+      setText('hw-kpi-state-sub', isStale ? 'No packet in >3.0s' : '● Receiving physical frames');
       setCss('hw-kpi-state-badge', 'color', isStale ? 'var(--status-warning)' : 'var(--status-normal)');
       setText('hw-kpi-state-icon', isStale ? 'warning' : 'sensors');
       setText('hw-kpi-rate', `${Number(rateHz).toFixed(1)}`);
-      setText('hw-kpi-backend', wsConnected ? 'Connected' : 'Offline');
+      setText('hw-kpi-backend', wsConnected ? '● Connected' : 'Offline');
       setText('hw-kpi-latency', `${Math.round(metrics.latency_ms || 2.4)} ms`);
 
+      setText('hw-spec-device', 'ESP32');
       setText('hw-spec-device-id', devId);
+      setText('hw-spec-profile-val', profile);
+      setText('hw-profile-badge', `PROFILE: ${profile}`);
       setText('hw-spec-firmware', fw);
       setText('hw-spec-rssi', rssi);
       setText('hw-spec-last-packet', `${Math.round(lastAge)} ms ago`);
       setText('hw-spec-loss', `${loss}%`);
       setText('hw-spec-total-frames', `${totalFrames}`);
+
+      // Physical sensor channel readouts
+      const rpmVal = info.rpm ?? metrics.rpm;
+      setText('hw-val-rpm', (rpmVal !== undefined && rpmVal !== null) ? `${Math.round(rpmVal).toLocaleString()} RPM` : '--');
+
+      const currVal = info.current_a ?? metrics.current_a;
+      setText('hw-val-current', (currVal !== undefined && currVal !== null) ? `${Number(currVal).toFixed(2)} A` : '-- A');
+
+      const voltVal = info.voltage_v ?? metrics.voltage_v;
+      setText('hw-val-voltage', (voltVal !== undefined && voltVal !== null) ? `${Number(voltVal).toFixed(2)} V` : '-- V');
+
+      const pwrVal = info.power_w ?? metrics.power_w ?? ((voltVal !== undefined && currVal !== undefined && voltVal !== null && currVal !== null) ? (voltVal * currVal) : null);
+      setText('hw-val-power', (pwrVal !== undefined && pwrVal !== null) ? `${Number(pwrVal).toFixed(1)} W` : '-- W');
+
+      const tempVal = info.temperature_c ?? metrics.temperature_c ?? info.temperature;
+      setText('hw-val-temp', (tempVal !== undefined && tempVal !== null) ? `${Number(tempVal).toFixed(1)} °C` : '-- °C');
+
+      const vibVal = info.vibration ?? metrics.vibration;
+      setText('hw-val-vib', (vibVal !== undefined && vibVal !== null) ? `${Number(vibVal).toFixed(2)} mm/s` : '---');
+
+      const loadVal = info.motor_load_pct ?? metrics.motor_load_pct ?? info.engine_load;
+      setText('hw-val-load', (loadVal !== undefined && loadVal !== null) ? `${Number(loadVal).toFixed(0)} %` : '-- %');
 
     } else {
       // Disconnected Live State
@@ -1664,53 +1715,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
       setText('hw-kpi-device-id', '--');
       setText('hw-kpi-gateway-source', 'SOURCE: --');
-      setText('hw-kpi-state-text', 'DISCONNECTED');
-      setText('hw-kpi-state-sub', 'Waiting for physical frame');
+      setText('hw-kpi-state-text', 'Waiting for hardware');
+      setText('hw-kpi-state-sub', 'Awaiting ESP32 connection');
       setCss('hw-kpi-state-badge', 'color', 'var(--status-offline)');
       setText('hw-kpi-state-icon', 'power_off');
       setText('hw-kpi-rate', '--');
-      setText('hw-kpi-backend', wsConnected ? 'Connected (WS)' : 'Offline');
+      setText('hw-kpi-backend', wsConnected ? '● Connected (WS)' : 'Offline');
       setText('hw-kpi-latency', wsConnected ? 'Ready' : '-- ms');
 
+      setText('hw-spec-device', 'ESP32');
       setText('hw-spec-device-id', '--');
+      setText('hw-spec-profile-val', 'MOTOR_PROTOTYPE');
+      setText('hw-profile-badge', 'PROFILE: MOTOR_PROTOTYPE');
       setText('hw-spec-firmware', '--');
       setText('hw-spec-rssi', '--');
       setText('hw-spec-last-packet', '-- ms ago');
       setText('hw-spec-loss', '0.0%');
       setText('hw-spec-total-frames', '0');
+
+      setText('hw-val-rpm', '--');
+      setText('hw-val-current', '-- A');
+      setText('hw-val-voltage', '-- V');
+      setText('hw-val-power', '-- W');
+      setText('hw-val-temp', '-- °C');
+      setText('hw-val-vib', '---');
+      setText('hw-val-load', '-- %');
     }
   }
-
-  // ─── Bind Hardware UI Controls ────────────────────────────────────────────
-  $('hw-type-esp32')?.addEventListener('click', () => {
-    selectedHwType = 'esp32';
-    $('hw-type-esp32')?.classList.add('active');
-    $('hw-type-arduino')?.classList.remove('active');
-    updateHardwareView();
-  });
-
-  $('hw-type-arduino')?.addEventListener('click', () => {
-    selectedHwType = 'arduino';
-    $('hw-type-arduino')?.classList.add('active');
-    $('hw-type-esp32')?.classList.remove('active');
-    updateHardwareView();
-  });
-
-  $('hw-method-wifi')?.addEventListener('click', () => {
-    selectedHwMethod = 'wifi';
-    $('hw-method-wifi')?.classList.add('active');
-    $('hw-method-serial')?.classList.remove('active');
-    $('hw-method-serial-note')?.style.setProperty('display', 'none');
-    updateHardwareView();
-  });
-
-  $('hw-method-serial')?.addEventListener('click', () => {
-    selectedHwMethod = 'serial';
-    $('hw-method-serial')?.classList.add('active');
-    $('hw-method-wifi')?.classList.remove('active');
-    $('hw-method-serial-note')?.style.setProperty('display', 'block');
-    updateHardwareView();
-  });
 
   $('btn-hw-switch-live')?.addEventListener('click', () => {
     setMode('LIVE');
@@ -1869,8 +1900,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const sensorTrust = data.sensor_trust || {};
     const metrics = data.stream_metrics || streamMetrics || {};
 
-    // Update Hardware View with live stream metrics
-    updateHardwareView(data.stream_metrics || streamMetrics, metrics, mode, true);
+    // Update Hardware View with live stream & prototype metrics
+    updateHardwareView({ ...dashboardView, ...(data.stream_metrics || streamMetrics) }, metrics, mode, true);
 
     if (evalMode === 'LIVE' && !liveStreamConnected) {
       renderDisconnectedLiveState();

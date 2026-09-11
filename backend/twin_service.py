@@ -63,13 +63,239 @@ class TwinUpdateService:
         self.last_twin_state = None
         self.last_dashboard_view = None
 
-    def process_telemetry_frame(self, raw_frame: Dict[str, Any]) -> Dict[str, Any]:
-
+    def process_motor_prototype_frame(self, raw_frame: Dict[str, Any], start_time: float, now_epoch: float) -> Dict[str, Any]:
         """
-        Executes the complete 16-stage AERIS-TWIN intelligence pipeline.
+        Processes physical DC motor prototype telemetry without injecting aero-engine thermodynamics or fake RUL.
+        Physical Testbed: 3x18650 Battery -> ACS712 Current Sensor -> L298N Motor Driver -> DC Geared Motor -> ESP32.
+        """
+        device_id = raw_frame.get("device_id", "AERIS-ESP32-001")
+        timestamp = raw_frame.get("timestamp", now_epoch)
+        seq = raw_frame.get("sequence_number", raw_frame.get("seq", 0))
+        source_mode = raw_frame.get("source", "PHYSICAL_SENSOR")
+        is_sim = False
+
+        # Physical measurements (nullable/optional)
+        rpm = float(raw_frame["rpm"]) if raw_frame.get("rpm") is not None else None
+        current_a = float(raw_frame["current_a"]) if raw_frame.get("current_a") is not None else (float(raw_frame["current"]) if raw_frame.get("current") is not None else None)
+        voltage_v = float(raw_frame["voltage_v"]) if raw_frame.get("voltage_v") is not None else (float(raw_frame["voltage"]) if raw_frame.get("voltage") is not None else None)
+        
+        if raw_frame.get("power_w") is not None:
+            power_w = float(raw_frame["power_w"])
+        elif raw_frame.get("power") is not None:
+            power_w = float(raw_frame["power"])
+        elif voltage_v is not None and current_a is not None:
+            power_w = round(voltage_v * current_a, 2)
+        else:
+            power_w = None
+
+        temperature_c = float(raw_frame["temperature_c"]) if raw_frame.get("temperature_c") is not None else (float(raw_frame["temperature"]) if raw_frame.get("temperature") is not None else (float(raw_frame["temp"]) if raw_frame.get("temp") is not None else None))
+        vibration = float(raw_frame["vibration"]) if raw_frame.get("vibration") is not None else (float(raw_frame["vibration_mms"]) if raw_frame.get("vibration_mms") is not None else None)
+        motor_load_pct = float(raw_frame["motor_load_pct"]) if raw_frame.get("motor_load_pct") is not None else (float(raw_frame["motor_load"]) if raw_frame.get("motor_load") is not None else (float(raw_frame["load"]) if raw_frame.get("load") is not None else None))
+
+        # Electrical / Thermal Limit Checks & Health Estimation
+        health_index = 100.0
+        anomalies = []
+        possible_issue = "Nominal Motor Operation"
+        anomaly_score = 0.015
+
+        if voltage_v is not None:
+            if voltage_v < 9.0:
+                health_index -= 35.0
+                anomalies.append(f"Critical Battery Undervoltage: {voltage_v:.2f}V (< 9.0V threshold)")
+                possible_issue = "Battery Critical Low Voltage (<9.0V)"
+                anomaly_score = max(anomaly_score, 0.85)
+            elif voltage_v < 9.9:
+                health_index -= 15.0
+                anomalies.append(f"Low Battery Pack: {voltage_v:.2f}V (< 9.9V cutoff)")
+                possible_issue = "Battery Pack Depleted"
+                anomaly_score = max(anomaly_score, 0.45)
+
+        if current_a is not None:
+            if current_a > 6.0:
+                health_index -= 40.0
+                anomalies.append(f"Motor Overcurrent / Jam: {current_a:.2f}A (> 6.0A limit)")
+                possible_issue = "Motor Stalled / Overcurrent (>6.0A)"
+                anomaly_score = max(anomaly_score, 0.90)
+            elif current_a > 4.5:
+                health_index -= 15.0
+                anomalies.append(f"High Electrical Load: {current_a:.2f}A")
+                possible_issue = "High Current Demand"
+                anomaly_score = max(anomaly_score, 0.40)
+
+        if temperature_c is not None:
+            if temperature_c > 75.0:
+                health_index -= 35.0
+                anomalies.append(f"Thermal Overheating: {temperature_c:.1f}°C (> 75.0°C limit)")
+                possible_issue = "Motor Driver Thermal Stress"
+                anomaly_score = max(anomaly_score, 0.80)
+            elif temperature_c > 55.0:
+                health_index -= 10.0
+                anomalies.append(f"Elevated Temperature: {temperature_c:.1f}°C")
+                anomaly_score = max(anomaly_score, 0.35)
+
+        if vibration is not None and vibration > 3.5:
+            health_index -= 20.0
+            anomalies.append(f"Excessive Vibration: {vibration:.2f} mm/s")
+            possible_issue = "Motor Mechanical Imbalance"
+            anomaly_score = max(anomaly_score, 0.65)
+
+        health_index = max(10.0, min(100.0, health_index))
+        anomaly_detected = len(anomalies) > 0 and anomaly_score > 0.40
+        status_str = "CRITICAL" if anomaly_score >= 0.75 else ("WARNING" if anomaly_score >= 0.35 else "NORMAL")
+
+        # Primary Evidence (Physically Honest)
+        primary_evidence = [
+            "Physical DC Motor Prototype Telemetry (3×18650 + ACS712 + L298N + ESP32)",
+            f"Power Bus: {voltage_v if voltage_v is not None else '--'}V | Current: {current_a if current_a is not None else '--'}A | Power: {power_w if power_w is not None else '--'}W",
+            "Aero-engine Rotax 914 thermodynamic model bypassed for physical motor prototype"
+        ]
+        if anomalies:
+            primary_evidence.extend(anomalies)
+        else:
+            primary_evidence.append("Operating within electrical and thermal testbed boundaries")
+
+        # Timing
+        proc_duration_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
+        self._processing_durations.append(proc_duration_ms)
+        self._frame_timestamps.append(now_epoch)
+
+        if len(self._frame_timestamps) >= 2:
+            time_span = self._frame_timestamps[-1] - self._frame_timestamps[0]
+            eff_ingest_rate_hz = round((len(self._frame_timestamps) - 1) / max(0.01, time_span), 1)
+        else:
+            eff_ingest_rate_hz = 10.0
+
+        avg_proc_ms = round(sum(self._processing_durations) / max(1, len(self._processing_durations)), 1)
+        data_age_ms = round(max(0.0, (now_epoch - timestamp) * 1000.0), 1)
+
+        stream_metrics = {
+            "ingestion_rate_hz": eff_ingest_rate_hz,
+            "processing_rate_hz": round(1000.0 / max(0.1, avg_proc_ms), 1),
+            "evaluation_latency_ms": proc_duration_ms,
+            "avg_latency_ms": avg_proc_ms,
+            "data_age_ms": data_age_ms,
+            "dropped_samples": 0,
+            "total_samples": len(self._frame_timestamps),
+            "source": source_mode,
+            "profile": "MOTOR_PROTOTYPE",
+            "device_id": device_id,
+            "is_simulated": is_sim,
+        }
+
+        # Sensor Trust Matrix for physical channels
+        sensor_trust = {
+            "overall_trust_score": 0.98,
+            "aggregate_trust_score": 0.98,
+            "channels": {
+                "current_a": {"valid": current_a is not None and current_a >= 0, "status": "VALID" if current_a is not None else "NO_DATA", "trust_score": 0.98},
+                "voltage_v": {"valid": voltage_v is not None and voltage_v >= 0, "status": "VALID" if voltage_v is not None else "NO_DATA", "trust_score": 0.98},
+                "rpm": {"valid": rpm is not None and rpm >= 0, "status": "VALID" if rpm is not None else "NO_DATA", "trust_score": 0.99},
+                "temperature_c": {"valid": temperature_c is not None, "status": "VALID" if temperature_c is not None else "NO_DATA", "trust_score": 0.95},
+                "vibration": {"valid": vibration is not None and vibration >= 0, "status": "VALID" if vibration is not None else "NO_DATA", "trust_score": 0.96},
+            }
+        }
+
+        digital_twin_state = {
+            "device_id": device_id,
+            "profile": "MOTOR_PROTOTYPE",
+            "timestamp": timestamp,
+            "sequence_number": seq,
+            "processing_latency_ms": proc_duration_ms,
+            "stream_metrics": stream_metrics,
+            "health_state": {
+                "value": {
+                    "health_index": round(health_index, 1),
+                    "normalized_degradation": round((100.0 - health_index) / 100.0, 3),
+                    "interpretation": "Physical motor prototype health based on electrical/thermal margins"
+                }
+            },
+            "fault_state": {
+                "value": {
+                    "fault": possible_issue,
+                    "confidence": 0.95 if anomaly_detected else 0.98
+                }
+            },
+            "confidence": {
+                "overall": 0.95,
+                "sensor_trust": 0.98,
+                "ai_certainty": 0.95
+            },
+            "primary_evidence": primary_evidence,
+            "system_state": status_str,
+            "alerts": [{"severity": "CRITICAL" if status_str == "CRITICAL" else "WARNING", "text": a, "timestamp": timestamp} for a in anomalies],
+        }
+
+        dashboard_view = {
+            "device_id": device_id,
+            "profile": "MOTOR_PROTOTYPE",
+            "rpm": rpm,
+            "current_a": current_a,
+            "voltage_v": voltage_v,
+            "power_w": power_w,
+            "temperature_c": temperature_c,
+            "temperature": temperature_c,
+            "vibration": vibration,
+            "motor_load_pct": motor_load_pct,
+            "engine_load": motor_load_pct,
+            "flight_time_str": "PROTOTYPE-ACTIVE",
+            "flight_time_seconds": int(timestamp),
+            "engine_health": int(health_index),
+            "mission_reliability": int(health_index),
+            "status": status_str,
+            "source_mode": source_mode,
+            "is_simulated": False,
+            "anomaly_detected": anomaly_detected,
+            "anomaly_score": round(anomaly_score, 3),
+            "fault_class": possible_issue,
+            "fault_probability": 0.95 if anomaly_detected else 0.05,
+            "confidence_pct": 95,
+            "sensor_trust_pct": 98,
+            "rul_time_str": "MONITORING ONLY",
+            "rul_estimate_hours": None,
+            "degradation_velocity": 0.0,
+            "recommended_decision": "CONTINUE MOTOR TESTBED MONITORING" if not anomaly_detected else "INSPECT MOTOR LOAD & BATTERY",
+            "recommended_actions": ["Maintain DC motor operating envelope", "Monitor ACS712 current & bus voltage"] if not anomaly_detected else ["Reduce motor PWM duty cycle", "Inspect 3x18650 battery cell voltages"],
+            "primary_evidence": primary_evidence,
+            "stream_metrics": stream_metrics,
+        }
+
+        self.last_twin_state = digital_twin_state
+        self.last_dashboard_view = dashboard_view
+        self.state_history.append(digital_twin_state)
+
+        return {
+            "twin_state": digital_twin_state,
+            "dashboard_view": dashboard_view,
+            "residuals": {},
+            "expected_physics": {},
+            "sensor_trust": sensor_trust,
+            "stream_metrics": stream_metrics,
+            "alerts": digital_twin_state["alerts"],
+            "events": [],
+            "primary_evidence": primary_evidence,
+            "inference": {
+                "possibleIssue": possible_issue,
+                "riskLevel": "HIGH" if anomaly_detected else "LOW",
+                "confidence": 95,
+                "estimatedTimeToFault": "MONITORING ONLY",
+                "anomalyScore": round(anomaly_score, 3),
+                "recommendedAction": dashboard_view["recommended_actions"],
+                "timestamp": timestamp
+            }
+        }
+
+    def process_telemetry_frame(self, raw_frame: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Executes the AERIS-TWIN intelligence pipeline.
+        Branches between MOTOR_PROTOTYPE and AERO_ENGINE profiles.
         """
         start_time = time.perf_counter()
         now_epoch = time.time()
+
+        # Profile detection
+        profile = raw_frame.get("profile")
+        if profile == "MOTOR_PROTOTYPE" or ("current_a" in raw_frame and "oil_pressure" not in raw_frame and "oilPressure" not in raw_frame):
+            return self.process_motor_prototype_frame(raw_frame, start_time, now_epoch)
         
         # Stage 1: Telemetry Ingestion & Link Health
         telemetry = self.gateway.ingest_packet(raw_frame)

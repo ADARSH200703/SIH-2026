@@ -31,7 +31,8 @@ from .evaluator.questions_registry import EVALUATOR_QUESTIONS
 from .evaluator.limitations import SYSTEM_LIMITATIONS
 from .models.telemetry import (
     ScenarioRequest, ParameterOverrideRequest,
-    FaultInjectionRequest, WhatIfRequest, TelemetryPacket
+    FaultInjectionRequest, WhatIfRequest, TelemetryPacket,
+    MotorPrototypePacket, PROFILE_AERO_ENGINE, PROFILE_MOTOR_PROTOTYPE
 )
 
 # Initialize core subsystems
@@ -389,10 +390,108 @@ def get_telemetry_status():
 
 def normalize_telemetry_packet(raw_packet: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Normalizes physical sensor and hardware gateway field names to AERIS-TWIN schema.
+    Normalizes telemetry packet based on profile (MOTOR_PROTOTYPE vs AERO_ENGINE).
+    Preserves strict physical boundary: zero fake aero parameters injected into motor prototype packets.
     """
     packet = dict(raw_packet)
 
+    # Profile determination
+    profile = packet.get("profile")
+    if profile == PROFILE_MOTOR_PROTOTYPE or "current_a" in packet or "voltage_v" in packet or (
+        "oil_pressure" not in packet and "oilPressure" not in packet and "cht" not in packet and "fuel_flow" not in packet and "fuelFlow" not in packet
+    ):
+        profile = PROFILE_MOTOR_PROTOTYPE
+    else:
+        profile = PROFILE_AERO_ENGINE
+
+    packet["profile"] = profile
+
+    if profile == PROFILE_MOTOR_PROTOTYPE:
+        # ─── MOTOR_PROTOTYPE NORMALIZATION ───
+        # RPM
+        if "rpm" in packet and packet["rpm"] is not None:
+            try:
+                rpm_val = float(packet["rpm"])
+                packet["rpm"] = max(0.0, rpm_val)
+            except (ValueError, TypeError):
+                packet["rpm"] = None
+        else:
+            packet["rpm"] = None
+
+        # Current (A)
+        curr = packet.get("current_a", packet.get("current"))
+        if curr is not None:
+            try:
+                packet["current_a"] = max(0.0, float(curr))
+            except (ValueError, TypeError):
+                packet["current_a"] = None
+        else:
+            packet["current_a"] = None
+
+        # Voltage (V)
+        volt = packet.get("voltage_v", packet.get("voltage"))
+        if volt is not None:
+            try:
+                packet["voltage_v"] = max(0.0, float(volt))
+            except (ValueError, TypeError):
+                packet["voltage_v"] = None
+        else:
+            packet["voltage_v"] = None
+
+        # Power (W)
+        pwr = packet.get("power_w", packet.get("power"))
+        if pwr is not None:
+            try:
+                packet["power_w"] = max(0.0, float(pwr))
+            except (ValueError, TypeError):
+                packet["power_w"] = None
+        elif packet["voltage_v"] is not None and packet["current_a"] is not None:
+            packet["power_w"] = round(packet["voltage_v"] * packet["current_a"], 2)
+        else:
+            packet["power_w"] = None
+
+        # Temperature (°C)
+        temp = packet.get("temperature_c", packet.get("temperature", packet.get("temp")))
+        if temp is not None:
+            try:
+                packet["temperature_c"] = float(temp)
+            except (ValueError, TypeError):
+                packet["temperature_c"] = None
+        else:
+            packet["temperature_c"] = None
+
+        # Vibration (mm/s or RMS)
+        vib = packet.get("vibration", packet.get("vibration_mms"))
+        if vib is not None:
+            try:
+                packet["vibration"] = max(0.0, float(vib))
+            except (ValueError, TypeError):
+                packet["vibration"] = None
+        else:
+            packet["vibration"] = None
+
+        # Motor Load (%)
+        load = packet.get("motor_load_pct", packet.get("motor_load", packet.get("load")))
+        if load is not None:
+            try:
+                packet["motor_load_pct"] = max(0.0, min(100.0, float(load)))
+            except (ValueError, TypeError):
+                packet["motor_load_pct"] = None
+        else:
+            packet["motor_load_pct"] = None
+
+        # Metadata
+        packet["device_id"] = packet.get("device_id", "AERIS-ESP32-001")
+        packet["source"] = packet.get("source", "PHYSICAL_SENSOR")
+        packet["is_simulated"] = False
+        if "timestamp" not in packet or not packet["timestamp"]:
+            packet["timestamp"] = time.time()
+        if "sequence_number" not in packet:
+            packet["sequence_number"] = packet.get("seq", 0)
+
+        return packet
+
+    # ─── AERO_ENGINE NORMALIZATION (Rotax 914) ───
     # RPM
     if "rpm" in packet and packet["rpm"] is not None:
         try:
@@ -450,7 +549,8 @@ def ingest_live_telemetry(raw_packet: Dict[str, Any], request: Request):
     return {
         "status": "ingested",
         "mode": "LIVE",
-        "device_id": pushed.get("device_id", "AERIS-PROTOTYPE-01"),
+        "profile": pushed.get("profile", "AERO_ENGINE"),
+        "device_id": pushed.get("device_id", "AERIS-ESP32-001"),
         "source": pushed.get("source", "LIVE"),
         "sequence_number": pushed.get("sequence_number", 0),
         "latency_ms": pipeline_out["twin_state"]["processing_latency_ms"],
@@ -465,7 +565,7 @@ def ingest_live_telemetry(raw_packet: Dict[str, Any], request: Request):
 @app.post("/telemetry/hardware")
 def ingest_hardware_telemetry(raw_packet: Dict[str, Any], request: Request):
     """
-    Dedicated physical prototype telemetry gateway ingestion endpoint for Arduino + ESP32.
+    Dedicated physical prototype telemetry gateway ingestion endpoint for ESP32.
     """
     verify_device_authentication(request, raw_packet)
     if not raw_packet.get("source"):
@@ -476,7 +576,8 @@ def ingest_hardware_telemetry(raw_packet: Dict[str, Any], request: Request):
     return {
         "status": "ingested",
         "mode": "LIVE",
-        "device_id": pushed.get("device_id", "AERIS-PROTOTYPE-01"),
+        "profile": pushed.get("profile", "MOTOR_PROTOTYPE"),
+        "device_id": pushed.get("device_id", "AERIS-ESP32-001"),
         "source": pushed.get("source", "PHYSICAL_SENSOR"),
         "sequence_number": pushed.get("sequence_number", 0),
         "latency_ms": pipeline_out["twin_state"]["processing_latency_ms"],

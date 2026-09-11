@@ -125,45 +125,47 @@ export class ThreeDigitalTwin {
 
   _buildMaterials() {
     this.mats = {
-      // Solid Aerospace Alloys
+      // ─── Section 1: Primary Airframe Structure (Neutral Metallic / Light Aircraft Gray) ───
       carbonAirframe: new THREE.MeshStandardMaterial({
-        color: 0x1E293B, metalness: 0.85, roughness: 0.35, transparent: true, opacity: 0.96
+        color: 0xD1D5DB, metalness: 0.45, roughness: 0.40
       }),
       wingAlloy: new THREE.MeshStandardMaterial({
-        color: 0x334155, metalness: 0.80, roughness: 0.35, transparent: true, opacity: 0.96
+        color: 0xCBD5E1, metalness: 0.48, roughness: 0.38
       }),
       cowlingAlloy: new THREE.MeshStandardMaterial({
-        color: 0x1E293B, metalness: 0.88, roughness: 0.28, transparent: true, opacity: 0.92
+        color: 0x94A3B8, metalness: 0.55, roughness: 0.32, transparent: true, opacity: 0.90
       }),
+
+      // ─── Section 2: Engine & Propulsion Subsystem (Dark Machined Metallic with Subtle Technical Accents) ───
       engineBlock: new THREE.MeshStandardMaterial({
-        color: 0x475569, metalness: 0.90, roughness: 0.25
+        color: 0x1E293B, metalness: 0.88, roughness: 0.28
       }),
       cylinderAlloy: new THREE.MeshStandardMaterial({
-        color: 0x64748B, metalness: 0.88, roughness: 0.28, emissive: 0x111827, emissiveIntensity: 0.2
+        color: 0x334155, metalness: 0.88, roughness: 0.24, emissive: 0x0F172A, emissiveIntensity: 0.15
       }),
       crankshaftSteel: new THREE.MeshStandardMaterial({
-        color: 0x94A3B8, metalness: 0.95, roughness: 0.15
+        color: 0xE2E8F0, metalness: 0.95, roughness: 0.12
       }),
       bearingBronze: new THREE.MeshStandardMaterial({
-        color: 0xCBD5E1, metalness: 0.92, roughness: 0.20, emissive: 0x1E293B, emissiveIntensity: 0.2
+        color: 0xD97706, metalness: 0.85, roughness: 0.25, emissive: 0x451A03, emissiveIntensity: 0.2
       }),
       propellerCarbon: new THREE.MeshStandardMaterial({
-        color: 0x0F172A, metalness: 0.90, roughness: 0.20
+        color: 0x090D16, metalness: 0.85, roughness: 0.22
       }),
       propellerHub: new THREE.MeshStandardMaterial({
-        color: 0x94A3B8, metalness: 0.95, roughness: 0.15
+        color: 0x64748B, metalness: 0.90, roughness: 0.20
       }),
       exhaustTitanium: new THREE.MeshStandardMaterial({
-        color: 0x64748B, metalness: 0.88, roughness: 0.3
+        color: 0x475569, metalness: 0.88, roughness: 0.30
       }),
       fuelRail: new THREE.MeshStandardMaterial({
-        color: 0x2DD4BF, metalness: 0.75, roughness: 0.25, emissive: 0x0F766E, emissiveIntensity: 0.3
+        color: 0x0F766E, metalness: 0.80, roughness: 0.25, emissive: 0x115E59, emissiveIntensity: 0.25
       }),
       coolingFins: new THREE.MeshStandardMaterial({
-        color: 0x38BDF8, metalness: 0.80, roughness: 0.3, emissive: 0x0369A1, emissiveIntensity: 0.25
+        color: 0x0284C7, metalness: 0.80, roughness: 0.30, emissive: 0x0369A1, emissiveIntensity: 0.20
       }),
       ecuModule: new THREE.MeshStandardMaterial({
-        color: 0x172033, metalness: 0.7, roughness: 0.4, emissive: 0x0B1120, emissiveIntensity: 0.4
+        color: 0x0F172A, metalness: 0.70, roughness: 0.40, emissive: 0x020617, emissiveIntensity: 0.3
       }),
 
       // Status Indicator Materials
@@ -185,7 +187,7 @@ export class ThreeDigitalTwin {
         color: 0x38BDF8, wireframe: true, transparent: true, opacity: 0.35, emissive: 0x0284C7, emissiveIntensity: 0.3
       }),
       hologramGhost: new THREE.MeshStandardMaterial({
-        color: 0x2DD4BF, transparent: true, opacity: 0.12, wireframe: false, depthWrite: false
+        color: 0x38BDF8, transparent: true, opacity: 0.12, wireframe: false, depthWrite: false
       }),
       
       // Selected Highlight Glow

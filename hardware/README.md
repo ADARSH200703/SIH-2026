@@ -1,11 +1,120 @@
 # AERIS-TWIN Hardware Telemetry Subsystem
 ### Physical Sensor Acquisition & ESP32 Wireless Telemetry Gateway
 
-This directory contains the production-grade embedded firmware and wiring specifications for interfacing physical UAV aero-engine sensors with the AERIS-TWIN Digital Twin platform.
+---
+
+## ⚡ PHYSICAL PROTOTYPE INTEGRATION (v1)
+
+### System Overview & Hardware Architecture
+The v1 physical prototype is a dedicated DC motor electromechanical testbed interfaced directly to a standalone **ESP32** microcontroller.
+
+> [!IMPORTANT]
+> **Microcontroller Configuration**: In v1, the **ESP32 is the ONLY microcontroller**.  
+> **Arduino Uno is NOT USED in v1.**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ 3× 18650 Battery Pack (11.1V – 12.6V DC)                    │
+└──────────────────────────────┬──────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│ ACS712 Hall-Effect Current Transducer                       │
+└──────────────────────────────┬──────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│ L298N Dual H-Bridge Motor Driver                            │
+└──────────────────────────────┬──────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│ DC Geared Motor (+ Pulse/Optical RPM Sensor)                │
+└──────────────────────────────┬──────────────────────────────┘
+                               │ Analog & Digital Pulses
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│ ESP32 Microcontroller (Wi-Fi 802.11 b/g/n)                  │
+│ Firmware: hardware/esp32_gateway/aeris_esp32_gateway.ino    │
+│ Profile: MOTOR_PROTOTYPE                                    │
+└──────────────────────────────┬──────────────────────────────┘
+                               │ Wi-Fi / HTTPS POST / WebSocket
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│ AERIS-TWIN Backend (POST /api/telemetry/hardware)           │
+│ - Hardware Device Authentication (X-Device-API-Key)         │
+│ - Profile Normalization: MOTOR_PROTOTYPE                    │
+│ - Live / Stale / Disconnected State Tracking                │
+│ - Zero Fake Aero-Engine Parameters Injected                 │
+└──────────────────────────────┬──────────────────────────────┘
+                               │ WebSocket Stream
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│ AERIS-TWIN Dashboard & Hardware Cockpit UI                  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Physical Sensor Mapping & Conversions
+- **Current**: `ACS712` &rarr; Voltage Divider &rarr; ESP32 ADC (`GPIO 34`) &rarr; `current_a` (Amperes)
+- **Voltage**: `3×18650 Battery` &rarr; 100kΩ/22kΩ Resistor Divider &rarr; ESP32 ADC (`GPIO 35`) &rarr; `voltage_v` (Volts)
+- **Power**: Derived electrically as $P = V \times I$ &rarr; `power_w` (Watts)
+- **RPM**: Optical / Hall Pulse Sensor &rarr; ESP32 GPIO (`GPIO 25`, Interrupt) &rarr; `rpm`
+- **Temperature**: Thermal Sensor / Thermistor &rarr; ESP32 ADC (`GPIO 32`) &rarr; `temperature_c` (°C)
+- **Vibration**: Vibration / Accelerometer Transducer &rarr; `vibration`
+- **Motor Load**: Derived strictly from real physical current draw relative to continuous rated current &rarr; `motor_load_pct` (%)
 
 ---
 
-## 1. System Architecture
+### ⚠️ Critical Electrical & Safety Guidelines
+
+> [!CAUTION]
+> **1. ACS712 5V Sensor Output vs ESP32 3.3V ADC Limit:**
+> - Many ACS712 breakout modules are powered by **5.0V** and produce an analog output centered at $V_{CC}/2 \approx 2.5\text{V}$ at 0A, swinging up toward 5.0V at high current.
+> - The **ESP32 ADC pins are NOT 5V tolerant** (max 3.3V / 3.6V absolute maximum).
+> - **Verify the exact ACS712 module output voltage before connecting OUT to an ESP32 ADC pin!**
+> - Always utilize a resistor voltage divider or logic level shifter if the ACS712 signal can exceed 3.3V.
+>
+> **2. 3×18650 Battery Voltage Direct Connection Hazard:**
+> - A 3S 18650 pack delivers **9.0V to 12.6V DC**.
+> - **DO NOT connect battery voltage directly to an ESP32 ADC pin!**
+> - A calibrated resistor voltage divider (e.g. $R_1 = 100\text{ k}\Omega, R_2 = 22\text{ k}\Omega$) MUST be used to step 12.6V down to $\le 2.27\text{V}$.
+
+---
+
+### Communication & Telemetry Specification
+- **Communication Protocol**: ESP32 &rarr; Wi-Fi &rarr; HTTPS POST &rarr; AERIS-TWIN Backend
+- **Endpoint**: `POST /api/telemetry/hardware`
+- **Authentication**: `X-Device-API-Key: aeris-device-secret-key-2026` or `api_key` payload field
+- **Profile Identifier**: `MOTOR_PROTOTYPE`
+
+#### Example `MOTOR_PROTOTYPE` JSON Payload:
+```json
+{
+  "device_id": "AERIS-ESP32-001",
+  "profile": "MOTOR_PROTOTYPE",
+  "sequence_number": 1,
+  "timestamp": 1773280000.0,
+  "rpm": 1850.0,
+  "current_a": 2.65,
+  "voltage_v": 11.8,
+  "power_w": 31.27,
+  "temperature_c": 38.5,
+  "vibration": 0.85,
+  "motor_load_pct": 45.0,
+  "wifi_rssi": -58,
+  "firmware_version": "v1.4.2-motor",
+  "source": "PHYSICAL_SENSOR"
+}
+```
+
+---
+
+### 🛡️ Prototype Scope & Disclaimer
+The AERIS-TWIN physical motor prototype integration validates the end-to-end embedded acquisition, wireless telemetry streaming, schema validation, and real-time cockpit monitoring architecture. It is an experimental research testbed and is **NOT** flight-certified engine monitoring or safety-critical control software.
+
+---
+
+## 1. System Architecture (Legacy Aero-Engine Testbed)
 
 ```
 +-----------------------------------------------------------------------------------+

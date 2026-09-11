@@ -6,7 +6,38 @@ from typing import Optional, Dict, Any, List
 from pydantic import BaseModel, Field
 import time
 
+# Profile Constants
+PROFILE_AERO_ENGINE = "AERO_ENGINE"
+PROFILE_MOTOR_PROTOTYPE = "MOTOR_PROTOTYPE"
+
+class MotorPrototypePacket(BaseModel):
+    """
+    Physical DC Motor Testbed Telemetry Packet
+    Hardware: 3x18650 Battery -> ACS712 Current Sensor -> L298N Motor Driver -> DC Geared Motor -> ESP32
+    """
+    device_id: str = Field(default="AERIS-ESP32-001", description="Physical ESP32 device identifier")
+    profile: str = Field(default=PROFILE_MOTOR_PROTOTYPE, description="Telemetry profile (MOTOR_PROTOTYPE)")
+    sequence_number: int = Field(default=0, description="Monotonically increasing sequence number")
+    timestamp: float = Field(default_factory=time.time, description="Unix epoch timestamp in seconds")
+    
+    # Real physical measurements
+    rpm: Optional[float] = Field(default=None, description="DC motor shaft rotational speed (RPM)")
+    current_a: Optional[float] = Field(default=None, description="ACS712 current measurement in Amperes")
+    voltage_v: Optional[float] = Field(default=None, description="Battery/bus voltage in Volts")
+    power_w: Optional[float] = Field(default=None, description="Electrical power in Watts (voltage_v * current_a)")
+    temperature_c: Optional[float] = Field(default=None, description="Motor casing / driver temperature in °C")
+    vibration: Optional[float] = Field(default=None, description="Vibration metric (e.g. mm/s or raw accelerometer RMS)")
+    motor_load_pct: Optional[float] = Field(default=None, description="Motor mechanical load percentage (0-100%)")
+    
+    # Metadata & connectivity
+    wifi_rssi: Optional[int] = Field(default=None, description="ESP32 Wi-Fi Received Signal Strength Indication (dBm)")
+    firmware_version: Optional[str] = Field(default="v1.4.2-motor", description="ESP32 firmware version")
+    source: str = Field(default="PHYSICAL_SENSOR", description="PHYSICAL_SENSOR, ESP32, REST")
+    api_key: Optional[str] = Field(default=None, description="Optional device authentication API key")
+    raw_packet: Optional[Dict[str, Any]] = None
+
 class TelemetryPacket(BaseModel):
+    profile: str = Field(default=PROFILE_AERO_ENGINE, description="AERO_ENGINE or MOTOR_PROTOTYPE")
     engine_id: str = Field(default="UAV-ENG-ROT-914-01", description="Unique identifier for engine")
     uav_id: str = Field(default="MALE-UAV-TAPAS-04", description="Host UAV airframe identifier")
     mission_id: str = Field(default="MSN-2026-SURV-082", description="Active mission identifier")

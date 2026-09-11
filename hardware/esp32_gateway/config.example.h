@@ -18,18 +18,16 @@
 
 // Hardware Identity & Security Key
 // This MUST match the AERIS_DEVICE_API_KEY environment variable in your backend .env
-#define AERIS_DEVICE_ID       "AERIS-UAV-HW-01"
+#define AERIS_DEVICE_ID       "AERIS-ESP32-001"
+#define AERIS_PROFILE         "MOTOR_PROTOTYPE"
 #define AERIS_DEVICE_API_KEY  "aeris-device-secret-key-2026"
-#define AERIS_FIRMWARE_VER    "v1.4.2-hw"
+#define AERIS_FIRMWARE_VER    "v1.4.2-motor"
 
-// UART Configuration for Arduino Uno Link
-#define UART_BAUD_RATE        115200
-#define PIN_UART_RX           16   // ESP32 GPIO16 (RX2) -> Connect to Arduino TX (Pin 1 via voltage divider)
-#define PIN_UART_TX           17   // ESP32 GPIO17 (TX2) -> Connect to Arduino RX (Pin 0)
-
-// Operational Modes
-// Set to 1 if testing ESP32 in standalone mode without physical Arduino connected
-#define STANDALONE_TEST_MODE  0
+// Pin Definitions on ESP32 (Standalone Physical Prototype v1)
+#define PIN_ADC_CURRENT       34   // Connected to ACS712 OUT via voltage divider (DO NOT connect 5V directly to ESP32 ADC)
+#define PIN_ADC_VOLTAGE       35   // Connected to 3S Battery pack via 100k/22k divider
+#define PIN_RPM_SENSOR        25   // Optical / Hall pulse sensor GPIO
+#define PIN_TEMP_SENSOR       32   // NTC thermistor / thermal sensor ADC pin
 
 // Telemetry Timing & Buffer Settings
 #define TRANSMIT_INTERVAL_MS  100  // 10 Hz telemetry streaming rate

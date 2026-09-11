@@ -57,6 +57,7 @@ class LiveStreamSource(TelemetrySource):
         self.last_frame: Optional[Dict[str, Any]] = None
         self.last_device_id: Optional[str] = None
         self.last_source: str = "LIVE"
+        self.last_profile: str = "MOTOR_PROTOTYPE"
         self.last_wifi_rssi: Optional[int] = None
         self.last_firmware_version: Optional[str] = None
 
@@ -78,9 +79,10 @@ class LiveStreamSource(TelemetrySource):
         ts = raw_frame.get("timestamp", now)
         self.last_packet_timestamp = ts
 
-        # Track hardware gateway metadata
-        self.last_device_id = raw_frame.get("device_id", "AERIS-PROTOTYPE-01")
-        self.last_source = raw_frame.get("source", "LIVE")
+        # Track hardware gateway metadata & profile
+        self.last_device_id = raw_frame.get("device_id", "AERIS-ESP32-001")
+        self.last_source = raw_frame.get("source", "PHYSICAL_SENSOR")
+        self.last_profile = raw_frame.get("profile", "MOTOR_PROTOTYPE" if ("current_a" in raw_frame or "voltage_v" in raw_frame or raw_frame.get("profile") == "MOTOR_PROTOTYPE") else "AERO_ENGINE")
         self.last_wifi_rssi = raw_frame.get("wifi_rssi", None)
         self.last_firmware_version = raw_frame.get("firmware_version", None)
 
@@ -88,6 +90,7 @@ class LiveStreamSource(TelemetrySource):
         raw_frame["_ingest_time"] = now
         raw_frame["source"] = self.last_source
         raw_frame["device_id"] = self.last_device_id
+        raw_frame["profile"] = self.last_profile
         raw_frame["is_simulated"] = False
         self.last_frame = raw_frame
         self._buffer.append(raw_frame)
@@ -127,8 +130,12 @@ class LiveStreamSource(TelemetrySource):
         total_expected = self.total_received + self.total_dropped
         loss_rate = round((self.total_dropped / max(1, total_expected)) * 100.0, 2)
 
+        # Collect last known real sensor readings from last frame if available
+        last_f = self.last_frame or {}
+
         return {
             "source": self.last_source,
+            "profile": self.last_profile,
             "device_id": self.last_device_id,
             "status": status,
             "connected": self.is_connected(),
@@ -141,6 +148,13 @@ class LiveStreamSource(TelemetrySource):
             "last_packet_time": self.last_received_time,
             "wifi_rssi": self.last_wifi_rssi,
             "firmware_version": self.last_firmware_version,
+            "rpm": last_f.get("rpm", None),
+            "current_a": last_f.get("current_a", None),
+            "voltage_v": last_f.get("voltage_v", None),
+            "power_w": last_f.get("power_w", None),
+            "temperature_c": last_f.get("temperature_c", None),
+            "vibration": last_f.get("vibration", None),
+            "motor_load_pct": last_f.get("motor_load_pct", None),
         }
 
     def reset(self):
@@ -154,6 +168,7 @@ class LiveStreamSource(TelemetrySource):
         self.last_frame = None
         self.last_device_id = None
         self.last_source = "LIVE"
+        self.last_profile = "AERO_ENGINE"
         self.last_wifi_rssi = None
         self.last_firmware_version = None
 

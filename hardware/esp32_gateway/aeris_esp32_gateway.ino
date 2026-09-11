@@ -1,26 +1,38 @@
 /*
- * AERIS-TWIN Aero-Engine Digital Twin
- * Hardware Subsystem: ESP32 Wireless Telemetry Gateway
+ * AERIS-TWIN — PHYSICAL PROTOTYPE INTEGRATION v1
+ * Hardware Subsystem: Standalone ESP32 Motor Prototype Telemetry Gateway
  *
- * Description:
- *  Acts as the high-speed IoT wireless telemetry bridge between the Arduino Uno
- *  sensor acquisition board and the AERIS-TWIN FastAPI Cloud/Local Backend.
+ * Physical Architecture:
+ *   3x18650 battery pack (11.1V - 12.6V)
+ *         ↓
+ *      ACS712 Current Sensor (Hall-effect current transducer)
+ *         ↓
+ *       L298N Dual H-Bridge Motor Driver
+ *         ↓
+ *      DC Geared Motor
+ *         ↓
+ *      ESP32 Microcontroller (The ONLY microcontroller in v1; Arduino Uno is NOT used)
+ *         ↓ Wi-Fi / HTTPS POST / WebSocket
+ *      AERIS-TWIN Backend (/api/telemetry/hardware)
  *
- * Capabilities:
- *  1. Dual UART Interface:
- *     - Serial (USB, GPIO 1/3, 115200 baud): Debugging & diagnostics monitor.
- *     - Serial2 (Hardware UART, GPIO 16/17, 115200 baud): High-speed sensor ingestion from Arduino.
- *  2. Wi-Fi Connection Manager:
- *     - Non-blocking auto-reconnect logic with RSSI signal quality monitoring.
- *  3. Telemetry Payload Parsing & Enrichment:
- *     - Parses Arduino JSON frames, enriches with device identity, Wi-Fi RSSI, and security key.
- *  4. Secure HTTP/HTTPS REST Telemetry Streamer:
- *     - Transmits payloads to /api/telemetry/hardware using HTTP POST with X-Device-API-Key headers.
- *  5. Ring Buffer / Fallback Engine:
- *     - Provides resilient 30-frame buffer during transient Wi-Fi drops.
- *     - Standalone bench test mode if physical Arduino is offline.
+ * ============================================================================
+ * CRITICAL HARDWARE & ELECTRICAL SAFETY NOTICES
+ * ============================================================================
+ * 1. ACS712 SENSOR ADC SAFETY:
+ *    - The ACS712 is powered by 5.0V and outputs VCC/2 (~2.5V) at 0A, increasing by 66-185 mV/A.
+ *    - Under high load, its output can exceed 3.3V.
+ *    - WARNING: Verify the exact ACS712 module output voltage before connecting OUT
+ *      to an ESP32 ADC pin!
+ *    - Use a voltage divider (e.g. 10 kΩ / 20 kΩ) or level shifter if OUT can exceed 3.3V.
  *
- * Required Arduino Libraries:
+ * 2. 3x18650 BATTERY VOLTAGE MEASUREMENT SAFETY:
+ *    - A 3S 18650 battery pack delivers 9.0V (empty) to 12.6V (fully charged).
+ *    - NEVER connect battery voltage directly to an ESP32 ADC pin!
+ *    - A calibrated resistor voltage divider (e.g. R1=100 kΩ, R2=22 kΩ for a 5.54:1 ratio)
+ *      MUST be used to step down 12.6V to ~2.27V safe for ESP32 ADC (0-3.3V).
+ * ============================================================================
+ *
+ * Required Libraries:
  *  - WiFi (Built-in ESP32)
  *  - HTTPClient (Built-in ESP32)
  *  - ArduinoJson (by Benoit Blanchon, v6.x or v7.x)
@@ -31,68 +43,131 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 
-// Include configuration file
-#if __has_include("config.h")
-#include "config.h"
-#else
-#include "config.example.h"
+// ==========================================
+// CONFIGURATION PARAMETERS
+// ==========================================
+#ifndef WIFI_SSID
+#define WIFI_SSID             "Your_WiFi_SSID"
+#define WIFI_PASSWORD         "Your_WiFi_Password"
 #endif
+
+#ifndef AERIS_BACKEND_URL
+#define AERIS_BACKEND_URL     "http://192.168.1.100:8000" // Or Render cloud backend URL
+#define AERIS_API_ENDPOINT    "/api/telemetry/hardware"
+#define AERIS_DEVICE_ID       "AERIS-ESP32-001"
+#define AERIS_PROFILE         "MOTOR_PROTOTYPE"
+#define AERIS_DEVICE_API_KEY  "aeris-device-secret-key-2026"
+#define AERIS_FIRMWARE_VER    "v1.4.2-motor"
+#endif
+
+// Pin Definitions on ESP32
+#define PIN_STATUS_LED        2    // Onboard diagnostic LED
+#define PIN_ADC_CURRENT       34   // ADC1_CH6 (Connected to ACS712 OUT via voltage divider)
+#define PIN_ADC_VOLTAGE       35   // ADC1_CH7 (Connected to 3S Battery via 100k/22k divider)
+#define PIN_RPM_SENSOR        25   // Optical / Hall pulse sensor GPIO
+#define PIN_TEMP_SENSOR       32   // NTC thermistor / thermal sensor ADC pin
+
+#define SAMPLING_INTERVAL_MS  100  // 10 Hz ingestion rate
+#define HTTP_TIMEOUT_MS       3500
+
+// Calibration Constants
+#define ACS712_VREF           3.30f  // ESP32 ADC reference voltage
+#define ACS712_ZERO_VOLTS     1.65f  // Zero-current voltage after 3.3V divider
+#define ACS712_SENSITIVITY    0.066f // Volts per Ampere (for 30A module, adjust for 5A or 20A)
+#define VOLTAGE_DIVIDER_RATIO 5.545f // (100k + 22k) / 22k
 
 // ==========================================
 // TELEMETRY FRAME DATA STRUCTURE
 // ==========================================
-struct TelemetryFrame {
-    uint32_t seq;
-    char source[24];
+struct MotorTelemetryFrame {
+    uint32_t sequence_number;
     float rpm;
-    float cht;
-    float oil_pressure;
+    float current_a;
+    float voltage_v;
+    float power_w;
+    float temperature_c;
     float vibration;
-    float fuel_flow;
-    float engine_load;
+    float motor_load_pct;
     int wifi_rssi;
-    uint32_t local_timestamp_ms;
-    bool is_valid;
+    uint32_t timestamp_ms;
 };
 
-// Ring Buffer for offline resilience
-TelemetryFrame g_telemetry_queue[QUEUE_MAX_FRAMES];
-int g_queue_head = 0;
-int g_queue_tail = 0;
-int g_queue_count = 0;
-
-// Hardware Serial for Arduino link
-HardwareSerial SerialArduino(2);
-
-// Transmission timing & state
-uint32_t g_last_tx_ms = 0;
-uint32_t g_last_uart_rx_ms = 0;
+// State Variables
+uint32_t g_seq = 0;
+uint32_t g_last_sample_ms = 0;
 uint32_t g_last_wifi_check_ms = 0;
-uint32_t g_packets_sent_success = 0;
-uint32_t g_packets_sent_fail = 0;
-String g_uart_rx_buffer = "";
+volatile uint32_t g_pulse_count = 0;
+uint32_t g_last_rpm_calc_ms = 0;
+float g_calculated_rpm = 0.0f;
 
-// ==========================================
-// BUFFER MANAGEMENT HELPERS
-// ==========================================
-bool enqueue_frame(const TelemetryFrame &frame) {
-    if (g_queue_count >= QUEUE_MAX_FRAMES) {
-        // Buffer full: drop oldest frame
-        g_queue_head = (g_queue_head + 1) % QUEUE_MAX_FRAMES;
-        g_queue_count--;
-    }
-    g_telemetry_queue[g_queue_tail] = frame;
-    g_queue_tail = (g_queue_tail + 1) % QUEUE_MAX_FRAMES;
-    g_queue_count++;
-    return true;
+// Interrupt Service Routine for RPM Pulse Counting
+void IRAM_ATTR rpm_isr() {
+    g_pulse_count++;
 }
 
-bool dequeue_frame(TelemetryFrame &frame) {
-    if (g_queue_count == 0) return false;
-    frame = g_telemetry_queue[g_queue_head];
-    g_queue_head = (g_queue_head + 1) % QUEUE_MAX_FRAMES;
-    g_queue_count--;
-    return true;
+// ==========================================
+// SENSOR ACQUISITION & PHYSICAL CONVERSION
+// ==========================================
+MotorTelemetryFrame read_physical_sensors() {
+    MotorTelemetryFrame frame;
+    g_seq++;
+    frame.sequence_number = g_seq;
+    frame.timestamp_ms = millis();
+    frame.wifi_rssi = (WiFi.status() == WL_CONNECTED) ? WiFi.RSSI() : -99;
+
+    // 1. RPM Calculation (Windowed pulse rate)
+    uint32_t now = millis();
+    uint32_t dt = now - g_last_rpm_calc_ms;
+    if (dt >= 200) {
+        noInterrupts();
+        uint32_t pulses = g_pulse_count;
+        g_pulse_count = 0;
+        interrupts();
+        // Assuming 1 pulse per shaft revolution (adjust for encoder CPR / gear ratio)
+        g_calculated_rpm = (pulses * 60000.0f) / (float)dt;
+        g_last_rpm_calc_ms = now;
+    }
+    frame.rpm = g_calculated_rpm;
+
+    // 2. Current Measurement (ACS712 via ADC)
+    // 32-sample averaging for ADC noise reduction
+    uint32_t adc_curr_sum = 0;
+    for (int i = 0; i < 32; i++) {
+        adc_curr_sum += analogRead(PIN_ADC_CURRENT);
+    }
+    float raw_adc_curr = (float)adc_curr_sum / 32.0f;
+    float v_out_curr = (raw_adc_curr / 4095.0f) * ACS712_VREF;
+    float current_val = abs(v_out_curr - ACS712_ZERO_VOLTS) / max(0.01f, ACS712_SENSITIVITY);
+    frame.current_a = max(0.0f, current_val);
+
+    // 3. Battery Voltage (3S 18650 Pack via Resistor Divider)
+    uint32_t adc_volt_sum = 0;
+    for (int i = 0; i < 32; i++) {
+        adc_volt_sum += analogRead(PIN_ADC_VOLTAGE);
+    }
+    float raw_adc_volt = (float)adc_volt_sum / 32.0f;
+    float pin_voltage = (raw_adc_volt / 4095.0f) * 3.3f;
+    frame.voltage_v = max(0.0f, pin_voltage * VOLTAGE_DIVIDER_RATIO);
+
+    // 4. Electrical Power: P = V × I
+    frame.power_w = frame.voltage_v * frame.current_a;
+
+    // 5. Temperature (°C) from Thermistor ADC
+    uint32_t adc_temp_sum = 0;
+    for (int i = 0; i < 16; i++) {
+        adc_temp_sum += analogRead(PIN_TEMP_SENSOR);
+    }
+    float raw_temp = (float)adc_temp_sum / 16.0f;
+    // Normalized linear scaling approximation (replace with Steinhart-Hart equation for NTC)
+    frame.temperature_c = 25.0f + (raw_temp / 4095.0f) * 60.0f;
+
+    // 6. Vibration (placeholder for I2C MPU6050 accelerometer if attached, else nominal)
+    frame.vibration = 0.85f;
+
+    // 7. Motor Load (%) derived from current draw relative to rated max (5.0A)
+    frame.motor_load_pct = min(100.0f, max(0.0f, (frame.current_a / 5.0f) * 100.0f));
+
+    return frame;
 }
 
 // ==========================================
@@ -101,7 +176,7 @@ bool dequeue_frame(TelemetryFrame &frame) {
 void connect_wifi() {
     if (WiFi.status() == WL_CONNECTED) return;
 
-    Serial.print(F("[WIFI] Connecting to SSID: "));
+    Serial.print(F("[WIFI] Connecting to: "));
     Serial.println(WIFI_SSID);
 
     WiFi.mode(WIFI_STA);
@@ -116,152 +191,68 @@ void connect_wifi() {
 
     if (WiFi.status() == WL_CONNECTED) {
         Serial.println(F("\n[WIFI] Connected Successfully!"));
-        Serial.print(F("[WIFI] Local IP: "));
+        Serial.print(F("[WIFI] IP: "));
         Serial.println(WiFi.localIP());
-        Serial.print(F("[WIFI] RSSI: "));
-        Serial.print(WiFi.RSSI());
-        Serial.println(F(" dBm"));
+        Serial.printf("[WIFI] RSSI: %d dBm\n", WiFi.RSSI());
         digitalWrite(PIN_STATUS_LED, HIGH);
     } else {
-        Serial.println(F("\n[WIFI] Connection Timeout. Will retry in background."));
+        Serial.println(F("\n[WIFI] Wi-Fi connection timed out. Retrying in loop..."));
         digitalWrite(PIN_STATUS_LED, LOW);
-    }
-}
-
-void check_wifi_health() {
-    if (millis() - g_last_wifi_check_ms < 5000) return;
-    g_last_wifi_check_ms = millis();
-
-    if (WiFi.status() != WL_CONNECTED) {
-        Serial.println(F("[WIFI] Link Lost! Reconnecting..."));
-        WiFi.reconnect();
     }
 }
 
 // ==========================================
 // HTTP TELEMETRY TRANSMITTER
 // ==========================================
-bool transmit_frame_to_backend(const TelemetryFrame &frame) {
+bool transmit_telemetry(const MotorTelemetryFrame &frame) {
     if (WiFi.status() != WL_CONNECTED) {
         return false;
     }
 
     HTTPClient http;
-    String target_url = String(AERIS_BACKEND_URL) + String(AERIS_API_ENDPOINT);
+    String url = String(AERIS_BACKEND_URL) + String(AERIS_API_ENDPOINT);
 
-    http.begin(target_url);
+    http.begin(url);
     http.setTimeout(HTTP_TIMEOUT_MS);
     http.addHeader("Content-Type", "application/json");
     http.addHeader("X-Device-API-Key", AERIS_DEVICE_API_KEY);
     http.addHeader("X-Device-ID", AERIS_DEVICE_ID);
 
-    // Build outbound JSON payload with ArduinoJson
-    StaticJsonDocument<512> doc;
+    // Construct clean MOTOR_PROTOTYPE JSON document
+    StaticJsonDocument<384> doc;
     doc["device_id"] = AERIS_DEVICE_ID;
-    doc["api_key"] = AERIS_DEVICE_API_KEY;
-    doc["gateway_source"] = "ESP32";
-    doc["firmware_version"] = AERIS_FIRMWARE_VER;
+    doc["profile"] = AERIS_PROFILE;
+    doc["sequence_number"] = frame.sequence_number;
+    doc["timestamp"] = (double)(millis()) / 1000.0;
+    doc["rpm"] = round(frame.rpm * 10.0f) / 10.0f;
+    doc["current_a"] = round(frame.current_a * 1000.0f) / 1000.0f;
+    doc["voltage_v"] = round(frame.voltage_v * 100.0f) / 100.0f;
+    doc["power_w"] = round(frame.power_w * 100.0f) / 100.0f;
+    doc["temperature_c"] = round(frame.temperature_c * 10.0f) / 10.0f;
+    doc["vibration"] = round(frame.vibration * 1000.0f) / 1000.0f;
+    doc["motor_load_pct"] = round(frame.motor_load_pct * 10.0f) / 10.0f;
     doc["wifi_rssi"] = frame.wifi_rssi;
-    doc["seq"] = frame.seq;
-    doc["source"] = frame.source;
-    doc["rpm"] = frame.rpm;
-    doc["cht"] = frame.cht;
-    doc["oil_pressure"] = frame.oil_pressure;
-    doc["vibration"] = frame.vibration;
-    doc["fuel_flow"] = frame.fuel_flow;
-    doc["engine_load"] = frame.engine_load;
+    doc["firmware_version"] = AERIS_FIRMWARE_VER;
+    doc["source"] = "PHYSICAL_SENSOR";
 
-    String request_body;
-    serializeJson(doc, request_body);
+    String payload;
+    serializeJson(doc, payload);
 
-    uint32_t t_start = millis();
-    int http_code = http.POST(request_body);
-    uint32_t latency = millis() - t_start;
+    uint32_t t0 = millis();
+    int code = http.POST(payload);
+    uint32_t latency = millis() - t0;
 
-    bool success = false;
-    if (http_code == HTTP_CODE_OK || http_code == 201) {
-        g_packets_sent_success++;
-        success = true;
-        Serial.printf("[HTTP] TX Seq #%u OK (%d) | Latency: %ums | RSSI: %d dBm\n",
-                      frame.seq, http_code, latency, frame.wifi_rssi);
+    bool ok = (code == 200 || code == 201);
+    if (ok) {
+        Serial.printf("[HTTP] TX #%u OK (%d) | Latency: %ums | I: %.2fA | V: %.2fV | P: %.1fW | RPM: %.0f\n",
+                      frame.sequence_number, code, latency, frame.current_a, frame.voltage_v, frame.power_w, frame.rpm);
+        digitalWrite(PIN_STATUS_LED, !digitalRead(PIN_STATUS_LED));
     } else {
-        g_packets_sent_fail++;
-        Serial.printf("[HTTP] TX FAILED Code: %d (%s) | URL: %s\n",
-                      http_code, http.errorToString(http_code).c_str(), target_url.c_str());
+        Serial.printf("[HTTP] TX #%u FAILED: HTTP %d (%s)\n", frame.sequence_number, code, http.errorToString(code).c_str());
     }
 
     http.end();
-    return success;
-}
-
-// ==========================================
-// UART INGESTION FROM ARDUINO UNO
-// ==========================================
-void process_arduino_uart_stream() {
-    while (SerialArduino.available() > 0) {
-        char c = (char)SerialArduino.read();
-        if (c == '\n' || c == '\r') {
-            if (g_uart_rx_buffer.length() > 0) {
-                // Parse complete JSON frame
-                StaticJsonDocument<384> doc;
-                DeserializationError err = deserializeJson(doc, g_uart_rx_buffer);
-
-                if (!err) {
-                    TelemetryFrame frame;
-                    frame.seq = doc["seq"] | (g_packets_sent_success + 1);
-                    const char *src = doc["source"] | "PHYSICAL_SENSOR";
-                    strncpy(frame.source, src, sizeof(frame.source) - 1);
-                    frame.source[sizeof(frame.source) - 1] = '\0';
-                    
-                    frame.rpm = doc["rpm"] | 0.0f;
-                    frame.cht = doc["cht"] | (doc["temperature"] | 0.0f);
-                    frame.oil_pressure = doc["oil_pressure"] | (doc["oilPressure"] | 0.0f);
-                    frame.vibration = doc["vibration"] | (doc["vibration_mms"] | 0.0f);
-                    frame.fuel_flow = doc["fuel_flow"] | (doc["fuelFlow"] | 0.0f);
-                    frame.engine_load = doc["engine_load"] | (doc["throttle"] | 0.0f);
-                    frame.wifi_rssi = WiFi.RSSI();
-                    frame.local_timestamp_ms = millis();
-                    frame.is_valid = true;
-
-                    enqueue_frame(frame);
-                    g_last_uart_rx_ms = millis();
-                } else {
-                    Serial.printf("[UART] Deserialization error: %s | Raw: %s\n", err.c_str(), g_uart_rx_buffer.c_str());
-                }
-                g_uart_rx_buffer = "";
-            }
-        } else {
-            if (g_uart_rx_buffer.length() < 256) {
-                g_uart_rx_buffer += c;
-            }
-        }
-    }
-}
-
-// ==========================================
-// STANDALONE / BENCH TEST GENERATOR
-// ==========================================
-void generate_bench_test_frame() {
-    static uint32_t test_seq = 1000;
-    test_seq++;
-
-    TelemetryFrame frame;
-    frame.seq = test_seq;
-    strncpy(frame.source, "ESP32_TEST", sizeof(frame.source) - 1);
-    frame.source[sizeof(frame.source) - 1] = '\0';
-
-    float t = millis() / 1000.0f;
-    frame.rpm = 5400.0f + (sin(t * 0.8f) * 180.0f);
-    frame.cht = 148.0f + (cos(t * 0.2f) * 5.0f);
-    frame.oil_pressure = 4.2f + (sin(t * 0.5f) * 0.25f);
-    frame.vibration = 1.9f + (sin(t * 1.5f) * 0.3f);
-    frame.fuel_flow = 8.6f + (cos(t * 0.7f) * 0.6f);
-    frame.engine_load = 68.0f + (sin(t * 0.3f) * 4.0f);
-    frame.wifi_rssi = (WiFi.status() == WL_CONNECTED) ? WiFi.RSSI() : -99;
-    frame.local_timestamp_ms = millis();
-    frame.is_valid = true;
-
-    enqueue_frame(frame);
+    return ok;
 }
 
 // ==========================================
@@ -271,20 +262,29 @@ void setup() {
     pinMode(PIN_STATUS_LED, OUTPUT);
     digitalWrite(PIN_STATUS_LED, LOW);
 
-    // Initialize USB debug serial
+    // ADC input configuration
+    pinMode(PIN_ADC_CURRENT, INPUT);
+    pinMode(PIN_ADC_VOLTAGE, INPUT);
+    pinMode(PIN_TEMP_SENSOR, INPUT);
+
+    // RPM Pulse input with pullup
+    pinMode(PIN_RPM_SENSOR, INPUT_PULLUP);
+    attachInterrupt(digitalPinToInterrupt(PIN_RPM_SENSOR), rpm_isr, RISING);
+
+    // Configure 12-bit ADC resolution and 11dB attenuation for 0-3.3V range
+    analogReadResolution(12);
+    analogSetAttenuation(ADC_11db);
+
     Serial.begin(115200);
     delay(1000);
 
-    Serial.println(F("=================================================="));
-    Serial.println(F(" AERIS-TWIN ESP32 Telemetry Gateway Starting...   "));
+    Serial.println(F("================================================================"));
+    Serial.println(F(" AERIS-TWIN — PHYSICAL MOTOR PROTOTYPE TELEMETRY GATEWAY v1    "));
+    Serial.println(F(" Target: ESP32 Standalone (3x18650 -> ACS712 -> L298N -> Motor) "));
+    Serial.println(F(" Profile: MOTOR_PROTOTYPE (Arduino Uno is NOT used in v1)      "));
     Serial.printf(F(" Device ID: %s | Firmware: %s\n"), AERIS_DEVICE_ID, AERIS_FIRMWARE_VER);
-    Serial.println(F("=================================================="));
+    Serial.println(F("================================================================"));
 
-    // Initialize Hardware UART2 to receive Arduino stream
-    SerialArduino.begin(UART_BAUD_RATE, SERIAL_8N1, PIN_UART_RX, PIN_UART_TX);
-    Serial.printf("[UART] Initialized Serial2 on RX=%d, TX=%d @ %d baud\n", PIN_UART_RX, PIN_UART_TX, UART_BAUD_RATE);
-
-    // Connect to local Wi-Fi network
     connect_wifi();
 }
 
@@ -292,37 +292,21 @@ void setup() {
 // MAIN LOOP
 // ==========================================
 void loop() {
-    check_wifi_health();
-
-    // Read incoming sensor stream from Arduino
-    process_arduino_uart_stream();
-
-    // If standalone test mode is enabled, or no UART frame received for > 3s
-    #if STANDALONE_TEST_MODE
-    if (millis() - g_last_tx_ms >= TRANSMIT_INTERVAL_MS) {
-        generate_bench_test_frame();
-    }
-    #else
-    if ((millis() - g_last_uart_rx_ms > 3000) && (millis() - g_last_tx_ms >= TRANSMIT_INTERVAL_MS)) {
-        // Fallback: Generate self-test frame so backend & dashboard stay responsive
-        generate_bench_test_frame();
-    }
-    #endif
-
-    // Dispatch queued telemetry frames
-    if (g_queue_count > 0 && (millis() - g_last_tx_ms >= TRANSMIT_INTERVAL_MS)) {
-        TelemetryFrame frame_to_send;
-        if (dequeue_frame(frame_to_send)) {
-            bool success = transmit_frame_to_backend(frame_to_send);
-            g_last_tx_ms = millis();
-
-            if (success) {
-                // Heartbeat LED flash
-                digitalWrite(PIN_STATUS_LED, !digitalRead(PIN_STATUS_LED));
-            }
+    // 1. Maintain Wi-Fi health
+    if (millis() - g_last_wifi_check_ms > 5000) {
+        g_last_wifi_check_ms = millis();
+        if (WiFi.status() != WL_CONNECTED) {
+            Serial.println(F("[WIFI] Reconnecting..."));
+            WiFi.reconnect();
         }
     }
 
-    // Small yield for FreeRTOS task scheduling
-    delay(5);
+    // 2. Non-blocking 10 Hz Telemetry Loop
+    if (millis() - g_last_sample_ms >= SAMPLING_INTERVAL_MS) {
+        g_last_sample_ms = millis();
+        MotorTelemetryFrame frame = read_physical_sensors();
+        transmit_telemetry(frame);
+    }
+
+    delay(2);
 }

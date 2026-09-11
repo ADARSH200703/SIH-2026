@@ -1612,7 +1612,7 @@
                 HARDWARE CONNECTION &amp; TELEMETRY GATEWAY
               </span>
               <p style="font-size: 0.8rem; color: var(--text-muted);">
-                Physical Sensor Acquisition (Arduino Uno) &rarr; Wireless Telemetry Gateway (ESP32) &rarr; AERIS-TWIN Backend Ingestion.
+                Physical Motor Prototype (3&times;18650 &rarr; ACS712 &rarr; L298N &rarr; DC Motor) &rarr; ESP32 Standalone Gateway &rarr; AERIS-TWIN Backend.
               </p>
             </div>
             <div style="display: flex; align-items: center; gap: 0.75rem;">
@@ -1643,7 +1643,7 @@
           <div id="hw-mode-banner-live" class="live-not-connected-banner" style="display: none; margin-bottom: 1rem;">
             <div style="display: flex; align-items: center; gap: 8px;">
               <span class="material-symbols-outlined" style="color: #EF4444; font-size: 18px;" id="hw-live-banner-icon">wifi_off</span>
-              <span id="hw-live-banner-text"><strong>LIVE TELEMETRY: WAITING FOR DEVICE</strong> &mdash; Connect the ESP32 hardware bridge to stream physical sensor frames to <code>/api/telemetry/hardware</code>.</span>
+              <span id="hw-live-banner-text"><strong>LIVE TELEMETRY: WAITING FOR HARDWARE</strong> &mdash; Transmit physical motor prototype frames from ESP32 to <code>/api/telemetry/hardware</code>.</span>
             </div>
           </div>
 
@@ -1661,9 +1661,9 @@
               <span class="kpi-title">HARDWARE STATE</span>
               <div class="status-kpi-badge" id="hw-kpi-state-badge" style="font-size: 1.35rem; color: var(--status-offline);">
                 <span class="material-symbols-outlined" id="hw-kpi-state-icon" style="font-size: 20px;">power_off</span>
-                <span id="hw-kpi-state-text">DISCONNECTED</span>
+                <span id="hw-kpi-state-text">Waiting for hardware</span>
               </div>
-              <span class="status-kpi-sub" id="hw-kpi-state-sub">Waiting for physical frame</span>
+              <span class="status-kpi-sub" id="hw-kpi-state-sub">No active packet stream</span>
             </div>
 
             <!-- Ingestion Frequency -->
@@ -1681,50 +1681,116 @@
             </div>
           </div>
 
+          <!-- Real-Time Physical Motor Prototype Sensor Readout Grid -->
+          <div class="info-card" style="margin-bottom: 1.25rem;">
+            <div class="panel-header" style="margin-bottom: 0.75rem;">
+              <span class="panel-title">
+                <span class="material-symbols-outlined" style="color: var(--primary);">electric_meter</span>
+                PHYSICAL PROTOTYPE SENSOR TELEMETRY (MOTOR_PROTOTYPE)
+              </span>
+              <span id="hw-profile-badge" style="font-size: 0.70rem; font-family: var(--font-mono); color: var(--accent-cyan); background: rgba(56, 189, 248, 0.1); border: 1px solid var(--accent-cyan); padding: 2px 8px; border-radius: 4px;">
+                PROFILE: MOTOR_PROTOTYPE
+              </span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.75rem;">
+              
+              <!-- RPM -->
+              <div class="rt-summary-pill" style="flex-direction: column; align-items: flex-start; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);">
+                <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 4px;">
+                  <span class="rt-sum-label" style="font-size: 0.70rem; color: var(--text-muted);">MOTOR RPM</span>
+                  <span class="material-symbols-outlined" style="font-size: 14px; color: #2DD4BF;">speed</span>
+                </div>
+                <div id="hw-val-rpm" style="font-size: 1.25rem; font-family: var(--font-mono); font-weight: 700; color: #2DD4BF;">--</div>
+                <div style="font-size: 0.65rem; color: var(--text-dim);">Optical / Hall Sensor</div>
+              </div>
+
+              <!-- Current (A) -->
+              <div class="rt-summary-pill" style="flex-direction: column; align-items: flex-start; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);">
+                <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 4px;">
+                  <span class="rt-sum-label" style="font-size: 0.70rem; color: var(--text-muted);">CURRENT</span>
+                  <span class="material-symbols-outlined" style="font-size: 14px; color: #38BDF8;">offline_bolt</span>
+                </div>
+                <div id="hw-val-current" style="font-size: 1.25rem; font-family: var(--font-mono); font-weight: 700; color: #38BDF8;">-- A</div>
+                <div style="font-size: 0.65rem; color: var(--text-dim);">ACS712 Hall Sensor</div>
+              </div>
+
+              <!-- Voltage (V) -->
+              <div class="rt-summary-pill" style="flex-direction: column; align-items: flex-start; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);">
+                <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 4px;">
+                  <span class="rt-sum-label" style="font-size: 0.70rem; color: var(--text-muted);">BUS VOLTAGE</span>
+                  <span class="material-symbols-outlined" style="font-size: 14px; color: #F59E0B;">battery_charging_full</span>
+                </div>
+                <div id="hw-val-voltage" style="font-size: 1.25rem; font-family: var(--font-mono); font-weight: 700; color: #F59E0B;">-- V</div>
+                <div style="font-size: 0.65rem; color: var(--text-dim);">3&times;18650 Battery Pack</div>
+              </div>
+
+              <!-- Power (W) -->
+              <div class="rt-summary-pill" style="flex-direction: column; align-items: flex-start; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);">
+                <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 4px;">
+                  <span class="rt-sum-label" style="font-size: 0.70rem; color: var(--text-muted);">ELECTRICAL POWER</span>
+                  <span class="material-symbols-outlined" style="font-size: 14px; color: #EC4899;">bolt</span>
+                </div>
+                <div id="hw-val-power" style="font-size: 1.25rem; font-family: var(--font-mono); font-weight: 700; color: #EC4899;">-- W</div>
+                <div style="font-size: 0.65rem; color: var(--text-dim);">V &times; I Computed</div>
+              </div>
+
+              <!-- Temperature (°C) -->
+              <div class="rt-summary-pill" style="flex-direction: column; align-items: flex-start; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);">
+                <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 4px;">
+                  <span class="rt-sum-label" style="font-size: 0.70rem; color: var(--text-muted);">TEMPERATURE</span>
+                  <span class="material-symbols-outlined" style="font-size: 14px; color: #EF4444;">thermostat</span>
+                </div>
+                <div id="hw-val-temp" style="font-size: 1.25rem; font-family: var(--font-mono); font-weight: 700; color: #EF4444;">-- °C</div>
+                <div style="font-size: 0.65rem; color: var(--text-dim);">Motor / Driver Temp</div>
+              </div>
+
+              <!-- Vibration -->
+              <div class="rt-summary-pill" style="flex-direction: column; align-items: flex-start; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);">
+                <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 4px;">
+                  <span class="rt-sum-label" style="font-size: 0.70rem; color: var(--text-muted);">VIBRATION</span>
+                  <span class="material-symbols-outlined" style="font-size: 14px; color: #A855F7;">vibration</span>
+                </div>
+                <div id="hw-val-vib" style="font-size: 1.25rem; font-family: var(--font-mono); font-weight: 700; color: #A855F7;">---</div>
+                <div style="font-size: 0.65rem; color: var(--text-dim);">Motor Accelerometer</div>
+              </div>
+
+              <!-- Motor Load (%) -->
+              <div class="rt-summary-pill" style="flex-direction: column; align-items: flex-start; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);">
+                <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 4px;">
+                  <span class="rt-sum-label" style="font-size: 0.70rem; color: var(--text-muted);">MOTOR LOAD</span>
+                  <span class="material-symbols-outlined" style="font-size: 14px; color: #2DD4BF;">tune</span>
+                </div>
+                <div id="hw-val-load" style="font-size: 1.25rem; font-family: var(--font-mono); font-weight: 700; color: #2DD4BF;">-- %</div>
+                <div style="font-size: 0.65rem; color: var(--text-dim);">PWM Duty / Torque</div>
+              </div>
+
+            </div>
+          </div>
+
           <!-- Main 2-Column Grid: Device Configuration & Real-Time Ingestion Specs -->
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem;">
             
             <!-- Column 1: Hardware Connection & Interface Config -->
             <div class="info-card">
               <div class="panel-header" style="margin-bottom: 0.75rem;">
-                <span class="panel-title"><span class="material-symbols-outlined" style="color: var(--primary);">cable</span> CONNECTION TYPE &amp; METHOD</span>
-                <span style="font-size: 0.70rem; font-family: var(--font-mono); color: var(--text-dim);">Rig Selector</span>
-              </div>
-
-              <!-- Connection Type Selector (Device Types) -->
-              <div style="margin-bottom: 1rem;">
-                <div style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--text-secondary); margin-bottom: 0.4rem;">DEVICE TYPE</div>
-                <div class="rate-btn-group" style="display: flex; gap: 6px;">
-                  <button class="rate-btn active" id="hw-type-esp32" style="flex: 1; padding: 6px 12px;">
-                    <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">wifi</span> ESP32 Gateway
-                  </button>
-                  <button class="rate-btn" id="hw-type-arduino" style="flex: 1; padding: 6px 12px;">
-                    <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">memory</span> Arduino Uno Acquisition
-                  </button>
-                </div>
-              </div>
-
-              <!-- Connection Method Selector -->
-              <div style="margin-bottom: 1rem;">
-                <div style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--text-secondary); margin-bottom: 0.4rem;">CONNECTION METHOD</div>
-                <div class="rate-btn-group" style="display: flex; gap: 6px;">
-                  <button class="rate-btn active" id="hw-method-wifi" style="flex: 1; padding: 6px 12px;">
-                    <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">wifi_tethering</span> Wi-Fi (Active Bridge)
-                  </button>
-                  <button class="rate-btn" id="hw-method-serial" style="flex: 1; padding: 6px 12px; opacity: 0.75;">
-                    <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">usb</span> USB / Serial (Bridge Mode)
-                  </button>
-                </div>
-                <div id="hw-method-serial-note" style="display: none; margin-top: 0.4rem; font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono);">
-                  * Note: USB/Serial bridge mode is serviced via the local edge gateway service.
-                </div>
+                <span class="panel-title"><span class="material-symbols-outlined" style="color: var(--primary);">cable</span> DEVICE SPECS &amp; TELEMETRY LINK</span>
+                <span style="font-size: 0.70rem; font-family: var(--font-mono); color: var(--text-dim);">ESP32 Rig</span>
               </div>
 
               <!-- Device Specs Grid -->
               <div class="model-specs-grid" style="margin-top: 0.75rem;">
                 <div class="spec-box">
+                  <span class="spec-box-label">Device</span>
+                  <span class="spec-box-val" id="hw-spec-device" style="color: var(--primary);">ESP32</span>
+                </div>
+                <div class="spec-box">
                   <span class="spec-box-label">Device ID</span>
                   <span class="spec-box-val" id="hw-spec-device-id" style="color: var(--primary);">--</span>
+                </div>
+                <div class="spec-box">
+                  <span class="spec-box-label">Profile</span>
+                  <span class="spec-box-val" id="hw-spec-profile-val" style="color: var(--accent-cyan);">MOTOR_PROTOTYPE</span>
                 </div>
                 <div class="spec-box">
                   <span class="spec-box-label">Firmware Version</span>
@@ -1777,16 +1843,15 @@
 
               <div style="background: rgba(0, 0, 0, 0.35); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 0.75rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                  <span style="font-size: 0.72rem; font-family: var(--font-mono); color: var(--text-dim);">PHYSICAL CHANNELS MONITORED:</span>
-                  <span style="font-size: 0.72rem; font-family: var(--font-mono); color: var(--primary);">6 TRANSDUCERS</span>
+                  <span style="font-size: 0.72rem; font-family: var(--font-mono); color: var(--text-dim);">PROTOTYPE SENSORS:</span>
+                  <span style="font-size: 0.72rem; font-family: var(--font-mono); color: var(--primary);">REAL HARDWARE CHANNELS</span>
                 </div>
                 <div style="display: flex; flex-wrap: wrap; gap: 6px; font-size: 0.72rem; font-family: var(--font-mono);">
-                  <span style="background: var(--surface); padding: 2px 6px; border-radius: 3px; border: 1px solid var(--border); color: #2DD4BF;">RPM (D2)</span>
-                  <span style="background: var(--surface); padding: 2px 6px; border-radius: 3px; border: 1px solid var(--border); color: #EF4444;">CHT (A0)</span>
-                  <span style="background: var(--surface); padding: 2px 6px; border-radius: 3px; border: 1px solid var(--border); color: #38BDF8;">OIL PRESS (A1)</span>
-                  <span style="background: var(--surface); padding: 2px 6px; border-radius: 3px; border: 1px solid var(--border); color: #F59E0B;">VIBRATION (A2)</span>
-                  <span style="background: var(--surface); padding: 2px 6px; border-radius: 3px; border: 1px solid var(--border); color: #38BDF8;">FUEL FLOW (A3)</span>
-                  <span style="background: var(--surface); padding: 2px 6px; border-radius: 3px; border: 1px solid var(--border); color: #2DD4BF;">LOAD (A4)</span>
+                  <span style="background: var(--surface); padding: 2px 6px; border-radius: 3px; border: 1px solid var(--border); color: #38BDF8;">ACS712 (Current)</span>
+                  <span style="background: var(--surface); padding: 2px 6px; border-radius: 3px; border: 1px solid var(--border); color: #F59E0B;">3&times;18650 (Voltage)</span>
+                  <span style="background: var(--surface); padding: 2px 6px; border-radius: 3px; border: 1px solid var(--border); color: #2DD4BF;">RPM Pulse</span>
+                  <span style="background: var(--surface); padding: 2px 6px; border-radius: 3px; border: 1px solid var(--border); color: #EC4899;">V&times;I (Power)</span>
+                  <span style="background: var(--surface); padding: 2px 6px; border-radius: 3px; border: 1px solid var(--border); color: #EF4444;">Thermistor</span>
                 </div>
               </div>
             </div>
@@ -1797,42 +1862,42 @@
           <div class="info-card">
             <div class="panel-header" style="margin-bottom: 0.75rem;">
               <span class="panel-title"><span class="material-symbols-outlined" style="color: var(--accent-cyan);">hub</span> PHYSICAL TELEMETRY DATA ARCHITECTURE</span>
-              <span style="font-size: 0.70rem; font-family: var(--font-mono); color: var(--text-dim);">Zero-Mock Hardware Pipeline</span>
+              <span style="font-size: 0.70rem; font-family: var(--font-mono); color: var(--text-dim);">ESP32 Standalone Prototype v1</span>
             </div>
 
             <div class="landing-core-pipeline-flow" style="margin: 0.5rem 0;">
               <div class="pipeline-flow-card">
                 <div class="pipeline-card-step">01</div>
                 <div class="pipeline-card-icon-wrap"><span class="material-symbols-outlined">sensors</span></div>
-                <div class="pipeline-card-name" style="font-size: 0.75rem;">PHYSICAL SENSORS</div>
-                <div style="font-size: 0.65rem; color: var(--text-dim); margin-top: 2px;">6-Ch Analog / Pulses</div>
+                <div class="pipeline-card-name" style="font-size: 0.75rem;">MOTOR PROTOTYPE</div>
+                <div style="font-size: 0.65rem; color: var(--text-dim); margin-top: 2px;">3&times;18650 &rarr; ACS712 &rarr; L298N &rarr; DC Motor</div>
               </div>
 
               <div class="pipeline-flow-arrow" aria-hidden="true"><span class="material-symbols-outlined">east</span></div>
 
               <div class="pipeline-flow-card">
                 <div class="pipeline-card-step">02</div>
-                <div class="pipeline-card-icon-wrap"><span class="material-symbols-outlined">memory</span></div>
-                <div class="pipeline-card-name" style="font-size: 0.75rem;">ARDUINO UNO</div>
-                <div style="font-size: 0.65rem; color: var(--text-dim); margin-top: 2px;">10Hz ADC &amp; EMA Filter</div>
+                <div class="pipeline-card-icon-wrap"><span class="material-symbols-outlined">wifi</span></div>
+                <div class="pipeline-card-name" style="font-size: 0.75rem;">ESP32 GATEWAY</div>
+                <div style="font-size: 0.65rem; color: var(--text-dim); margin-top: 2px;">ADC Sampling &amp; JSON Telemetry</div>
               </div>
 
               <div class="pipeline-flow-arrow" aria-hidden="true"><span class="material-symbols-outlined">east</span></div>
 
               <div class="pipeline-flow-card">
                 <div class="pipeline-card-step">03</div>
-                <div class="pipeline-card-icon-wrap"><span class="material-symbols-outlined">wifi</span></div>
-                <div class="pipeline-card-name" style="font-size: 0.75rem;">ESP32 GATEWAY</div>
-                <div style="font-size: 0.65rem; color: var(--text-dim); margin-top: 2px;">HTTPS POST / Auth Key</div>
+                <div class="pipeline-card-icon-wrap"><span class="material-symbols-outlined">dns</span></div>
+                <div class="pipeline-card-name" style="font-size: 0.75rem;">FASTAPI INGEST</div>
+                <div style="font-size: 0.65rem; color: var(--text-dim); margin-top: 2px;">/api/telemetry/hardware &amp; Auth</div>
               </div>
 
               <div class="pipeline-flow-arrow" aria-hidden="true"><span class="material-symbols-outlined">east</span></div>
 
               <div class="pipeline-flow-card">
                 <div class="pipeline-card-step">04</div>
-                <div class="pipeline-card-icon-wrap"><span class="material-symbols-outlined">deployed_code</span></div>
-                <div class="pipeline-card-name" style="font-size: 0.75rem;">FASTAPI &amp; TWIN</div>
-                <div style="font-size: 0.65rem; color: var(--text-dim); margin-top: 2px;">Physics &amp; AI Residuals</div>
+                <div class="pipeline-card-icon-wrap"><span class="material-symbols-outlined">network_check</span></div>
+                <div class="pipeline-card-name" style="font-size: 0.75rem;">WEBSOCKET</div>
+                <div style="font-size: 0.65rem; color: var(--text-dim); margin-top: 2px;">/ws/telemetry Real-Time Broadcast</div>
               </div>
 
               <div class="pipeline-flow-arrow" aria-hidden="true"><span class="material-symbols-outlined">east</span></div>
@@ -1840,15 +1905,15 @@
               <div class="pipeline-flow-card pipeline-flow-card-accent">
                 <div class="pipeline-card-step">05</div>
                 <div class="pipeline-card-icon-wrap"><span class="material-symbols-outlined">dashboard</span></div>
-                <div class="pipeline-card-name" style="font-size: 0.75rem;">GCS DASHBOARD</div>
-                <div style="font-size: 0.65rem; color: var(--primary); margin-top: 2px;">Real-Time Cockpit HUD</div>
+                <div class="pipeline-card-name" style="font-size: 0.75rem;">HARDWARE HUD</div>
+                <div style="font-size: 0.65rem; color: var(--primary); margin-top: 2px;">Live Motor Prototype Readings</div>
               </div>
             </div>
 
             <div style="margin-top: 0.75rem; padding: 0.75rem; background: rgba(0, 0, 0, 0.3); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem;">
               <div style="color: var(--text-secondary); display: flex; align-items: center; gap: 6px;">
                 <span class="material-symbols-outlined" style="font-size: 16px; color: var(--primary);">info</span>
-                <span>Hardware telemetry will appear automatically when a registered ESP32 device begins transmitting to the backend.</span>
+                <span>Physical motor prototype telemetry displays in real-time when the ESP32 transmits to the backend.</span>
               </div>
               <div style="font-family: var(--font-mono); color: var(--text-dim);">
                 Docs: <code>hardware/README.md</code>
