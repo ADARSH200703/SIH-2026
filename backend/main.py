@@ -349,7 +349,7 @@ def get_system_events(limit: int = 50):
 # ==========================================
 AERIS_DEVICE_API_KEY = os.getenv("AERIS_DEVICE_API_KEY", "").strip()
 
-def verify_device_authentication(request: Request, raw_packet: Optional[Dict[str, Any]] = None):
+def verify_device_authentication(request: Request = None, raw_packet: Optional[Dict[str, Any]] = None):
     """
     Validates physical prototype API key against configured AERIS_DEVICE_API_KEY environment variable.
     If no key is configured, defaults to permissive mode for local dev.
@@ -358,16 +358,18 @@ def verify_device_authentication(request: Request, raw_packet: Optional[Dict[str
     if not expected_key:
         return True  # Dev mode: permissive when no secret is configured
 
+    provided_key = ""
     # 1. Check HTTP Headers (X-Device-API-Key, X-API-Key, Authorization: Bearer <key>)
-    auth_header = (
-        request.headers.get("X-Device-API-Key")
-        or request.headers.get("X-API-Key")
-        or request.headers.get("Authorization", "")
-    )
-    if auth_header.startswith("Bearer "):
-        provided_key = auth_header[7:].strip()
-    else:
-        provided_key = auth_header.strip()
+    if request is not None:
+        auth_header = (
+            request.headers.get("X-Device-API-Key")
+            or request.headers.get("X-API-Key")
+            or request.headers.get("Authorization", "")
+        )
+        if auth_header.startswith("Bearer "):
+            provided_key = auth_header[7:].strip()
+        else:
+            provided_key = auth_header.strip()
 
     # 2. Fallback check inside JSON body
     if not provided_key and raw_packet:
@@ -538,7 +540,7 @@ def normalize_telemetry_packet(raw_packet: Dict[str, Any]) -> Dict[str, Any]:
 
 @app.post("/api/telemetry/live")
 @app.post("/telemetry/live")
-def ingest_live_telemetry(raw_packet: Dict[str, Any], request: Request):
+def ingest_live_telemetry(raw_packet: Dict[str, Any], request: Request = None):
     """
     Direct ingestion endpoint for continuous external live telemetry streams (ESP32 Gateway / Producers).
     """
@@ -563,7 +565,7 @@ def ingest_live_telemetry(raw_packet: Dict[str, Any], request: Request):
 
 @app.post("/api/telemetry/hardware")
 @app.post("/telemetry/hardware")
-def ingest_hardware_telemetry(raw_packet: Dict[str, Any], request: Request):
+def ingest_hardware_telemetry(raw_packet: Dict[str, Any], request: Request = None):
     """
     Dedicated physical prototype telemetry gateway ingestion endpoint for ESP32.
     """

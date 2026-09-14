@@ -68,7 +68,7 @@ class EngineFaultClassifier:
             evidence_list.append({
                 "type": "PHYSICS_RESIDUAL",
                 "parameter": "vibration",
-                "observation": f"Vibration residual ({v_norm} sigma) with positive trend ({v_slope:.4f}/s) indicates progressive bearing race/cage wear",
+                "observation": f"Vibration residual ({v_norm:.2f} sigma) with positive trend ({v_slope:.4f}/s) indicates progressive bearing race/cage wear",
                 "confidence": confidence
             })
             
@@ -83,7 +83,7 @@ class EngineFaultClassifier:
             evidence_list.append({
                 "type": "PHYSICS_RESIDUAL",
                 "parameter": "temperature",
-                "observation": f"Cylinder head temperature ({t_norm} sigma above thermal model) indicates cooling airflow or fin heat rejection deficit",
+                "observation": f"Cylinder head temperature ({t_norm:.2f} sigma above thermal model) indicates cooling airflow or fin heat rejection deficit",
                 "confidence": confidence
             })
             
@@ -98,7 +98,7 @@ class EngineFaultClassifier:
             evidence_list.append({
                 "type": "PHYSICS_RESIDUAL",
                 "parameter": "oilPressure",
-                "observation": f"Oil pressure ({abs(o_norm)} sigma below nominal) indicates lubrication delivery degradation",
+                "observation": f"Oil pressure ({abs(o_norm):.2f} sigma below nominal) indicates lubrication delivery degradation",
                 "confidence": confidence
             })
             
@@ -128,7 +128,7 @@ class EngineFaultClassifier:
             evidence_list.append({
                 "type": "PHYSICS_RESIDUAL",
                 "parameter": "fuelFlow",
-                "observation": f"Fuel mass flow rate ({f_norm} sigma above model) indicates injector metering anomaly",
+                "observation": f"Fuel mass flow rate ({f_norm:.2f} sigma above model) indicates injector metering anomaly",
                 "confidence": confidence
             })
 

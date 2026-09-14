@@ -1313,6 +1313,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   $('quick-mitigate-btn')?.addEventListener('click', mitigate);
   $('btn-execute-mitigation')?.addEventListener('click', mitigate);
+  $('lab-btn-execute-mitigation')?.addEventListener('click', mitigate);
 
   // ─── Keyboard Shortcuts & Modal Dismissals ─────────────────────────────────
   window.addEventListener('keydown', e => {
@@ -1830,16 +1831,25 @@ document.addEventListener('DOMContentLoaded', () => {
       if (el) { el.textContent = '—'; el.style.color = 'var(--text-dim)'; }
     });
 
-    // AI Panel
+    // AI Panel & AI Lab Cards
     setText('ai-possible-issue', 'No active telemetry stream connected');
+    setText('lab-possible-issue', 'No active telemetry stream connected');
     const rb = $('ai-risk-badge');
     if (rb) {
       rb.textContent = 'STANDBY';
       rb.className = 'risk-badge normal';
     }
+    const labRb = $('lab-risk-badge');
+    if (labRb) {
+      labRb.textContent = 'STANDBY';
+      labRb.className = 'risk-badge normal';
+    }
     setText('ai-confidence-val', '0%');
+    setText('lab-confidence-val', '0%');
     setCss('ai-confidence-bar', 'width', '0%');
+    setCss('lab-confidence-bar', 'width', '0%');
     setText('ai-time-to-fault', '--');
+    setText('lab-time-to-fault', '--');
 
     setText('lab-anomaly-score', '0.000');
     setCss('lab-anomaly-bar', 'width', '0%');
@@ -2078,18 +2088,29 @@ document.addEventListener('DOMContentLoaded', () => {
     updateResidualsTable(residuals, expected, state);
     updatePrimaryEvidence(dashboardView.primary_evidence || twinState.primary_evidence, sensorTrust, twinState);
 
-    // — AI Prediction Panel —
-    setText('ai-possible-issue', dashboardView.fault_class ? dashboardView.fault_class.replace(/_/g, ' ') : infer.possibleIssue);
+    // — AI Prediction Panel & AI Lab Cards —
+    const issueText = dashboardView.fault_class ? dashboardView.fault_class.replace(/_/g, ' ') : infer.possibleIssue;
+    setText('ai-possible-issue', issueText);
+    setText('lab-possible-issue', issueText);
+    const rk = dashboardView.anomaly_detected ? (state.status === 'CRITICAL' ? 'CRITICAL' : 'HIGH') : 'LOW';
     const rb = $('ai-risk-badge');
     if (rb) {
-      const rk = dashboardView.anomaly_detected ? (state.status === 'CRITICAL' ? 'CRITICAL' : 'HIGH') : 'LOW';
       rb.textContent = `${rk} RISK`;
       rb.className = `risk-badge ${rk.toLowerCase()}`;
     }
+    const labRb = $('lab-risk-badge');
+    if (labRb) {
+      labRb.textContent = `${rk} RISK`;
+      labRb.className = `risk-badge ${rk.toLowerCase()}`;
+    }
     const conf = dashboardView.confidence_pct ?? infer.confidence ?? 94;
     setText('ai-confidence-val', `${conf}%`);
+    setText('lab-confidence-val', `${conf}%`);
     setCss('ai-confidence-bar', 'width', `${conf}%`);
-    setText('ai-time-to-fault', dashboardView.rul_time_str || infer.estimatedTimeToFault);
+    setCss('lab-confidence-bar', 'width', `${conf}%`);
+    const timeToFaultStr = dashboardView.rul_time_str || infer.estimatedTimeToFault;
+    setText('ai-time-to-fault', timeToFaultStr);
+    setText('lab-time-to-fault', timeToFaultStr);
 
     // — AI Lab Primary Summary Cards & Probability Bars —
     setText('lab-anomaly-score', rawAnomScore.toFixed(3));
