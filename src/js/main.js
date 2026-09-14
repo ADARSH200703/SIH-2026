@@ -81,13 +81,23 @@ document.addEventListener('DOMContentLoaded', () => {
   async function checkBackendHealth() {
     const t0 = performance.now();
     try {
-      const res = await fetch(`${API_BASE_URL}/health`, { method: 'GET', cache: 'no-cache' });
+      const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      const timeoutId = controller ? setTimeout(() => controller.abort(), 4000) : null;
+      const res = await fetch(`${API_BASE_URL}/health`, {
+        method: 'GET',
+        cache: 'no-cache',
+        signal: controller ? controller.signal : undefined
+      });
+      if (timeoutId) clearTimeout(timeoutId);
+
       if (res.ok) {
         const data = await res.json();
         backendLatencyMs = Math.round(performance.now() - t0);
         backendHttpOnline = true;
         setText('comm-link-status', wsConnected ? 'Live Backend Link (Active)' : 'Connected (HTTP)');
         setText('backend-status-text', wsConnected ? 'FastAPI WS Connected' : 'FastAPI Online');
+        setCss('backend-status-text', 'color', 'var(--status-normal)');
+        $('ws-status-dot')?.classList.remove('connecting');
         $('ws-status-dot')?.classList.add('connected');
         setText('hw-kpi-backend', wsConnected ? '● Connected (WS)' : '● Online');
         setText('hw-kpi-latency', `${backendLatencyMs} ms`);
@@ -101,7 +111,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!wsConnected && !backendHttpOnline) {
       setText('comm-link-status', 'Disconnected');
       setText('backend-status-text', 'FastAPI Offline');
+      setCss('backend-status-text', 'color', 'var(--status-critical)');
       $('ws-status-dot')?.classList.remove('connected');
+      $('ws-status-dot')?.classList.remove('connecting');
       setText('hw-kpi-backend', 'Offline');
       setText('hw-kpi-latency', '-- ms');
     }
@@ -603,7 +615,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (viewKey === 'threed')   setTimeout(() => getTwin().onResize(), 100);
     if (viewKey === 'realtime') setTimeout(() => rtMon.init(), 60);
-    if (viewKey === 'hardware') updateHardwareView();
+    if (viewKey === 'hardware') {
+      updateHardwareView();
+      fetch(`${API_BASE_URL}/api/telemetry/status`)
+        .then(r => r.json())
+        .then(st => updateHardwareView(st, null, evalMode, st.connected))
+        .catch(() => {});
+    }
 
     if (updateUrl && $('dashboard-root')?.style.display !== 'none') {
       const routeMap = {
@@ -1635,8 +1653,8 @@ document.addEventListener('DOMContentLoaded', () => {
       setCss('hw-kpi-state-badge', 'color', 'var(--status-warning)');
       setText('hw-kpi-state-icon', 'science');
       setText('hw-kpi-rate', `${currentTargetRateHz.toFixed(1)}`);
-      setText('hw-kpi-backend', wsConnected ? 'Connected' : 'Offline');
-      setText('hw-kpi-latency', wsConnected ? '<1.5 ms' : '-- ms');
+      setText('hw-kpi-backend', (backendHttpOnline || wsConnected) ? '● Online' : 'Offline');
+      setText('hw-kpi-latency', (backendHttpOnline || wsConnected) ? (backendLatencyMs ? `${backendLatencyMs} ms` : '<1.5 ms') : '-- ms');
 
       setText('hw-spec-device', 'Simulator');
       setText('hw-spec-device-id', 'ROT-914-SIM');
@@ -1680,8 +1698,8 @@ document.addEventListener('DOMContentLoaded', () => {
       setCss('hw-kpi-state-badge', 'color', 'var(--accent-cyan)');
       setText('hw-kpi-state-icon', 'history');
       setText('hw-kpi-rate', '--');
-      setText('hw-kpi-backend', wsConnected ? 'Connected' : 'Offline');
-      setText('hw-kpi-latency', '-- ms');
+      setText('hw-kpi-backend', (backendHttpOnline || wsConnected) ? '● Online' : 'Offline');
+      setText('hw-kpi-latency', (backendHttpOnline || wsConnected) ? (backendLatencyMs ? `${backendLatencyMs} ms` : 'Ready') : '-- ms');
 
       setText('hw-spec-device', 'Flight Recorder');
       setText('hw-spec-device-id', 'HISTORICAL-LOG');
@@ -2321,13 +2339,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  let reconnectTimer = null;
+
   function initWebSocket() {
+    if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
+      return;
+    }
+    if (reconnectTimer) {
+      clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+    }
     try {
       socket = new WebSocket(WS_URL);
       socket.onopen = () => {
         wsConnected = true;
+        backendHttpOnline = true;
         setText('comm-link-status',    'Live Backend Link (Active)');
         setText('backend-status-text', 'FastAPI WS Connected');
+        setCss('backend-status-text', 'color', 'var(--status-normal)');
+        $('ws-status-dot')?.classList.remove('connecting');
         $('ws-status-dot')?.classList.add('connected');
         toast('Connected to FastAPI Real-Time Telemetry Engine');
 
@@ -2384,15 +2414,24 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!backendHttpOnline) {
           setText('comm-link-status',    'Disconnected');
           setText('backend-status-text', 'FastAPI Offline');
+          setCss('backend-status-text', 'color', 'var(--status-critical)');
           $('ws-status-dot')?.classList.remove('connected');
+          $('ws-status-dot')?.classList.remove('connecting');
         } else {
           setText('comm-link-status',    'Connected (HTTP)');
-          setText('backend-status-text', 'FastAPI Online');
+          setText('backend-status-text', 'FastAPI Online (WS Reconnecting)');
+          setCss('backend-status-text', 'color', 'var(--status-warning)');
+          $('ws-status-dot')?.classList.add('connecting');
         }
         if (evalMode === 'LIVE' && !liveStreamConnected) {
           renderDisconnectedLiveState({ status: backendHttpOnline ? 'WAITING FOR HARDWARE' : 'BACKEND OFFLINE', source: 'DISCONNECTED' });
         }
-        setTimeout(initWebSocket, 3000);
+        if (!reconnectTimer) {
+          reconnectTimer = setTimeout(() => {
+            reconnectTimer = null;
+            initWebSocket();
+          }, 3000);
+        }
       };
 
       socket.onerror = () => {

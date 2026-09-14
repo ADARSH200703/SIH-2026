@@ -553,9 +553,21 @@ body {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--success);
-  box-shadow: 0 0 6px var(--success);
+  background: var(--status-critical, #EF4444);
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.4);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.status-dot.connected {
+  background: var(--success, #22C55E);
+  box-shadow: 0 0 6px var(--success, #22C55E);
   animation: dotPulse 2s ease-in-out infinite;
+}
+
+.status-dot.connecting {
+  background: var(--warning, #F59E0B);
+  box-shadow: 0 0 6px var(--warning, #F59E0B);
+  animation: dotPulse 1s ease-in-out infinite;
 }
 
 @keyframes dotPulse {
