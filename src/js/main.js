@@ -54,11 +54,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   let wsConnected = false;
+  let backendHttpOnline = false;
+  let backendLatencyMs = null;
   let socket      = null;
 
   // ─── Dynamic API & WebSocket Endpoints ─────────────────────────────────────
-  const envApiBase = (typeof import.meta !== 'undefined' && import.meta.env && (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_BACKEND_URL)) || null;
-  const envWs = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_WS_URL) || null;
+  const rawApiBase = (typeof import.meta !== 'undefined' && import.meta.env && (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_BACKEND_URL)) || null;
+  const rawWsUrl = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_WS_URL) || null;
+
+  const envApiBase = rawApiBase ? String(rawApiBase).trim().replace(/\/+$/, '') : null;
+  const envWs = rawWsUrl ? String(rawWsUrl).trim().replace(/\/+$/, '') : null;
 
   const isDevPort = window.location.port === '3000' || window.location.port === '5173';
   const apiHost = envApiBase
@@ -70,6 +75,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const API_BASE_URL = envApiBase ? (envApiBase.startsWith('http') ? envApiBase : `${httpProtocol}//${envApiBase}`) : `${httpProtocol}//${apiHost}`;
   const WS_URL = envWs || `${wsProtocol}//${apiHost}/ws/telemetry`;
+
+  console.info('[AERIS-TWIN Backend Link]', { API_BASE_URL, WS_URL, envApiBase, envWs, host: window.location.host });
+
+  async function checkBackendHealth() {
+    const t0 = performance.now();
+    try {
+      const res = await fetch(`${API_BASE_URL}/health`, { method: 'GET', cache: 'no-cache' });
+      if (res.ok) {
+        const data = await res.json();
+        backendLatencyMs = Math.round(performance.now() - t0);
+        backendHttpOnline = true;
+        setText('comm-link-status', wsConnected ? 'Live Backend Link (Active)' : 'Connected (HTTP)');
+        setText('backend-status-text', wsConnected ? 'FastAPI WS Connected' : 'FastAPI Online');
+        $('ws-status-dot')?.classList.add('connected');
+        setText('hw-kpi-backend', wsConnected ? '● Connected (WS)' : '● Online');
+        setText('hw-kpi-latency', `${backendLatencyMs} ms`);
+        return data;
+      } else {
+        backendHttpOnline = false;
+      }
+    } catch (_) {
+      backendHttpOnline = false;
+    }
+    if (!wsConnected && !backendHttpOnline) {
+      setText('comm-link-status', 'Disconnected');
+      setText('backend-status-text', 'FastAPI Offline');
+      $('ws-status-dot')?.classList.remove('connected');
+      setText('hw-kpi-backend', 'Offline');
+      setText('hw-kpi-latency', '-- ms');
+    }
+    return null;
+  }
 
   // ─── Component Inspector Spec Table (Rotax 914 Aero Piston Architecture) ────
   const COMP_SPECS = {
@@ -1703,8 +1740,8 @@ document.addEventListener('DOMContentLoaded', () => {
       setCss('hw-kpi-state-badge', 'color', isStale ? 'var(--status-warning)' : 'var(--status-normal)');
       setText('hw-kpi-state-icon', isStale ? 'warning' : 'sensors');
       setText('hw-kpi-rate', `${Number(rateHz).toFixed(1)}`);
-      setText('hw-kpi-backend', wsConnected ? '● Connected' : 'Offline');
-      setText('hw-kpi-latency', `${Math.round(metrics.latency_ms || 2.4)} ms`);
+      setText('hw-kpi-backend', (backendHttpOnline || wsConnected) ? '● Online' : 'Offline');
+      setText('hw-kpi-latency', `${Math.round(metrics.latency_ms || backendLatencyMs || 2.4)} ms`);
 
       setText('hw-spec-device', deviceType);
       setText('hw-spec-device-id', devId);
@@ -1758,8 +1795,8 @@ document.addEventListener('DOMContentLoaded', () => {
       setCss('hw-kpi-state-badge', 'color', 'var(--status-offline)');
       setText('hw-kpi-state-icon', 'power_off');
       setText('hw-kpi-rate', '--');
-      setText('hw-kpi-backend', wsConnected ? '● Connected (WS)' : 'Offline');
-      setText('hw-kpi-latency', wsConnected ? 'Ready' : '-- ms');
+      setText('hw-kpi-backend', (backendHttpOnline || wsConnected) ? '● Online' : 'Offline');
+      setText('hw-kpi-latency', (backendHttpOnline || wsConnected) ? (backendLatencyMs ? `${backendLatencyMs} ms` : 'Ready') : '-- ms');
 
       setText('hw-spec-device', 'Arduino Uno / ESP32');
       setText('hw-spec-device-id', '--');
@@ -1790,16 +1827,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }).catch(() => {});
   });
 
-  $('btn-hw-check-sync')?.addEventListener('click', () => {
+  $('btn-hw-check-sync')?.addEventListener('click', async () => {
+    await checkBackendHealth();
     fetch(`${API_BASE_URL}/api/telemetry/status`)
       .then(r => r.json())
       .then(statusData => {
         updateHardwareView(statusData, null, evalMode, statusData.connected);
-        toast(`Hardware Bridge Sync: ${statusData.status || 'CONNECTED'}`);
+        toast(`Hardware Bridge Sync: ${statusData.status || (statusData.connected ? 'CONNECTED' : 'DISCONNECTED')}`);
       })
       .catch(() => {
-        updateHardwareView({ status: 'BACKEND OFFLINE', connected: false }, null, evalMode, false);
-        toast('Backend offline: could not query hardware status');
+        const isOnline = backendHttpOnline || wsConnected;
+        updateHardwareView({ status: isOnline ? 'DISCONNECTED' : 'BACKEND OFFLINE', connected: false }, null, evalMode, false);
+        if (isOnline) {
+          toast('Backend: Online | Hardware: Awaiting Telemetry');
+        } else {
+          toast('Backend offline: could not query hardware status');
+        }
       });
   });
 
@@ -1807,7 +1850,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // ─── Disconnected / Standby State Renderer ────────────────────────────────
   function renderDisconnectedLiveState(statusDetails = {}) {
     liveStreamConnected = false;
-    const status = statusDetails?.status || 'NO LIVE DATA';
+    const isOnline = backendHttpOnline || wsConnected;
+    const status = statusDetails?.status || (isOnline ? 'WAITING FOR HARDWARE' : 'NO LIVE DATA');
     const source = statusDetails?.source || 'DISCONNECTED';
 
     if ($('live-not-connected-banner') && evalMode === 'LIVE') {
@@ -2337,11 +2381,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
       socket.onclose = () => {
         wsConnected = false;
-        setText('comm-link-status',    'Disconnected');
-        setText('backend-status-text', 'FastAPI Offline');
-        $('ws-status-dot')?.classList.remove('connected');
-        if (evalMode === 'LIVE') {
-          renderDisconnectedLiveState({ status: 'BACKEND OFFLINE', source: 'DISCONNECTED' });
+        if (!backendHttpOnline) {
+          setText('comm-link-status',    'Disconnected');
+          setText('backend-status-text', 'FastAPI Offline');
+          $('ws-status-dot')?.classList.remove('connected');
+        } else {
+          setText('comm-link-status',    'Connected (HTTP)');
+          setText('backend-status-text', 'FastAPI Online');
+        }
+        if (evalMode === 'LIVE' && !liveStreamConnected) {
+          renderDisconnectedLiveState({ status: backendHttpOnline ? 'WAITING FOR HARDWARE' : 'BACKEND OFFLINE', source: 'DISCONNECTED' });
         }
         setTimeout(initWebSocket, 3000);
       };
@@ -2352,12 +2401,14 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (_) {
       // Backend offline
       if (evalMode === 'LIVE') {
-        renderDisconnectedLiveState({ status: 'BACKEND OFFLINE', source: 'DISCONNECTED' });
+        renderDisconnectedLiveState({ status: backendHttpOnline ? 'WAITING FOR HARDWARE' : 'BACKEND OFFLINE', source: 'DISCONNECTED' });
       }
     }
   }
 
-  // Initial state on page load: clean disconnected live state
+  // Initial state on page load: clean disconnected live state & poll backend health
   renderDisconnectedLiveState();
+  checkBackendHealth();
+  setInterval(checkBackendHealth, 10000);
   initWebSocket();
 });
