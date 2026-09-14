@@ -70,11 +70,11 @@ class TwinUpdateService:
         Physical Testbed: 3x18650 Battery -> ACS712 Current Sensor -> L298N Motor Driver -> DC Geared Motor -> ESP32.
         Preserves strict physical boundaries: zero fabricated aero-engine parameters.
         """
-        device_id = raw_frame.get("device_id", "AERIS-ESP32-001")
+        device_id = raw_frame.get("device_id", "AERIS-UNO-001")
         timestamp = raw_frame.get("timestamp", now_epoch)
         seq = raw_frame.get("sequence_number", raw_frame.get("seq", 0))
         source_mode = raw_frame.get("source", "PHYSICAL_SENSOR")
-        is_sim = False
+        is_sim = raw_frame.get("is_simulated", source_mode in ["SIMULATION", "SIMULATION_PRODUCER", "MOCK"])
 
         # Physical measurements
         rpm = float(raw_frame["rpm"]) if raw_frame.get("rpm") is not None else None
@@ -132,7 +132,7 @@ class TwinUpdateService:
 
         # Primary Evidence List (Traceable and Physically Grounded)
         primary_evidence = [
-            "Physical DC Motor Prototype Telemetry (3×18650 + ACS712 + L298N + ESP32)",
+            f"Physical DC Motor Prototype Telemetry ({device_id} | ACS712 + L298N + 3S Battery)",
             f"Power Bus: {voltage_v if voltage_v is not None else '--'}V | Current: {current_a if current_a is not None else '--'}A | Power: {power_w if power_w is not None else '--'}W",
             f"Electro-mechanical Twin Residuals: Armature I dev={residuals.get('current_a', {}).get('percentage_deviation', 0.0):+.1f}% | V sag={residuals.get('voltage_v', {}).get('percentage_deviation', 0.0):+.1f}%",
             f"Sensor Trust Array: {int(sensor_trust['aggregate_trust_score'] * 100)}% transducer validity",
@@ -213,8 +213,8 @@ class TwinUpdateService:
             "hardware_diagnostics": {
                 "device_id": device_id,
                 "profile": "MOTOR_PROTOTYPE",
-                "wifi_rssi": raw_frame.get("wifi_rssi", -55),
-                "firmware_version": raw_frame.get("firmware_version", "v1.4.2-motor"),
+                "wifi_rssi": raw_frame.get("wifi_rssi", None),
+                "firmware_version": raw_frame.get("firmware_version", None),
                 "ingestion_rate_hz": eff_ingest_rate_hz,
                 "data_age_ms": data_age_ms,
                 "evaluation_latency_ms": proc_duration_ms,
@@ -240,7 +240,7 @@ class TwinUpdateService:
             "mission_reliability": int(health_index),
             "status": status_str,
             "source_mode": source_mode,
-            "is_simulated": False,
+            "is_simulated": is_sim,
             "anomaly_detected": anomaly_detected,
             "anomaly_score": round(anomaly_score, 3),
             "fault_class": possible_issue,

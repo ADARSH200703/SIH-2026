@@ -13,9 +13,9 @@ PROFILE_MOTOR_PROTOTYPE = "MOTOR_PROTOTYPE"
 class MotorPrototypePacket(BaseModel):
     """
     Physical DC Motor Testbed Telemetry Packet
-    Hardware: 3x18650 Battery -> ACS712 Current Sensor -> L298N Motor Driver -> DC Geared Motor -> ESP32
+    Hardware: 3x18650 Battery -> ACS712 Current Sensor -> L298N Motor Driver -> DC Geared Motor -> Arduino Uno / ESP32
     """
-    device_id: str = Field(default="AERIS-ESP32-001", description="Physical ESP32 device identifier")
+    device_id: str = Field(default="AERIS-UNO-001", description="Physical Arduino Uno / ESP32 device identifier")
     profile: str = Field(default=PROFILE_MOTOR_PROTOTYPE, description="Telemetry profile (MOTOR_PROTOTYPE)")
     sequence_number: int = Field(default=0, description="Monotonically increasing sequence number")
     timestamp: float = Field(default_factory=time.time, description="Unix epoch timestamp in seconds")
@@ -30,9 +30,9 @@ class MotorPrototypePacket(BaseModel):
     motor_load_pct: Optional[float] = Field(default=None, description="Motor mechanical load percentage (0-100%)")
     
     # Metadata & connectivity
-    wifi_rssi: Optional[int] = Field(default=None, description="ESP32 Wi-Fi Received Signal Strength Indication (dBm)")
-    firmware_version: Optional[str] = Field(default="v1.4.2-motor", description="ESP32 firmware version")
-    source: str = Field(default="PHYSICAL_SENSOR", description="PHYSICAL_SENSOR, ESP32, REST")
+    wifi_rssi: Optional[int] = Field(default=None, description="Received Signal Strength Indication (dBm, null for USB Serial)")
+    firmware_version: Optional[str] = Field(default=None, description="Firmware version")
+    source: str = Field(default="PHYSICAL_SENSOR", description="PHYSICAL_SENSOR, ESP32, SIMULATION_PRODUCER, REST")
     api_key: Optional[str] = Field(default=None, description="Optional device authentication API key")
     raw_packet: Optional[Dict[str, Any]] = None
 

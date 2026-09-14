@@ -1615,7 +1615,7 @@
                 HARDWARE CONNECTION &amp; TELEMETRY GATEWAY
               </span>
               <p style="font-size: 0.8rem; color: var(--text-muted);">
-                Physical Motor Prototype (3&times;18650 &rarr; ACS712 &rarr; L298N &rarr; DC Motor) &rarr; ESP32 Standalone Gateway &rarr; AERIS-TWIN Backend.
+                Physical Motor Prototype (3&times;18650 &rarr; ACS712 &rarr; L298N &rarr; DC Motor) &rarr; Arduino Uno (USB Serial Bridge) / ESP32 &rarr; AERIS-TWIN Backend.
               </p>
             </div>
             <div style="display: flex; align-items: center; gap: 0.75rem;">
@@ -1646,7 +1646,7 @@
           <div id="hw-mode-banner-live" class="live-not-connected-banner" style="display: none; margin-bottom: 1rem;">
             <div style="display: flex; align-items: center; gap: 8px;">
               <span class="material-symbols-outlined" style="color: #EF4444; font-size: 18px;" id="hw-live-banner-icon">wifi_off</span>
-              <span id="hw-live-banner-text"><strong>LIVE TELEMETRY: WAITING FOR HARDWARE</strong> &mdash; Transmit physical motor prototype frames from ESP32 to <code>/api/telemetry/hardware</code>.</span>
+              <span id="hw-live-banner-text"><strong>LIVE TELEMETRY: WAITING FOR HARDWARE</strong> &mdash; Transmit physical motor prototype frames from Arduino Uno (serial_bridge.py) or ESP32 to <code>/api/telemetry/hardware</code>.</span>
             </div>
           </div>
 

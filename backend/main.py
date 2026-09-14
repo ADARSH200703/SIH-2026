@@ -483,9 +483,10 @@ def normalize_telemetry_packet(raw_packet: Dict[str, Any]) -> Dict[str, Any]:
             packet["motor_load_pct"] = None
 
         # Metadata
-        packet["device_id"] = packet.get("device_id", "AERIS-ESP32-001")
+        packet["device_id"] = packet.get("device_id", "AERIS-UNO-001")
         packet["source"] = packet.get("source", "PHYSICAL_SENSOR")
-        packet["is_simulated"] = False
+        if "is_simulated" not in packet:
+            packet["is_simulated"] = (packet["source"] in ["SIMULATION", "SIMULATION_PRODUCER", "MOCK"])
         if "timestamp" not in packet or not packet["timestamp"]:
             packet["timestamp"] = time.time()
         if "sequence_number" not in packet:
@@ -530,7 +531,8 @@ def normalize_telemetry_packet(raw_packet: Dict[str, Any]) -> Dict[str, Any]:
     # Metadata & Origin Tagging
     packet["source"] = packet.get("source", "ESP32")
     packet["device_id"] = packet.get("device_id", "AERIS-PROTOTYPE-01")
-    packet["is_simulated"] = False
+    if "is_simulated" not in packet:
+        packet["is_simulated"] = False
 
     if "timestamp" not in packet or not packet["timestamp"]:
         packet["timestamp"] = time.time()
@@ -542,7 +544,7 @@ def normalize_telemetry_packet(raw_packet: Dict[str, Any]) -> Dict[str, Any]:
 @app.post("/telemetry/live")
 def ingest_live_telemetry(raw_packet: Dict[str, Any], request: Request = None):
     """
-    Direct ingestion endpoint for continuous external live telemetry streams (ESP32 Gateway / Producers).
+    Direct ingestion endpoint for continuous external live telemetry streams (Arduino Uno / ESP32 / Gateway / Producers).
     """
     verify_device_authentication(request, raw_packet)
     normalized = normalize_telemetry_packet(raw_packet)
@@ -552,7 +554,7 @@ def ingest_live_telemetry(raw_packet: Dict[str, Any], request: Request = None):
         "status": "ingested",
         "mode": "LIVE",
         "profile": pushed.get("profile", "AERO_ENGINE"),
-        "device_id": pushed.get("device_id", "AERIS-ESP32-001"),
+        "device_id": pushed.get("device_id", "AERIS-UNO-001"),
         "source": pushed.get("source", "LIVE"),
         "sequence_number": pushed.get("sequence_number", 0),
         "latency_ms": pipeline_out["twin_state"]["processing_latency_ms"],
@@ -567,7 +569,7 @@ def ingest_live_telemetry(raw_packet: Dict[str, Any], request: Request = None):
 @app.post("/telemetry/hardware")
 def ingest_hardware_telemetry(raw_packet: Dict[str, Any], request: Request = None):
     """
-    Dedicated physical prototype telemetry gateway ingestion endpoint for ESP32.
+    Dedicated physical prototype telemetry gateway ingestion endpoint for Arduino Uno / ESP32.
     """
     verify_device_authentication(request, raw_packet)
     if not raw_packet.get("source"):
@@ -579,7 +581,7 @@ def ingest_hardware_telemetry(raw_packet: Dict[str, Any], request: Request = Non
         "status": "ingested",
         "mode": "LIVE",
         "profile": pushed.get("profile", "MOTOR_PROTOTYPE"),
-        "device_id": pushed.get("device_id", "AERIS-ESP32-001"),
+        "device_id": pushed.get("device_id", "AERIS-UNO-001"),
         "source": pushed.get("source", "PHYSICAL_SENSOR"),
         "sequence_number": pushed.get("sequence_number", 0),
         "latency_ms": pipeline_out["twin_state"]["processing_latency_ms"],

@@ -1681,11 +1681,12 @@ document.addEventListener('DOMContentLoaded', () => {
         sideBadge.style.color = isStale ? 'var(--status-warning)' : 'var(--status-normal)';
       }
 
-      const devId = info.device_id || metrics.device_id || 'AERIS-ESP32-001';
+      const devId = info.device_id || metrics.device_id || 'AERIS-UNO-001';
       const profile = info.profile || metrics.profile || 'MOTOR_PROTOTYPE';
-      const src = info.source || info.gateway_source || 'ESP32';
-      const fw = info.firmware_version || 'v1.4.2-motor';
-      const rssi = info.wifi_rssi ? `${info.wifi_rssi} dBm` : '-58 dBm';
+      const src = info.source || info.gateway_source || 'PHYSICAL_SENSOR';
+      const fw = info.firmware_version || '--';
+      const deviceType = devId.includes('UNO') ? 'Arduino Uno' : (devId.includes('ESP32') ? 'ESP32' : 'Arduino Uno');
+      const rssi = (info.wifi_rssi !== undefined && info.wifi_rssi !== null) ? `${info.wifi_rssi} dBm` : 'N/A (USB Serial)';
       const rateHz = metrics.actual_rate_hz || metrics.rate_hz || currentTargetRateHz || 10.0;
       const lastAge = info.data_age_ms ?? metrics.data_age_ms ?? 18;
       const loss = (info.packet_loss_pct ?? 0).toFixed(1);
@@ -1701,7 +1702,7 @@ document.addEventListener('DOMContentLoaded', () => {
       setText('hw-kpi-backend', wsConnected ? '● Connected' : 'Offline');
       setText('hw-kpi-latency', `${Math.round(metrics.latency_ms || 2.4)} ms`);
 
-      setText('hw-spec-device', 'ESP32');
+      setText('hw-spec-device', deviceType);
       setText('hw-spec-device-id', devId);
       setText('hw-spec-profile-val', profile);
       setText('hw-profile-badge', `PROFILE: ${profile}`);
@@ -1749,14 +1750,14 @@ document.addEventListener('DOMContentLoaded', () => {
       setText('hw-kpi-device-id', '--');
       setText('hw-kpi-gateway-source', 'SOURCE: --');
       setText('hw-kpi-state-text', 'Waiting for hardware');
-      setText('hw-kpi-state-sub', 'Awaiting ESP32 connection');
+      setText('hw-kpi-state-sub', 'Awaiting Arduino Uno / Hardware connection');
       setCss('hw-kpi-state-badge', 'color', 'var(--status-offline)');
       setText('hw-kpi-state-icon', 'power_off');
       setText('hw-kpi-rate', '--');
       setText('hw-kpi-backend', wsConnected ? '● Connected (WS)' : 'Offline');
       setText('hw-kpi-latency', wsConnected ? 'Ready' : '-- ms');
 
-      setText('hw-spec-device', 'ESP32');
+      setText('hw-spec-device', 'Arduino Uno / ESP32');
       setText('hw-spec-device-id', '--');
       setText('hw-spec-profile-val', 'MOTOR_PROTOTYPE');
       setText('hw-profile-badge', 'PROFILE: MOTOR_PROTOTYPE');

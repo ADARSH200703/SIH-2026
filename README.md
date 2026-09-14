@@ -475,7 +475,108 @@ For a complete system verification, test:
 
 ---
 
+## Arduino Uno Physical Demonstrator
+
+The AERIS-TWIN physical demonstrator integrates a real electromechanical DC motor testbed monitored by an **Arduino Uno** via USB Serial.
+
+> [!IMPORTANT]
+> **Physical Demonstrator Disclaimer:**
+> **"The Arduino motor testbed is a physical monitoring demonstrator and is not an aircraft engine or flight-qualified system."**
+
+### 1. Hardware Architecture
+```
+┌─────────────────────────────────────────────────────────────┐
+│ 3× 18650 Lithium-Ion Battery Pack (9.0V – 12.6V DC)         │
+└──────────────────────────────┬──────────────────────────────┘
+                               │
+            ┌──────────────────┴──────────────────┐
+            ▼                                     ▼
+┌───────────────────────────┐         ┌───────────────────────────┐
+│ Voltage Divider           │         │ ACS712 Current Sensor     │
+│ (100 kΩ / 22 kΩ = 5.545:1)│         │ (5V VCC, OUT -> Pin A0)   │
+└───────────┬───────────────┘         └───────────┬───────────────┘
+            │ Analog Pin A1                       │ Analog Pin A0
+            └──────────────────┬──────────────────┘
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│ L298N Dual H-Bridge Motor Driver (Common GND)               │
+│ - Pins: 8 (IN1), 9 (IN2), 10 (ENA PWM)                      │
+└──────────────────────────────┬──────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│ DC Geared Motor (+ Optional Optical/Hall RPM Pulse on Pin 2)│
+└──────────────────────────────┬──────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│ Arduino Uno (ATmega328P @ 16 MHz)                           │
+│ Firmware: hardware/arduino_uno/aeris_motor_demo/            │
+│ Profile: MOTOR_PROTOTYPE (Zero Fabricated Sensors)          │
+└──────────────────────────────┬──────────────────────────────┘
+```
+
+### 2. Serial Communication Architecture
+```
+Arduino Uno (ATmega328P)
+      ↓ USB Serial (115200 Baud, 10 Hz Newline-Delimited JSON)
+Laptop / Host (Python Serial Bridge: hardware/arduino_uno/serial_bridge.py)
+      ↓ HTTP POST (Content-Type: application/json)
+FastAPI Backend (POST /api/telemetry/hardware)
+      ↓ WebSocket Gateway (/ws/telemetry)
+Cockpit Dashboard UI (Hardware Monitor & Digital Twin)
+```
+
+### 3. How to Upload Arduino Firmware
+1. Open the Arduino IDE.
+2. Open the sketch: [`hardware/arduino_uno/aeris_motor_demo/aeris_motor_demo.ino`](file:///c:/Users/Adarshkumar/Downloads/Hackathon/SIH/hardware/arduino_uno/aeris_motor_demo/aeris_motor_demo.ino).
+3. Select **Tools &rarr; Board &rarr; Arduino Uno**.
+4. Select your connected **Port** (e.g., `COM4` on Windows, `/dev/ttyUSB0` on Linux/macOS).
+5. Click **Upload** (Ctrl+U).
+
+### 4. How to Identify the COM Port
+* **Windows**: Open **Device Manager &rarr; Ports (COM & LPT)** and look for `Arduino Uno (COMx)` or `USB-SERIAL CH340 (COMx)`.
+* **Linux**: Run `ls /dev/ttyACM*` or `ls /dev/ttyUSB*`.
+* **macOS**: Run `ls /dev/cu.usbmodem*` or `ls /dev/cu.usbserial*`.
+
+### 5. How to Start the Backend
+From the workspace root, run:
+```bash
+python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+### 6. How to Run the Serial Bridge
+Connect your Arduino Uno via USB and run:
+```bash
+python hardware/arduino_uno/serial_bridge.py --port COM4
+```
+*Optional parameters:*
+* `--baud 115200`: Configure custom baud rate.
+* `--url http://127.0.0.1:8000`: Configure custom backend URL.
+* `--api-key <key>`: Pass device authentication secret if configured.
+
+### 7. How to Verify Telemetry in the Dashboard
+1. Open the frontend dashboard at `http://localhost:3000` (or `http://localhost:8000`).
+2. Navigate to **Hardware Connection** in the top navigation bar.
+3. Switch Evaluator Mode to **LIVE**.
+4. Verify the status changes to **● Connected** with live readouts:
+   * **Device Identity**: `AERIS-UNO-001`
+   * **Device Type**: `Arduino Uno`
+   * **Profile**: `MOTOR_PROTOTYPE`
+   * **Current (A)**, **Bus Voltage (V)**, **Power (W)**, **RPM** (if connected).
+   * Unconnected channels display honest `N/A` without fabricated values.
+
+### 8. How to Use Mock Mode (Software Testing)
+If the physical Arduino hardware is not plugged in, run the bridge in mock mode:
+```bash
+python hardware/arduino_uno/serial_bridge.py --mock
+```
+*Mock packets are strictly tagged `source="SIMULATION_PRODUCER"` and `is_simulated=true`.*
+
+---
+
 ## Prototype Transparency
+
 
 AERIS-TWIN is deliberately transparent about its current limitations.
 
