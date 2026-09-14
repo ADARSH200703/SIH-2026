@@ -16,6 +16,9 @@ Usage:
   # Normal operation with physical Arduino Uno connected:
   python hardware/arduino_uno/serial_bridge.py --port COM4
 
+  # Diagnostic / Debug mode with detailed request-response tracing:
+  python hardware/arduino_uno/serial_bridge.py --port COM4 --debug
+
   # Custom baud rate and backend endpoint:
   python hardware/arduino_uno/serial_bridge.py --port COM4 --baud 115200 --url http://127.0.0.1:8000
 
@@ -37,11 +40,10 @@ from typing import Dict, Any, Optional, Tuple
 
 import httpx
 
-# Configure clean logging
+# Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    datefmt="%H:%M:%S"
+    format="%(message)s"
 )
 logger = logging.getLogger("AerisSerialBridge")
 
@@ -50,7 +52,7 @@ g_running = True
 
 def handle_exit_signal(sig, frame):
     global g_running
-    logger.info("Termination signal received. Shutting down serial bridge gracefully...")
+    print("\n[BRIDGE] Termination signal received. Shutting down gracefully...")
     g_running = False
 
 signal.signal(signal.SIGINT, handle_exit_signal)
@@ -199,6 +201,7 @@ class ArduinoSerialBridge:
         api_key: Optional[str] = None,
         is_mock: bool = False,
         mock_rate_hz: float = 10.0,
+        debug: bool = False,
         verbose: bool = False
     ):
         self.port = port
@@ -208,6 +211,7 @@ class ArduinoSerialBridge:
         self.api_key = api_key or os.getenv("AERIS_DEVICE_API_KEY", "").strip()
         self.is_mock = is_mock
         self.mock_rate_hz = max(1.0, min(50.0, mock_rate_hz))
+        self.debug = debug
         self.verbose = verbose
 
         self.full_post_url = f"{self.backend_url}{self.endpoint}"
@@ -223,8 +227,9 @@ class ArduinoSerialBridge:
         except Exception:
             pass
 
-    def send_packet_to_backend(self, packet: Dict[str, Any]) -> bool:
+    def send_packet_to_backend(self, packet: Dict[str, Any], raw_line: Optional[str] = None) -> bool:
         """Transmits normalized telemetry packet to FastAPI /api/telemetry/hardware."""
+        seq = packet.get("sequence_number", self.packets_sent + 1)
         headers = {
             "Content-Type": "application/json",
             "X-Device-ID": packet.get("device_id", "AERIS-UNO-001"),
@@ -233,36 +238,74 @@ class ArduinoSerialBridge:
             headers["X-Device-API-Key"] = self.api_key
             packet["api_key"] = self.api_key
 
+        if self.debug:
+            print(f"\n[{seq}] SERIAL RX")
+            print(raw_line or json.dumps(packet))
+            print(f"\n[{seq}] HTTP POST")
+            print(self.full_post_url)
+
         try:
             t0 = time.perf_counter()
             resp = self.http_client.post(self.full_post_url, json=packet, headers=headers)
             latency_ms = (time.perf_counter() - t0) * 1000.0
 
+            if self.debug:
+                print(f"\n[{seq}] HTTP STATUS")
+                print(resp.status_code)
+
             if resp.status_code in (200, 201):
                 self.packets_sent += 1
-                if self.verbose or (self.packets_sent % 10 == 0):
+                data = {}
+                try:
                     data = resp.json()
-                    curr_str = f"{packet['current_a']:.2f}A" if packet.get("current_a") is not None else "N/A"
-                    volt_str = f"{packet['voltage_v']:.2f}V" if packet.get("voltage_v") is not None else "N/A"
-                    pwr_str = f"{packet['power_w']:.1f}W" if packet.get("power_w") is not None else "N/A"
-                    rpm_str = f"{packet['rpm']:.0f} RPM" if packet.get("rpm") is not None else "N/A"
+                except Exception:
+                    pass
 
-                    logger.info(
-                        f"TX #{packet['sequence_number']} OK (HTTP {resp.status_code}, {latency_ms:.1f}ms) "
-                        f"| {volt_str} | {curr_str} | {pwr_str} | {rpm_str} "
-                        f"| Health: {data.get('health_index', '--')}% | Fault: {data.get('fault_class', 'NOMINAL')}"
-                    )
+                dev_status = data.get("status", "CONNECTED")
+
+                if self.debug:
+                    print(f"\n[{seq}] BACKEND")
+                    print(dev_status)
+                else:
+                    dev_id = packet.get("device_id", "AERIS-UNO-001")
+                    print(f"[ARDUINO] Received packet (seq={seq})")
+                    print(f"[BACKEND] POST {self.full_post_url}")
+                    print(f"[BACKEND] HTTP {resp.status_code}")
+                    print(f"[BACKEND] Device {dev_id} {dev_status}")
+
                 return True
             else:
                 self.packets_failed += 1
-                logger.warning(
-                    f"TX #{packet['sequence_number']} REJECTED: HTTP {resp.status_code} - {resp.text}"
-                )
+                if self.debug:
+                    print(f"\n[{seq}] BACKEND ERROR")
+                    print(f"HTTP {resp.status_code}: {resp.text}")
+
+                if resp.status_code in (401, 403):
+                    print(f"[BACKEND] ERROR: HTTP {resp.status_code} (Authentication Failed)")
+                elif resp.status_code == 422:
+                    print(f"[BACKEND] ERROR: HTTP 422 (Validation Error)")
+                    print(f"[BACKEND] Response: {resp.text}")
+                else:
+                    print(f"[BACKEND] ERROR: HTTP {resp.status_code} - {resp.text}")
                 return False
 
+        except (httpx.ConnectError, httpx.ConnectTimeout) as exc:
+            self.packets_failed += 1
+            if self.debug:
+                print(f"\n[{seq}] HTTP STATUS")
+                print("CONNECTION_FAILED")
+                print(f"\n[{seq}] BACKEND")
+                print(f"ERROR: connection refused ({exc})")
+            else:
+                print(f"[BACKEND] ERROR: connection refused ({self.full_post_url})")
+            return False
         except httpx.RequestError as exc:
             self.packets_failed += 1
-            logger.warning(f"Backend offline / connection error: {exc}")
+            if self.debug:
+                print(f"\n[{seq}] BACKEND ERROR")
+                print(f"Request error: {exc}")
+            else:
+                print(f"[BACKEND] ERROR: {exc}")
             return False
 
     def run_mock_loop(self, max_count: Optional[int] = None):
@@ -270,8 +313,8 @@ class ArduinoSerialBridge:
         Executes software test mode without physical serial hardware.
         Strictly tags packets with source='SIMULATION_PRODUCER' and is_simulated=True.
         """
-        logger.info(f"Starting MOCK mode at {self.mock_rate_hz} Hz -> {self.full_post_url}")
-        logger.info("Mock packets are strictly tagged: source='SIMULATION_PRODUCER', is_simulated=True")
+        print(f"[BRIDGE] Starting MOCK mode at {self.mock_rate_hz} Hz -> {self.full_post_url}")
+        print("[BRIDGE] Mock packets are strictly tagged: source='SIMULATION_PRODUCER', is_simulated=True")
 
         seq = 0
         t_start = time.time()
@@ -281,7 +324,6 @@ class ArduinoSerialBridge:
             seq += 1
             elapsed = time.time() - t_start
 
-            # Generate realistic nominal prototype readings for testing
             mock_voltage = round(11.85 - min(1.2, elapsed * 0.005) + math.sin(elapsed * 0.3) * 0.05, 2)
             mock_current = round(1.42 + math.sin(elapsed * 0.5) * 0.15, 3)
             mock_rpm = round(1850.0 + math.sin(elapsed * 0.4) * 30.0, 1)
@@ -295,18 +337,18 @@ class ArduinoSerialBridge:
                 "rpm": mock_rpm,
                 "current_a": mock_current,
                 "voltage_v": mock_voltage,
-                "temperature_c": None,   # Intentionally null to test missing channel handling
-                "vibration": None,       # Intentionally null
-                "motor_load_pct": None,  # Intentionally null
+                "temperature_c": None,
+                "vibration": None,
+                "motor_load_pct": None,
                 "firmware_version": "v1.0.0-mock"
             })
 
             packet, err = parse_and_validate_packet(mock_json_line, is_mock=True)
             if packet:
-                self.send_packet_to_backend(packet)
+                self.send_packet_to_backend(packet, raw_line=mock_json_line)
 
             if max_count and seq >= max_count:
-                logger.info(f"Reached requested max packet count ({max_count}). Exiting mock mode.")
+                print(f"[BRIDGE] Reached requested max packet count ({max_count}). Exiting mock mode.")
                 break
 
             time.sleep(interval)
@@ -319,11 +361,11 @@ class ArduinoSerialBridge:
         try:
             import serial
         except ImportError:
-            logger.error("pyserial module is not installed! Run 'pip install pyserial' to connect to Arduino hardware.")
+            print("[BRIDGE] ERROR: pyserial module is not installed! Run 'pip install pyserial' to connect to Arduino hardware.")
             return
 
-        logger.info(f"Target Serial Port: {self.port} @ {self.baud_rate} Baud")
-        logger.info(f"Backend Target: {self.full_post_url}")
+        print(f"[ARDUINO] Target Serial Port: {self.port} @ {self.baud_rate} Baud")
+        print(f"[BACKEND] Target URL: {self.full_post_url}")
 
         consecutive_errors = 0
         count = 0
@@ -331,7 +373,7 @@ class ArduinoSerialBridge:
         while g_running:
             ser = None
             try:
-                logger.info(f"Attempting to open serial port '{self.port}' @ {self.baud_rate} baud...")
+                print(f"[ARDUINO] Attempting to open serial port '{self.port}' @ {self.baud_rate} baud...")
                 ser = serial.Serial(
                     port=self.port,
                     baudrate=self.baud_rate,
@@ -339,7 +381,8 @@ class ArduinoSerialBridge:
                     rtscts=False,
                     dsrdtr=False
                 )
-                logger.info(f"Serial port '{self.port}' opened successfully! Listening for Arduino telemetry...")
+                print(f"[ARDUINO] Serial connected: {self.port}")
+                print(f"[ARDUINO] Listening for Arduino telemetry stream...")
                 consecutive_errors = 0
 
                 # Flush initial boot / reset garbage
@@ -350,7 +393,7 @@ class ArduinoSerialBridge:
                     try:
                         raw_bytes = ser.readline()
                     except serial.SerialException as exc:
-                        logger.warning(f"Serial read error (device disconnected?): {exc}")
+                        print(f"[ARDUINO] Serial read error (device disconnected?): {exc}")
                         break
 
                     if not raw_bytes:
@@ -363,21 +406,21 @@ class ArduinoSerialBridge:
 
                     packet, err = parse_and_validate_packet(line_str, is_mock=False)
                     if packet:
-                        self.send_packet_to_backend(packet)
+                        self.send_packet_to_backend(packet, raw_line=line_str.strip())
                         count += 1
                         if max_count and count >= max_count:
-                            logger.info(f"Reached target count {max_count}. Exiting.")
+                            print(f"[BRIDGE] Reached target count {max_count}. Exiting.")
                             return
-                    elif self.verbose and err:
-                        logger.debug(f"Skipped line: {err}")
+                    elif self.debug and err:
+                        print(f"[BRIDGE] Skipped non-packet line: {err}")
 
             except (serial.SerialException, FileNotFoundError, PermissionError) as exc:
                 consecutive_errors += 1
                 if consecutive_errors == 1 or consecutive_errors % 5 == 0:
-                    logger.warning(f"Could not open '{self.port}' ({exc}). Retrying in 2.0s (Ctrl+C to abort)...")
+                    print(f"[ARDUINO] Could not open '{self.port}' ({exc}). Retrying in 2.0s (Ctrl+C to abort)...")
                 time.sleep(2.0)
             except Exception as exc:
-                logger.error(f"Unexpected bridge error: {exc}")
+                print(f"[BRIDGE] Unexpected error: {exc}")
                 time.sleep(2.0)
             finally:
                 if ser and ser.is_open:
@@ -388,16 +431,22 @@ class ArduinoSerialBridge:
 
 
 def main():
+    default_port = os.getenv("AERIS_SERIAL_PORT") or os.getenv("SERIAL_PORT") or "COM4"
+    default_baud = int(os.getenv("AERIS_SERIAL_BAUD") or os.getenv("BAUD_RATE") or "115200")
+    default_url = os.getenv("AERIS_BACKEND_URL") or os.getenv("BACKEND_URL") or "http://127.0.0.1:8000"
+    default_key = os.getenv("AERIS_DEVICE_API_KEY") or ""
+
     parser = argparse.ArgumentParser(description="AERIS-TWIN Arduino Uno USB Serial Telemetry Bridge")
-    parser.add_argument("--port", default=os.getenv("AERIS_SERIAL_PORT", "COM4"), help="Arduino USB COM port (e.g. COM4, /dev/ttyUSB0)")
-    parser.add_argument("--baud", type=int, default=int(os.getenv("AERIS_SERIAL_BAUD", "115200")), help="Serial baud rate (default: 115200)")
-    parser.add_argument("--url", default=os.getenv("AERIS_BACKEND_URL", "http://127.0.0.1:8000"), help="FastAPI backend URL (default: http://127.0.0.1:8000)")
+    parser.add_argument("--port", "-p", default=default_port, help=f"Arduino USB COM port (default: {default_port})")
+    parser.add_argument("--baud", "-b", type=int, default=default_baud, help=f"Serial baud rate (default: {default_baud})")
+    parser.add_argument("--url", "-u", default=default_url, help=f"FastAPI backend URL (default: {default_url})")
     parser.add_argument("--endpoint", default="/api/telemetry/hardware", help="Backend telemetry endpoint (default: /api/telemetry/hardware)")
-    parser.add_argument("--api-key", default=os.getenv("AERIS_DEVICE_API_KEY", ""), help="Device API authentication key")
-    parser.add_argument("--mock", action="store_true", help="Run in mock simulation mode without physical hardware")
-    parser.add_argument("--rate", type=float, default=10.0, help="Mock telemetry rate in Hz (default: 10.0)")
-    parser.add_argument("--count", type=int, default=None, help="Maximum number of packets to transmit before exiting")
-    parser.add_argument("--verbose", action="store_true", help="Enable verbose per-packet logging")
+    parser.add_argument("--api-key", "-k", default=default_key, help="Device API authentication key")
+    parser.add_argument("--debug", "-d", action="store_true", help="Enable structured diagnostic debug mode (RX, POST, STATUS, BACKEND)")
+    parser.add_argument("--mock", "-m", action="store_true", help="Run in mock simulation mode without physical hardware")
+    parser.add_argument("--rate", "-r", type=float, default=10.0, help="Mock telemetry rate in Hz (default: 10.0)")
+    parser.add_argument("--count", "-c", type=int, default=None, help="Maximum number of packets to transmit before exiting")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
 
     args = parser.parse_args()
 
@@ -409,6 +458,7 @@ def main():
         api_key=args.api_key,
         is_mock=args.mock,
         mock_rate_hz=args.rate,
+        debug=args.debug,
         verbose=args.verbose
     )
 
@@ -419,7 +469,7 @@ def main():
             bridge.run_serial_loop(max_count=args.count)
     finally:
         bridge.close()
-        logger.info(f"Bridge closed. Total Sent: {bridge.packets_sent} | Failed: {bridge.packets_failed}")
+        print(f"[BRIDGE] Closed. Total Sent: {bridge.packets_sent} | Failed: {bridge.packets_failed}")
 
 
 if __name__ == "__main__":

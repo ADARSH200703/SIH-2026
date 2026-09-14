@@ -296,6 +296,78 @@ class TestArduinoSerialIntegration(unittest.TestCase):
         self.assertEqual(status["profile"], "MOTOR_PROTOTYPE")
         bridge.close()
 
+    # -------------------------------------------------------------------------
+    # 11. Diagnostic Status Endpoint Verification
+    # -------------------------------------------------------------------------
+    def test_11_telemetry_status_endpoint(self):
+        """Test GET /api/telemetry/status returns the structured health & diagnostics object."""
+        # 1. Initially without frames
+        res = self.client.get("/api/telemetry/status")
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertEqual(data["backend"], "online")
+        self.assertIn("live_source", data)
+        self.assertIn("status", data)
+
+        # 2. Ingest physical frame
+        payload = {
+            "device_id": "AERIS-UNO-001",
+            "profile": "MOTOR_PROTOTYPE",
+            "source": "PHYSICAL_SENSOR",
+            "sequence_number": 123,
+            "current_a": 1.25,
+            "voltage_v": 11.80
+        }
+        res_post = self.client.post("/api/telemetry/hardware", json=payload)
+        self.assertEqual(res_post.status_code, 200)
+        post_data = res_post.json()
+        self.assertTrue(post_data.get("ok"))
+        self.assertEqual(post_data.get("status"), "CONNECTED")
+        self.assertEqual(post_data.get("device_id"), "AERIS-UNO-001")
+        self.assertEqual(post_data.get("sequence_number"), 123)
+
+        # 3. Re-check status endpoint
+        res2 = self.client.get("/api/telemetry/status")
+        self.assertEqual(res2.status_code, 200)
+        data2 = res2.json()
+        self.assertEqual(data2["backend"], "online")
+        self.assertTrue(data2["live_source"])
+        self.assertEqual(data2["device_id"], "AERIS-UNO-001")
+        self.assertEqual(data2["profile"], "MOTOR_PROTOTYPE")
+        self.assertEqual(data2["source"], "PHYSICAL_SENSOR")
+        self.assertEqual(data2["last_sequence_number"], 123)
+        self.assertEqual(data2["status"], "CONNECTED")
+        self.assertIsNotNone(data2["data_age_seconds"])
+
+    # -------------------------------------------------------------------------
+    # 12. Bridge Debug Mode Output Verification
+    # -------------------------------------------------------------------------
+    def test_12_bridge_debug_mode(self):
+        """Test ArduinoSerialBridge in debug mode."""
+        bridge = ArduinoSerialBridge(
+            port="COM4",
+            backend_url="http://testserver",
+            endpoint="/api/telemetry/hardware",
+            debug=True
+        )
+        bridge.http_client = self.client
+
+        packet = {
+            "device_id": "AERIS-UNO-001",
+            "profile": "MOTOR_PROTOTYPE",
+            "source": "PHYSICAL_SENSOR",
+            "sequence_number": 77,
+            "timestamp": time.time(),
+            "current_a": 1.30,
+            "voltage_v": 11.90,
+            "is_simulated": False
+        }
+
+        success = bridge.send_packet_to_backend(packet, raw_line=json.dumps(packet))
+        self.assertTrue(success)
+        self.assertEqual(bridge.packets_sent, 1)
+        bridge.close()
+
 
 if __name__ == "__main__":
     unittest.main()

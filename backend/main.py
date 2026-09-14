@@ -83,6 +83,20 @@ class ConnectionManager:
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
         self.active_connections.append(websocket)
+        try:
+            status_info = live_source.get_status()
+            await websocket.send_json({
+                "type": "LIVE_STREAM_STATUS",
+                "mode": system_state.mode,
+                "connected": live_source.is_connected(),
+                "status": status_info.get("status", "DISCONNECTED"),
+                "status_details": status_info,
+                "target_rate_hz": system_state.target_rate_hz,
+                "is_paused": system_state.is_paused,
+                "timestamp": time.time()
+            })
+        except Exception:
+            pass
 
     def disconnect(self, websocket: WebSocket):
         if websocket in self.active_connections:
@@ -384,9 +398,29 @@ def verify_device_authentication(request: Request = None, raw_packet: Optional[D
 
 
 @app.get("/api/telemetry/status")
+@app.get("/telemetry/status")
 def get_telemetry_status():
     """Returns the live hardware telemetry stream connection status and metrics."""
-    return live_source.get_status()
+    stat = live_source.get_status()
+    is_live = live_source.is_connected()
+    age_sec = stat.get("packet_age_seconds")
+    last_ts = stat.get("last_packet_time")
+
+    resp = {
+        "backend": "online",
+        "live_source": is_live,
+        "device_id": stat.get("device_id") or "AERIS-UNO-001",
+        "profile": stat.get("profile") or "MOTOR_PROTOTYPE",
+        "source": stat.get("source") or "PHYSICAL_SENSOR",
+        "last_sequence_number": stat.get("last_sequence", 0),
+        "last_received_timestamp": last_ts,
+        "data_age_seconds": age_sec,
+        "status": "CONNECTED" if is_live else stat.get("status", "DISCONNECTED"),
+    }
+    for k, v in stat.items():
+        if k not in resp:
+            resp[k] = v
+    return resp
 
 
 
@@ -577,13 +611,48 @@ def ingest_hardware_telemetry(raw_packet: Dict[str, Any], request: Request = Non
     normalized = normalize_telemetry_packet(raw_packet)
     pushed = live_source.push_frame(normalized)
     pipeline_out = twin_service.process_telemetry_frame(pushed)
+    status_info = live_source.get_status()
+
+    # Immediate broadcast to WebSocket clients so dashboard updates instantaneously
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            asyncio.create_task(manager.broadcast({
+                "type": "TELEMETRY_UPDATE",
+                "mode": "LIVE",
+                "connected": True,
+                "status": status_info.get("status", "LIVE"),
+                "data": pipeline_out,
+                "state": pushed,
+                "history": simulator.history,
+                "inference": pipeline_out["inference"],
+                "twin_state": pipeline_out["twin_state"],
+                "dashboard_view": pipeline_out["dashboard_view"],
+                "residuals": pipeline_out["residuals"],
+                "expected_physics": pipeline_out["expected_physics"],
+                "sensor_trust": pipeline_out["sensor_trust"],
+                "alerts": pipeline_out.get("alerts", []),
+                "events": pipeline_out.get("events", []),
+                "primary_evidence": pipeline_out.get("primary_evidence", []),
+                "stream_metrics": status_info,
+                "target_rate_hz": system_state.target_rate_hz,
+                "is_paused": system_state.is_paused,
+            }))
+    except Exception:
+        pass
+
+    age_sec = status_info.get("packet_age_seconds", 0.0)
+    data_age_val = age_sec if age_sec is not None else round(pipeline_out["dashboard_view"].get("stream_metrics", {}).get("data_age_ms", 0) / 1000.0, 3)
+
     return {
-        "status": "ingested",
-        "mode": "LIVE",
-        "profile": pushed.get("profile", "MOTOR_PROTOTYPE"),
+        "ok": True,
         "device_id": pushed.get("device_id", "AERIS-UNO-001"),
+        "profile": pushed.get("profile", "MOTOR_PROTOTYPE"),
         "source": pushed.get("source", "PHYSICAL_SENSOR"),
         "sequence_number": pushed.get("sequence_number", 0),
+        "data_age": data_age_val,
+        "status": status_info.get("status", "CONNECTED"),
+        "mode": "LIVE",
         "latency_ms": pipeline_out["twin_state"]["processing_latency_ms"],
         "data_age_ms": pipeline_out["dashboard_view"].get("stream_metrics", {}).get("data_age_ms", 0),
         "health_index": pipeline_out["twin_state"]["health_state"]["value"]["health_index"],

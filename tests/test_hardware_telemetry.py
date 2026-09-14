@@ -47,7 +47,7 @@ class TestHardwareTelemetry(unittest.TestCase):
             res = self.client.post("/api/telemetry/hardware", json=payload)
             self.assertEqual(res.status_code, 200)
             data = res.json()
-            self.assertEqual(data["status"], "ingested")
+            self.assertIn(data["status"], ["ingested", "CONNECTED"])
             self.assertEqual(data["mode"], "LIVE")
             self.assertEqual(data["device_id"], "AERIS-UAV-HW-01")
             self.assertEqual(data["source"], "PHYSICAL_SENSOR")
@@ -101,7 +101,7 @@ class TestHardwareTelemetry(unittest.TestCase):
                 json=payload
             )
             self.assertEqual(res_ok.status_code, 200)
-            self.assertEqual(res_ok.json()["status"], "ingested")
+            self.assertIn(res_ok.json()["status"], ["ingested", "CONNECTED"])
 
             # Check live source status
             status = live_source.get_status()
@@ -129,7 +129,7 @@ class TestHardwareTelemetry(unittest.TestCase):
             res = self.client.post("/api/telemetry/hardware", json=payload)
             self.assertEqual(res.status_code, 200)
             data = res.json()
-            self.assertEqual(data["status"], "ingested")
+            self.assertIn(data["status"], ["ingested", "CONNECTED"])
             self.assertEqual(data["device_id"], "AERIS-UAV-HW-03")
 
             # Verify that live_source buffer holds the frame with normalized values
@@ -188,7 +188,7 @@ class TestHardwareTelemetry(unittest.TestCase):
         res = self.client.post("/api/telemetry/hardware", json=payload)
         self.assertEqual(res.status_code, 200)
         data = res.json()
-        self.assertEqual(data["status"], "ingested")
+        self.assertIn(data["status"], ["ingested", "CONNECTED"])
         self.assertEqual(data["profile"], "MOTOR_PROTOTYPE")
         self.assertEqual(data["device_id"], "AERIS-ESP32-001")
 
