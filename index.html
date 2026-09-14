@@ -725,11 +725,14 @@
                   <div class="time-to-fault-val" id="ai-time-to-fault">1200.0 h</div>
                 </div>
 
-                <div class="action-btn-group" style="margin-top: 0.5rem;">
-                  <button class="action-btn action-btn-primary" id="btn-execute-mitigation">
-                    <span class="material-symbols-outlined">send</span>
-                    <span>Execute Mitigation Command</span>
+                <div class="action-btn-group" style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 4px;">
+                  <button class="action-btn action-btn-primary" id="btn-execute-mitigation" title="Advisory Decision Support — Simulates operator advisory acknowledgment without autonomous control">
+                    <span class="material-symbols-outlined">recommend</span>
+                    <span>Simulated Advisory Action (Decision Support)</span>
                   </button>
+                  <div style="font-size: 0.65rem; color: var(--text-dim); text-align: center; font-family: var(--font-mono);">
+                    Advisory Decision Support — Non-Flight-Critical Demonstrator
+                  </div>
                 </div>
               </div>
 

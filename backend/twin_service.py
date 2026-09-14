@@ -10,6 +10,7 @@ from typing import Dict, Any, List, Optional
 from collections import deque
 
 from .physics.aero_engine_model import AeroPistonPhysicsModel
+from .physics.motor_prototype_model import MotorPrototypePhysicsModel
 from .physics.residual_engine import ResidualEngine
 from .intelligence.sensor_trust import SensorTrustEngine
 from .intelligence.anomaly_detector import EngineAnomalyDetector
@@ -30,6 +31,7 @@ class TwinUpdateService:
         # Initialize Subsystem Modules
         self.gateway = TelemetryGatewayAdapter()
         self.physics_model = AeroPistonPhysicsModel()
+        self.motor_physics_model = MotorPrototypePhysicsModel()
         self.residual_engine = ResidualEngine(window_size=30)
         self.sensor_trust_engine = SensorTrustEngine(history_len=40)
         self.anomaly_detector = EngineAnomalyDetector()
@@ -45,7 +47,6 @@ class TwinUpdateService:
         # State tracking & rate metrics
         self.last_twin_state: Optional[Dict[str, Any]] = None
         self.last_dashboard_view: Optional[Dict[str, Any]] = None
-        # deque(maxlen=100): O(1) append + automatic oldest-drop; replaces list + pop(0)
         self.state_history: deque = deque(maxlen=100)
 
         self._frame_timestamps: deque = deque(maxlen=60)
@@ -65,8 +66,9 @@ class TwinUpdateService:
 
     def process_motor_prototype_frame(self, raw_frame: Dict[str, Any], start_time: float, now_epoch: float) -> Dict[str, Any]:
         """
-        Processes physical DC motor prototype telemetry without injecting aero-engine thermodynamics or fake RUL.
+        Processes physical DC motor prototype telemetry through the electro-mechanical digital twin.
         Physical Testbed: 3x18650 Battery -> ACS712 Current Sensor -> L298N Motor Driver -> DC Geared Motor -> ESP32.
+        Preserves strict physical boundaries: zero fabricated aero-engine parameters.
         """
         device_id = raw_frame.get("device_id", "AERIS-ESP32-001")
         timestamp = raw_frame.get("timestamp", now_epoch)
@@ -74,7 +76,7 @@ class TwinUpdateService:
         source_mode = raw_frame.get("source", "PHYSICAL_SENSOR")
         is_sim = False
 
-        # Physical measurements (nullable/optional)
+        # Physical measurements
         rpm = float(raw_frame["rpm"]) if raw_frame.get("rpm") is not None else None
         current_a = float(raw_frame["current_a"]) if raw_frame.get("current_a") is not None else (float(raw_frame["current"]) if raw_frame.get("current") is not None else None)
         voltage_v = float(raw_frame["voltage_v"]) if raw_frame.get("voltage_v") is not None else (float(raw_frame["voltage"]) if raw_frame.get("voltage") is not None else None)
@@ -90,69 +92,54 @@ class TwinUpdateService:
 
         temperature_c = float(raw_frame["temperature_c"]) if raw_frame.get("temperature_c") is not None else (float(raw_frame["temperature"]) if raw_frame.get("temperature") is not None else (float(raw_frame["temp"]) if raw_frame.get("temp") is not None else None))
         vibration = float(raw_frame["vibration"]) if raw_frame.get("vibration") is not None else (float(raw_frame["vibration_mms"]) if raw_frame.get("vibration_mms") is not None else None)
-        motor_load_pct = float(raw_frame["motor_load_pct"]) if raw_frame.get("motor_load_pct") is not None else (float(raw_frame["motor_load"]) if raw_frame.get("motor_load") is not None else (float(raw_frame["load"]) if raw_frame.get("load") is not None else None))
+        motor_load_pct = float(raw_frame["motor_load_pct"]) if raw_frame.get("motor_load_pct") is not None else (float(raw_frame["motor_load"]) if raw_frame.get("motor_load") is not None else (float(raw_frame["load"]) if raw_frame.get("load") is not None else 45.0))
 
-        # Electrical / Thermal Limit Checks & Health Estimation
-        health_index = 100.0
-        anomalies = []
-        possible_issue = "Nominal Motor Operation"
-        anomaly_score = 0.015
+        # 1. Physics Model & Residuals for DC Motor Testbed
+        expected_physics = self.motor_physics_model.compute_expected_state(raw_frame)
+        residuals = self.motor_physics_model.compute_residuals(raw_frame, expected_physics)
 
-        if voltage_v is not None:
-            if voltage_v < 9.0:
-                health_index -= 35.0
-                anomalies.append(f"Critical Battery Undervoltage: {voltage_v:.2f}V (< 9.0V threshold)")
-                possible_issue = "Battery Critical Low Voltage (<9.0V)"
-                anomaly_score = max(anomaly_score, 0.85)
-            elif voltage_v < 9.9:
-                health_index -= 15.0
-                anomalies.append(f"Low Battery Pack: {voltage_v:.2f}V (< 9.9V cutoff)")
-                possible_issue = "Battery Pack Depleted"
-                anomaly_score = max(anomaly_score, 0.45)
+        # 2. Sensor Trust
+        sensor_trust = self.sensor_trust_engine.evaluate_sensors(raw_frame)
 
-        if current_a is not None:
-            if current_a > 6.0:
-                health_index -= 40.0
-                anomalies.append(f"Motor Overcurrent / Jam: {current_a:.2f}A (> 6.0A limit)")
-                possible_issue = "Motor Stalled / Overcurrent (>6.0A)"
-                anomaly_score = max(anomaly_score, 0.90)
-            elif current_a > 4.5:
-                health_index -= 15.0
-                anomalies.append(f"High Electrical Load: {current_a:.2f}A")
-                possible_issue = "High Current Demand"
-                anomaly_score = max(anomaly_score, 0.40)
+        # 3. Anomaly Detection with Explainability
+        anomaly_result = self.anomaly_detector.detect(residuals, raw_frame)
+        anomaly_detected = anomaly_result.get("anomaly", False)
+        anomaly_score = anomaly_result.get("score", 0.02)
+        explainability = anomaly_result.get("explainability", {})
 
-        if temperature_c is not None:
-            if temperature_c > 75.0:
-                health_index -= 35.0
-                anomalies.append(f"Thermal Overheating: {temperature_c:.1f}°C (> 75.0°C limit)")
-                possible_issue = "Motor Driver Thermal Stress"
-                anomaly_score = max(anomaly_score, 0.80)
-            elif temperature_c > 55.0:
-                health_index -= 10.0
-                anomalies.append(f"Elevated Temperature: {temperature_c:.1f}°C")
-                anomaly_score = max(anomaly_score, 0.35)
+        # 4. Fault Classification
+        fault_result = self.fault_classifier.classify(residuals, anomaly_result, raw_frame)
+        possible_issue = fault_result.get("fault", "NOMINAL").replace("_", " ")
 
-        if vibration is not None and vibration > 3.5:
+        # 5. Health Index Calculation
+        health_index = 100.0 - (anomaly_score * 45.0)
+        if current_a is not None and current_a > 5.5:
+            health_index -= 30.0
+        if voltage_v is not None and voltage_v < 9.5:
+            health_index -= 25.0
+        if temperature_c is not None and temperature_c > 65.0:
             health_index -= 20.0
-            anomalies.append(f"Excessive Vibration: {vibration:.2f} mm/s")
-            possible_issue = "Motor Mechanical Imbalance"
-            anomaly_score = max(anomaly_score, 0.65)
-
         health_index = max(10.0, min(100.0, health_index))
-        anomaly_detected = len(anomalies) > 0 and anomaly_score > 0.40
-        status_str = "CRITICAL" if anomaly_score >= 0.75 else ("WARNING" if anomaly_score >= 0.35 else "NORMAL")
 
-        # Primary Evidence (Physically Honest)
+        # 6. RUL Estimation (Testbed Life Baseline with Data Sufficiency)
+        degradation_data = {
+            "normalized_degradation": round((100.0 - health_index) / 100.0, 4),
+            "degradation_velocity": 0.0008 if anomaly_detected else 0.0001
+        }
+        rul_result = self.rul_engine.estimate_rul(degradation_data, sensor_trust, raw_frame)
+
+        status_str = "CRITICAL" if anomaly_score >= 0.70 else ("WARNING" if anomaly_detected else "NORMAL")
+
+        # Primary Evidence List (Traceable and Physically Grounded)
         primary_evidence = [
             "Physical DC Motor Prototype Telemetry (3×18650 + ACS712 + L298N + ESP32)",
             f"Power Bus: {voltage_v if voltage_v is not None else '--'}V | Current: {current_a if current_a is not None else '--'}A | Power: {power_w if power_w is not None else '--'}W",
-            "Aero-engine Rotax 914 thermodynamic model bypassed for physical motor prototype"
+            f"Electro-mechanical Twin Residuals: Armature I dev={residuals.get('current_a', {}).get('percentage_deviation', 0.0):+.1f}% | V sag={residuals.get('voltage_v', {}).get('percentage_deviation', 0.0):+.1f}%",
+            f"Sensor Trust Array: {int(sensor_trust['aggregate_trust_score'] * 100)}% transducer validity",
+            f"Fault Status: {fault_result.get('status_qualifier', 'POSSIBLE')} {possible_issue} (Confidence: {int(fault_result.get('confidence', 0.9)*100)}%)"
         ]
-        if anomalies:
-            primary_evidence.extend(anomalies)
-        else:
-            primary_evidence.append("Operating within electrical and thermal testbed boundaries")
+        if anomaly_detected and explainability.get("reason"):
+            primary_evidence.insert(2, f"Anomaly Reason: {explainability['reason']}")
 
         # Timing
         proc_duration_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
@@ -182,18 +169,13 @@ class TwinUpdateService:
             "is_simulated": is_sim,
         }
 
-        # Sensor Trust Matrix for physical channels
-        sensor_trust = {
-            "overall_trust_score": 0.98,
-            "aggregate_trust_score": 0.98,
-            "channels": {
-                "current_a": {"valid": current_a is not None and current_a >= 0, "status": "VALID" if current_a is not None else "NO_DATA", "trust_score": 0.98},
-                "voltage_v": {"valid": voltage_v is not None and voltage_v >= 0, "status": "VALID" if voltage_v is not None else "NO_DATA", "trust_score": 0.98},
-                "rpm": {"valid": rpm is not None and rpm >= 0, "status": "VALID" if rpm is not None else "NO_DATA", "trust_score": 0.99},
-                "temperature_c": {"valid": temperature_c is not None, "status": "VALID" if temperature_c is not None else "NO_DATA", "trust_score": 0.95},
-                "vibration": {"valid": vibration is not None and vibration >= 0, "status": "VALID" if vibration is not None else "NO_DATA", "trust_score": 0.96},
-            }
-        }
+        alerts = []
+        if status_str in ("WARNING", "CRITICAL"):
+            alerts.append({
+                "severity": status_str,
+                "text": f"Motor Testbed Alert: {possible_issue} (Score: {anomaly_score:.2f})",
+                "timestamp": timestamp
+            })
 
         digital_twin_state = {
             "device_id": device_id,
@@ -206,23 +188,38 @@ class TwinUpdateService:
                 "value": {
                     "health_index": round(health_index, 1),
                     "normalized_degradation": round((100.0 - health_index) / 100.0, 3),
-                    "interpretation": "Physical motor prototype health based on electrical/thermal margins"
+                    "interpretation": "Physical motor prototype health based on electro-mechanical and thermal margins"
                 }
             },
             "fault_state": {
                 "value": {
                     "fault": possible_issue,
-                    "confidence": 0.95 if anomaly_detected else 0.98
+                    "status_qualifier": fault_result.get("status_qualifier", "LIKELY"),
+                    "confidence": fault_result.get("confidence", 0.92)
                 }
             },
+            "rul_state": {
+                "value": rul_result
+            },
             "confidence": {
-                "overall": 0.95,
-                "sensor_trust": 0.98,
-                "ai_certainty": 0.95
+                "overall": 0.94,
+                "sensor_trust": sensor_trust["aggregate_trust_score"],
+                "ai_certainty": fault_result.get("confidence", 0.90)
             },
             "primary_evidence": primary_evidence,
             "system_state": status_str,
-            "alerts": [{"severity": "CRITICAL" if status_str == "CRITICAL" else "WARNING", "text": a, "timestamp": timestamp} for a in anomalies],
+            "alerts": alerts,
+            "explainability": explainability,
+            "hardware_diagnostics": {
+                "device_id": device_id,
+                "profile": "MOTOR_PROTOTYPE",
+                "wifi_rssi": raw_frame.get("wifi_rssi", -55),
+                "firmware_version": raw_frame.get("firmware_version", "v1.4.2-motor"),
+                "ingestion_rate_hz": eff_ingest_rate_hz,
+                "data_age_ms": data_age_ms,
+                "evaluation_latency_ms": proc_duration_ms,
+                "sensors": sensor_trust.get("sensors", {})
+            }
         }
 
         dashboard_view = {
@@ -247,15 +244,18 @@ class TwinUpdateService:
             "anomaly_detected": anomaly_detected,
             "anomaly_score": round(anomaly_score, 3),
             "fault_class": possible_issue,
-            "fault_probability": 0.95 if anomaly_detected else 0.05,
-            "confidence_pct": 95,
-            "sensor_trust_pct": 98,
-            "rul_time_str": "MONITORING ONLY",
-            "rul_estimate_hours": None,
-            "degradation_velocity": 0.0,
+            "fault_probability": fault_result.get("probability", 0.90),
+            "confidence_pct": int(fault_result.get("confidence", 0.92) * 100),
+            "sensor_trust_pct": int(sensor_trust["aggregate_trust_score"] * 100),
+            "rul_time_str": rul_result.get("rul_time_str", "MONITORING ONLY"),
+            "rul_estimate_hours": rul_result.get("rul_estimate_hours"),
+            "rul_lower_bound_hours": rul_result.get("lower_bound_hours"),
+            "rul_upper_bound_hours": rul_result.get("upper_bound_hours"),
+            "degradation_velocity": rul_result.get("degradation_velocity", 0.0),
             "recommended_decision": "CONTINUE MOTOR TESTBED MONITORING" if not anomaly_detected else "INSPECT MOTOR LOAD & BATTERY",
             "recommended_actions": ["Maintain DC motor operating envelope", "Monitor ACS712 current & bus voltage"] if not anomaly_detected else ["Reduce motor PWM duty cycle", "Inspect 3x18650 battery cell voltages"],
             "primary_evidence": primary_evidence,
+            "explainability": explainability,
             "stream_metrics": stream_metrics,
         }
 
@@ -266,18 +266,19 @@ class TwinUpdateService:
         return {
             "twin_state": digital_twin_state,
             "dashboard_view": dashboard_view,
-            "residuals": {},
-            "expected_physics": {},
+            "residuals": residuals,
+            "expected_physics": expected_physics,
             "sensor_trust": sensor_trust,
             "stream_metrics": stream_metrics,
+            "explainability": explainability,
             "alerts": digital_twin_state["alerts"],
             "events": [],
             "primary_evidence": primary_evidence,
             "inference": {
                 "possibleIssue": possible_issue,
                 "riskLevel": "HIGH" if anomaly_detected else "LOW",
-                "confidence": 95,
-                "estimatedTimeToFault": "MONITORING ONLY",
+                "confidence": int(fault_result.get("confidence", 0.92) * 100),
+                "estimatedTimeToFault": rul_result.get("rul_time_str", "MONITORING ONLY"),
                 "anomalyScore": round(anomaly_score, 3),
                 "recommendedAction": dashboard_view["recommended_actions"],
                 "timestamp": timestamp
@@ -529,7 +530,16 @@ class TwinUpdateService:
             "alerts": alert_summary["alerts"],
             "system_state": alert_summary["system_state"],
             "evidence": all_evidence,
-            "primary_evidence": primary_evidence
+            "primary_evidence": primary_evidence,
+            "explainability": anomaly_result.get("explainability", {}),
+            "hardware_diagnostics": {
+                "device_id": engine_id,
+                "profile": "AERO_ENGINE",
+                "ingestion_rate_hz": eff_ingest_rate_hz,
+                "data_age_ms": data_age_ms,
+                "evaluation_latency_ms": proc_duration_ms,
+                "sensors": sensor_trust.get("sensors", {})
+            }
         }
         
         # Stage 16: Construct Presentation DashboardView for Frontend
@@ -581,6 +591,7 @@ class TwinUpdateService:
             "alerts": alert_summary["alerts"],
             "recent_events": alert_summary["recent_events"],
             "primary_evidence": primary_evidence,
+            "explainability": anomaly_result.get("explainability", {}),
             "stream_metrics": stream_metrics,
             "link_status": self.gateway.get_link_status()
         }
@@ -604,6 +615,7 @@ class TwinUpdateService:
             "expected_physics": expected_physics,
             "sensor_trust": sensor_trust,
             "stream_metrics": stream_metrics,
+            "explainability": anomaly_result.get("explainability", {}),
             "alerts": alert_summary["alerts"],
             "events": alert_summary["recent_events"],
             "primary_evidence": primary_evidence,

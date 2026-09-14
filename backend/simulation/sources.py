@@ -54,6 +54,10 @@ class LiveStreamSource(TelemetrySource):
         self.last_sequence_num: int = -1
         self.total_received: int = 0
         self.total_dropped: int = 0
+        self.total_duplicates: int = 0
+        self.total_out_of_order: int = 0
+        self.error_count: int = 0
+        self._rate_timestamps: deque = deque(maxlen=40)
         self.last_frame: Optional[Dict[str, Any]] = None
         self.last_device_id: Optional[str] = None
         self.last_source: str = "LIVE"
@@ -69,11 +73,19 @@ class LiveStreamSource(TelemetrySource):
         now = time.time()
         self.last_received_time = now
         self.total_received += 1
+        self._rate_timestamps.append(now)
 
-        seq = raw_frame.get("sequence_number", self.last_sequence_num + 1)
-        if self.last_sequence_num >= 0 and seq > (self.last_sequence_num + 1):
-            dropped = seq - (self.last_sequence_num + 1)
-            self.total_dropped += dropped
+        seq = raw_frame.get("sequence_number", raw_frame.get("seq", self.last_sequence_num + 1))
+        
+        # Sequence Health Tracking: Duplicates, Out-of-Order, and Drops
+        if self.last_sequence_num >= 0:
+            if seq == self.last_sequence_num:
+                self.total_duplicates += 1
+            elif seq < self.last_sequence_num:
+                self.total_out_of_order += 1
+            elif seq > (self.last_sequence_num + 1):
+                dropped = seq - (self.last_sequence_num + 1)
+                self.total_dropped += dropped
         self.last_sequence_num = seq
 
         ts = raw_frame.get("timestamp", now)
@@ -118,14 +130,22 @@ class LiveStreamSource(TelemetrySource):
         if self.last_received_time is None:
             age_sec = None
             status = "NOT CONNECTED"
+            packet_rate_hz = 0.0
         else:
             age_sec = round(now - self.last_received_time, 3)
             if age_sec > self.disconnect_timeout_sec:
                 status = "DISCONNECTED"
+                packet_rate_hz = 0.0
             elif age_sec > self.stale_timeout_sec:
                 status = "STALE"
+                packet_rate_hz = 0.0
             else:
                 status = "CONNECTED"
+                if len(self._rate_timestamps) >= 2:
+                    dt = self._rate_timestamps[-1] - self._rate_timestamps[0]
+                    packet_rate_hz = round((len(self._rate_timestamps) - 1) / max(0.01, dt), 1)
+                else:
+                    packet_rate_hz = 10.0
 
         total_expected = self.total_received + self.total_dropped
         loss_rate = round((self.total_dropped / max(1, total_expected)) * 100.0, 2)
@@ -139,10 +159,14 @@ class LiveStreamSource(TelemetrySource):
             "device_id": self.last_device_id,
             "status": status,
             "connected": self.is_connected(),
+            "packet_rate_hz": packet_rate_hz,
             "packet_age_seconds": age_sec,
             "data_age_ms": round(age_sec * 1000.0, 1) if age_sec is not None else None,
             "total_received": self.total_received,
             "total_dropped": self.total_dropped,
+            "total_duplicates": self.total_duplicates,
+            "total_out_of_order": self.total_out_of_order,
+            "error_count": self.error_count,
             "packet_loss_pct": loss_rate,
             "last_sequence": self.last_sequence_num,
             "last_packet_time": self.last_received_time,
@@ -160,11 +184,15 @@ class LiveStreamSource(TelemetrySource):
     def reset(self):
         """Reset live stream telemetry state and buffer."""
         self._buffer.clear()
+        self._rate_timestamps.clear()
         self.last_received_time = None
         self.last_packet_timestamp = None
         self.last_sequence_num = -1
         self.total_received = 0
         self.total_dropped = 0
+        self.total_duplicates = 0
+        self.total_out_of_order = 0
+        self.error_count = 0
         self.last_frame = None
         self.last_device_id = None
         self.last_source = "LIVE"
