@@ -757,30 +757,26 @@ def get_engine_telemetry(engine_id: str):
 @app.get("/api/telemetry")
 def get_latest_telemetry_data():
     """
-    GET /api/telemetry — Serves the latest telemetry data stored in memory.
-    If no telemetry has been posted yet, returns current system/simulator telemetry.
+    GET /api/telemetry — Serves the latest processed telemetry data from the twin service.
+    If no telemetry has been evaluated yet, returns fallback metrics.
     """
-    global latest_telemetry
-    if latest_telemetry:
-        return latest_telemetry
-    
     if not twin_service.last_dashboard_view:
         twin_service.process_telemetry_frame(simulator.state)
     
     return {
-        "source": simulator.state.get("source", "SIMULATION"),
-        "device_id": simulator.state.get("device_id", "AERIS-DEMO-001"),
-        "is_simulated": True if system_state.mode == "SIMULATION" else simulator.state.get("is_simulated", True),
-        "rpm": simulator.state.get("rpm"),
-        "temperature": simulator.state.get("temperature"),
-        "vibration": simulator.state.get("vibration"),
-        "oil_pressure": simulator.state.get("oil_pressure"),
-        "engine_load": simulator.state.get("engine_load"),
-        "engine_health": simulator.state.get("engine_health"),
-        "status": simulator.state.get("status", "NORMAL"),
-        "active_scenario": simulator.scenario,
-        "state": simulator.state,
-        "history": simulator.history,
+        "source": system_state.mode,
+        "device_id": "AERIS-DEMO-001" if system_state.mode == "SIMULATION" else "AERIS-HW-001",
+        "is_simulated": system_state.mode == "SIMULATION",
+        "rpm": twin_service.last_dashboard_view.get("rpm", 0),
+        "temperature": twin_service.last_dashboard_view.get("temperature", 0),
+        "vibration": twin_service.last_dashboard_view.get("vibration", 0),
+        "oil_pressure": twin_service.last_dashboard_view.get("oil_pressure", 0),
+        "engine_load": twin_service.last_dashboard_view.get("engine_load", 0),
+        "engine_health": twin_service.last_dashboard_view.get("health", {}).get("health_index", 100),
+        "status": twin_service.last_dashboard_view.get("status", "NORMAL"),
+        "active_scenario": simulator.scenario if system_state.mode == "SIMULATION" else None,
+        "state": simulator.state if system_state.mode == "SIMULATION" else live_source.get_frame(),
+        "history": simulator.history if system_state.mode == "SIMULATION" else [],
         "inference": twin_service.last_twin_state["fault_state"]["value"] if twin_service.last_twin_state else {},
         "twin_state": twin_service.last_twin_state,
         "dashboard_view": twin_service.last_dashboard_view,
