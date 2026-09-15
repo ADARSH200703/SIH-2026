@@ -25,13 +25,32 @@ document.addEventListener('DOMContentLoaded', () => {
   const rtMon = new RealtimeMonitor();
   const histLog = new HistoryLogs(sim);
 
-  // Evaluation Mode State ('LIVE' vs 'SIMULATION')
-  let evalMode = 'LIVE';
+  // Evaluation Mode State ('LIVE' vs 'SIMULATION') — Defaults to SIMULATION for demo
+  let evalMode = 'SIMULATION';
   let liveStreamConnected = false;
   let isStreamPaused = false;
   let totalProcessedSamples = 0;
   let currentTargetRateHz = 10;
   let isReplaying = false;
+
+  function updateSystemStatusMatrix() {
+    const isOnline = backendHttpOnline || wsConnected;
+    const isWs = wsConnected;
+    const isSim = evalMode === 'SIMULATION';
+    const isHw = evalMode === 'LIVE' && liveStreamConnected;
+
+    setText('matrix-backend-val', isOnline ? 'ONLINE' : 'OFFLINE');
+    setCss('matrix-backend-val', 'color', isOnline ? 'var(--status-normal)' : 'var(--status-critical)');
+
+    setText('matrix-ws-val', isWs ? 'CONNECTED' : (backendHttpOnline ? 'CONNECTING' : 'DISCONNECTED'));
+    setCss('matrix-ws-val', 'color', isWs ? 'var(--status-normal)' : (backendHttpOnline ? 'var(--status-warning)' : 'var(--status-critical)'));
+
+    setText('matrix-telem-val', isSim ? 'SIMULATION' : (isHw ? 'PHYSICAL SENSOR' : 'STANDBY'));
+    setCss('matrix-telem-val', 'color', isSim ? 'var(--status-warning)' : (isHw ? 'var(--status-normal)' : 'var(--text-dim)'));
+
+    setText('matrix-hw-val', isHw ? 'CONNECTED' : 'DISCONNECTED');
+    setCss('matrix-hw-val', 'color', isHw ? 'var(--status-normal)' : '#94A3B8');
+  }
 
   // Expose history filter to inline onclick handlers in HTML
   window._histFilter = (f) => {
@@ -94,13 +113,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await res.json();
         backendLatencyMs = Math.round(performance.now() - t0);
         backendHttpOnline = true;
-        setText('comm-link-status', wsConnected ? 'Live Backend Link (Active)' : 'Connected (HTTP)');
+        setText('comm-link-status', wsConnected ? 'Backend Link (Active)' : 'Connected (HTTP)');
         setText('backend-status-text', wsConnected ? 'FastAPI WS Connected' : 'FastAPI Online');
         setCss('backend-status-text', 'color', 'var(--status-normal)');
         $('ws-status-dot')?.classList.remove('connecting');
         $('ws-status-dot')?.classList.add('connected');
-        setText('hw-kpi-backend', wsConnected ? '● Connected (WS)' : '● Online');
+        setText('hw-kpi-backend', wsConnected ? '● Online (WS)' : '● Online (HTTP)');
         setText('hw-kpi-latency', `${backendLatencyMs} ms`);
+        updateSystemStatusMatrix();
         return data;
       } else {
         backendHttpOnline = false;
@@ -116,6 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
       $('ws-status-dot')?.classList.remove('connecting');
       setText('hw-kpi-backend', 'Offline');
       setText('hw-kpi-latency', '-- ms');
+      updateSystemStatusMatrix();
     }
     return null;
   }
@@ -862,7 +883,8 @@ document.addEventListener('DOMContentLoaded', () => {
       toast('Switched to SIMULATION & FAULT TEST MODE [SIMULATED]');
     }
 
-    updateHardwareView(null, null, mode, isLive ? liveStreamConnected : true);
+    updateHardwareView(null, null, mode, isLive ? liveStreamConnected : false);
+    updateSystemStatusMatrix();
   }
 
   $('btn-mode-live')?.addEventListener('click', () => setMode('LIVE'));
@@ -902,28 +924,41 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ─── Quick Simulation Test Injections ───────────────────────────────────────
-  $('btn-quick-inject-bearing')?.addEventListener('click', () => {
+  function triggerDemoScenario(scenarioKey, toastMsg) {
     const dd = $('scenario-dropdown');
-    if (dd) dd.value = 'vibration_bearing';
-    sim.setScenario('vibration_bearing');
-    wsCmd({ action: 'SET_SCENARIO', scenario: 'vibration_bearing' });
-    toast('[SIM] Injected Crankshaft Bearing Spalling Fault');
+    if (dd) dd.value = scenarioKey;
+    sim.setScenario(scenarioKey);
+    wsCmd({ action: 'SET_SCENARIO', scenario: scenarioKey });
+    fetch(`${API_BASE_URL}/api/scenario`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scenario: scenarioKey })
+    }).catch(() => {});
+    toast(toastMsg);
+  }
+
+  $('btn-quick-inject-nominal')?.addEventListener('click', () => {
+    triggerDemoScenario('cruise', '[DEMO] Injected Normal Cruise Baseline');
+  });
+
+  $('btn-quick-inject-bearing')?.addEventListener('click', () => {
+    triggerDemoScenario('high_vibration', '[DEMO] Injected High Vibration / Bearing Wear');
   });
 
   $('btn-quick-inject-thermal')?.addEventListener('click', () => {
-    const dd = $('scenario-dropdown');
-    if (dd) dd.value = 'thermal_overheat';
-    sim.setScenario('thermal_overheat');
-    wsCmd({ action: 'SET_SCENARIO', scenario: 'thermal_overheat' });
-    toast('[SIM] Injected Cylinder Head Thermal Overheat');
+    triggerDemoScenario('thermal_overheat', '[DEMO] Injected Thermal Overheat Scenario');
+  });
+
+  $('btn-quick-inject-load')?.addEventListener('click', () => {
+    triggerDemoScenario('high_load', '[DEMO] Injected High Mechanical Load Scenario');
+  });
+
+  $('btn-quick-inject-fault')?.addEventListener('click', () => {
+    triggerDemoScenario('fault', '[DEMO] Injected Multi-Channel Fault / Anomaly Scenario');
   });
 
   $('btn-quick-reset-sim')?.addEventListener('click', () => {
-    const dd = $('scenario-dropdown');
-    if (dd) dd.value = 'cruise';
-    sim.setScenario('cruise');
-    wsCmd({ action: 'SET_SCENARIO', scenario: 'cruise' });
-    toast('[SIM] Reset Simulation to Cruise Baseline');
+    triggerDemoScenario('cruise', '[DEMO] Reset Simulation to Normal Baseline');
   });
 
   // ─── Replay Controls ───────────────────────────────────────────────────────
@@ -1638,31 +1673,31 @@ document.addEventListener('DOMContentLoaded', () => {
       if (liveBanner) liveBanner.style.display = 'none';
 
       if (overallBadge) {
-        overallBadge.textContent = 'SIMULATION ACTIVE';
-        overallBadge.className = 'hw-status-pill stale';
+        overallBadge.textContent = 'DISCONNECTED';
+        overallBadge.className = 'hw-status-pill disconnected';
       }
       if (sideBadge) {
-        sideBadge.textContent = 'SIM';
-        sideBadge.style.color = 'var(--status-warning)';
+        sideBadge.textContent = 'DISCONNECTED';
+        sideBadge.style.color = '#94A3B8';
       }
 
-      setText('hw-kpi-device-id', 'SIMULATOR RIG');
-      setText('hw-kpi-gateway-source', 'SOURCE: Virtual Engine Model');
-      setText('hw-kpi-state-text', 'SIMULATING');
-      setText('hw-kpi-state-sub', 'Physical hardware in standby');
-      setCss('hw-kpi-state-badge', 'color', 'var(--status-warning)');
-      setText('hw-kpi-state-icon', 'science');
+      setText('hw-kpi-device-id', 'AERIS-DEMO-001');
+      setText('hw-kpi-gateway-source', 'SOURCE: SIMULATION (Demo Stream)');
+      setText('hw-kpi-state-text', 'DISCONNECTED');
+      setText('hw-kpi-state-sub', 'Physical hardware disconnected (Demo simulation active)');
+      setCss('hw-kpi-state-badge', 'color', '#94A3B8');
+      setText('hw-kpi-state-icon', 'sensors_off');
       setText('hw-kpi-rate', `${currentTargetRateHz.toFixed(1)}`);
       setText('hw-kpi-backend', (backendHttpOnline || wsConnected) ? '● Online' : 'Offline');
       setText('hw-kpi-latency', (backendHttpOnline || wsConnected) ? (backendLatencyMs ? `${backendLatencyMs} ms` : '<1.5 ms') : '-- ms');
 
-      setText('hw-spec-device', 'Simulator');
-      setText('hw-spec-device-id', 'ROT-914-SIM');
-      setText('hw-spec-profile-val', 'AERO_ENGINE');
+      setText('hw-spec-device', 'Synthetic Demo Stream');
+      setText('hw-spec-device-id', 'AERIS-DEMO-001');
+      setText('hw-spec-profile-val', 'SIMULATION_DEMO');
       setText('hw-profile-badge', 'PROFILE: SIMULATION');
-      setText('hw-spec-firmware', 'v2.5.0-sim');
+      setText('hw-spec-firmware', 'v2.5.0-demo');
       setText('hw-spec-rssi', 'N/A (Virtual)');
-      setText('hw-spec-last-packet', '<50 ms ago');
+      setText('hw-spec-last-packet', '<50 ms ago (Simulated)');
       setText('hw-spec-loss', '0.0%');
       setText('hw-spec-total-frames', `${totalProcessedSamples}`);
 
@@ -1674,6 +1709,7 @@ document.addEventListener('DOMContentLoaded', () => {
       setText('hw-val-temp', '-- °C');
       setText('hw-val-vib', '---');
       setText('hw-val-load', '-- %');
+      updateSystemStatusMatrix();
       return;
     }
 
@@ -2235,9 +2271,13 @@ document.addEventListener('DOMContentLoaded', () => {
     setText('prob-misfire', `${pMisfire}%`);
     setCss('prob-misfire-bar', 'width', `${pMisfire}%`);
 
-    // Prognostics RUL, Hazard Rate & Degradation Velocity
+    // Prognostics RUL, Hazard Rate & Degradation Velocity (Simulation Estimate)
     const rulStr = dashboardView.rul_time_str || infer.estimatedTimeToFault || '1200.0 h';
     setText('lab-rul-val', rulStr);
+    if (evalMode === 'SIMULATION') {
+      setText('lab-rul-estimate-tag', 'Simulation Estimate');
+      setText('lab-rul-interval-label', 'Simulation Estimate (Uncalibrated Demo Profile)');
+    }
     const hazVal = twinState?.hazard_rate ? `${twinState.hazard_rate.toFixed(4)} / hr` : '0.0034 / hr';
     setText('lab-hazard-rate', hazVal);
     const degRate = twinState?.degradation_velocity ? `${twinState.degradation_velocity > 0 ? '+' : ''}${twinState.degradation_velocity.toFixed(4)} / hr` : '+0.0002 / hr';
@@ -2378,7 +2418,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }
 
           if (msg.type === 'LIVE_STREAM_STATUS') {
-            liveStreamConnected = !!msg.connected;
+            liveStreamConnected = !!msg.connected && evalMode === 'LIVE';
             const banner = $('live-not-connected-banner');
             if (banner && evalMode === 'LIVE') {
               banner.style.display = liveStreamConnected ? 'none' : 'flex';
@@ -2391,13 +2431,20 @@ document.addEventListener('DOMContentLoaded', () => {
               setText('kpi-status-val', 'STALE');
               updateHardwareView(msg.status_details || { status: 'STALE', connected: true }, null, evalMode, true);
             }
+            updateSystemStatusMatrix();
           } else if (msg.type === 'TELEMETRY_UPDATE') {
-            liveStreamConnected = true;
-            if ($('live-not-connected-banner') && evalMode === 'LIVE') {
-              $('live-not-connected-banner').style.display = 'none';
+            const isSimPacket = msg.mode === 'SIMULATION' || msg.source === 'SIMULATION' || msg.data?.source === 'SIMULATION' || msg.data?.dashboard_view?.source === 'SIMULATION';
+            if (!isSimPacket && evalMode === 'LIVE') {
+              liveStreamConnected = true;
+              if ($('live-not-connected-banner')) {
+                $('live-not-connected-banner').style.display = 'none';
+              }
+            } else if (evalMode === 'SIMULATION') {
+              liveStreamConnected = false;
             }
             setCss('hdr-pulse-dot', 'background', '#22C55E');
-            processTelemetryUpdate(msg.data, msg.mode, msg.status, msg.stream_metrics);
+            processTelemetryUpdate(msg.data, msg.mode || evalMode, msg.status, msg.stream_metrics);
+            updateSystemStatusMatrix();
           } else if (msg.type === 'ALERT_TRIGGERED') {
             if (msg.alert) {
               histLog.addBackendEvent(msg.alert);

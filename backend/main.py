@@ -46,9 +46,9 @@ experiment_runner = ExperimentRunner()
 live_source = LiveStreamSource(stale_timeout_sec=3.0, disconnect_timeout_sec=6.0)
 mavlink_source = MAVLinkSource()
 
-# System Mode & Frequency State
+# System Mode & Frequency State (Defaults to SIMULATION for demo)
 class SystemState:
-    mode: str = "LIVE"  # "LIVE" or "SIMULATION"
+    mode: str = "SIMULATION"  # "LIVE" or "SIMULATION"
     target_rate_hz: float = 10.0  # 1.0, 5.0, 10.0, 20.0
     is_paused: bool = False
 
@@ -219,12 +219,17 @@ async def telemetry_broadcast_loop():
 
                     raw_frame["source"] = "SIMULATION"
                     raw_frame["is_simulated"] = True
+                    raw_frame["device_id"] = "AERIS-DEMO-001"
                     
                     pipeline_out = twin_service.process_telemetry_frame(raw_frame)
                     
                     payload = {
                         "type": "TELEMETRY_UPDATE",
                         "mode": "SIMULATION",
+                        "source": "SIMULATION",
+                        "device_id": "AERIS-DEMO-001",
+                        "is_simulated": True,
+                        "hardware_connected": False,
                         "connected": True,
                         "data": pipeline_out,
                         "state": raw_frame,
@@ -761,7 +766,19 @@ def get_latest_telemetry_data():
     
     if not twin_service.last_dashboard_view:
         twin_service.process_telemetry_frame(simulator.state)
+    
     return {
+        "source": simulator.state.get("source", "SIMULATION"),
+        "device_id": simulator.state.get("device_id", "AERIS-DEMO-001"),
+        "is_simulated": True if system_state.mode == "SIMULATION" else simulator.state.get("is_simulated", True),
+        "rpm": simulator.state.get("rpm"),
+        "temperature": simulator.state.get("temperature"),
+        "vibration": simulator.state.get("vibration"),
+        "oil_pressure": simulator.state.get("oil_pressure"),
+        "engine_load": simulator.state.get("engine_load"),
+        "engine_health": simulator.state.get("engine_health"),
+        "status": simulator.state.get("status", "NORMAL"),
+        "active_scenario": simulator.scenario,
         "state": simulator.state,
         "history": simulator.history,
         "inference": twin_service.last_twin_state["fault_state"]["value"] if twin_service.last_twin_state else {},
@@ -1293,15 +1310,17 @@ def get_mission_decision(engine_id: str):
 @app.post("/api/scenario")
 def trigger_scenario(req: ScenarioRequest):
     valid_scenarios = [
-        "cruise", "lubrication_degradation", "vibration_bearing",
-        "thermal_overheat", "spark_misfire", "high_altitude_climb"
+        "cruise", "normal", "nominal", "lubrication_degradation", "vibration_bearing",
+        "high_vibration", "bearing_wear", "thermal_overheat", "cooling_degradation",
+        "high_load", "fault", "anomaly", "spark_misfire", "high_altitude_climb"
     ]
-    if req.scenario not in valid_scenarios:
-        raise HTTPException(status_code=400, detail="Invalid scenario name")
+    sc = req.scenario.lower().strip()
+    if sc not in valid_scenarios:
+        raise HTTPException(status_code=400, detail=f"Invalid scenario name: {req.scenario}. Must be one of {valid_scenarios}")
 
-    simulator.set_scenario(req.scenario)
-    log_event(f"Simulation Scenario Activated: {req.scenario.upper()}", "warning", "Simulation")
-    return {"status": "scenario_applied", "activeScenario": req.scenario}
+    simulator.set_scenario(sc)
+    log_event(f"Simulation Scenario Activated: {sc.upper()}", "warning", "Simulation")
+    return {"status": "scenario_applied", "activeScenario": sc.upper(), "is_simulated": True}
 
 @app.post("/api/mitigate")
 def execute_mitigation():

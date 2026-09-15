@@ -13,11 +13,12 @@ class AeroEngineSimulator:
         self.seed = seed
         self.rng = random.Random(seed)
         
-        # Engine operating baseline
+        # Engine operating baseline (Demo / Simulation Telemetry)
         self.state = {
             "engine_id": "UAV-ENG-ROT-914-01",
+            "device_id": "AERIS-DEMO-001",
             "uav_id": "MALE-UAV-TAPAS-04",
-            "mission_id": "MSN-2026-SURV-082",
+            "mission_id": "MSN-2026-DEMO-001",
             "timestamp": time.time(),
             "sequence_number": 0,
             "flight_time_seconds": 9918,
@@ -42,10 +43,11 @@ class AeroEngineSimulator:
             "flight_phase": "CRUISE",
             
             # Scenario & Controls
-            "activeScenario": "cruise",
+            "activeScenario": "NORMAL",
             "manualOverride": False,
             "isRunning": True,
-            "source": "SIMULATOR"
+            "source": "SIMULATION",
+            "is_simulated": True
         }
         
         # Active fault injection states
@@ -60,6 +62,14 @@ class AeroEngineSimulator:
             "vibration": []
         }
         self._init_history()
+
+    @property
+    def scenario(self) -> str:
+        return self.state.get("activeScenario", "NORMAL")
+
+    @property
+    def active_scenario(self) -> str:
+        return self.state.get("activeScenario", "NORMAL")
 
     def _init_history(self):
         for i in range(59, -1, -1):
@@ -86,34 +96,44 @@ class AeroEngineSimulator:
         return injection
 
     def set_scenario(self, scenario: str):
-        self.state["activeScenario"] = scenario
+        sc = scenario.strip().lower()
+        self.state["activeScenario"] = scenario.upper()
         self.state["manualOverride"] = False
+        self.active_injections.clear()
         
-        # Map scenario to standard fault injection
-        if scenario == "vibration_bearing":
-            self.inject_fault("BEARING_DEGRADATION", severity=0.7, progression_rate=0.015)
-        elif scenario == "lubrication_degradation":
-            self.inject_fault("LUBRICATION_DEGRADATION", severity=0.6, progression_rate=0.012)
-        elif scenario == "thermal_overheat":
-            self.inject_fault("COOLING_DEGRADATION", severity=0.8, progression_rate=0.018)
-        elif scenario == "spark_misfire":
-            self.inject_fault("SPARK_PLUG_DEGRADATION", severity=0.65, progression_rate=0.010)
+        # Map scenario to standard progressive simulation dynamics
+        if sc in ["vibration_bearing", "high_vibration", "bearing_wear"]:
+            self.inject_fault("BEARING_DEGRADATION", severity=0.75, progression_rate=0.018)
+        elif sc in ["thermal_overheat", "cooling_degradation"]:
+            self.inject_fault("COOLING_DEGRADATION", severity=0.85, progression_rate=0.020)
+        elif sc in ["high_load", "load_surge"]:
+            self.inject_fault("HIGH_LOAD", severity=0.80, progression_rate=0.022)
+        elif sc in ["fault", "anomaly", "fault_state"]:
+            self.inject_fault("FAULT_MULTI_CHANNEL", severity=0.75, progression_rate=0.018)
+        elif sc in ["lubrication_degradation", "lube_loss"]:
+            self.inject_fault("LUBRICATION_DEGRADATION", severity=0.65, progression_rate=0.014)
+        elif sc in ["spark_misfire", "ignition_fault"]:
+            self.inject_fault("SPARK_PLUG_DEGRADATION", severity=0.65, progression_rate=0.012)
+        elif sc in ["cruise", "normal", "nominal"]:
+            self.execute_mitigation()
 
     def execute_mitigation(self):
         """
         Closes feedback loop: resets fault injections and returns engine to optimal cruise trim.
         """
         self.active_injections.clear()
-        self.state["activeScenario"] = "cruise"
+        self.state["activeScenario"] = "NORMAL"
         self.state["manualOverride"] = False
         self.state["vibration"] = 1.65
         self.state["temperature"] = 78.5
         self.state["oilPressure"] = 4.28
         self.state["fuelFlow"] = 5.2
+        self.state["throttle"] = 68.0
+        self.state["engineLoad"] = 62.0
 
     def step(self) -> Dict[str, Any]:
         """
-        Advances the simulator by 1 time step.
+        Advances the simulator by 1 time step at ~5-10 Hz with smooth physical transitions.
         """
         if not self.state["isRunning"]:
             return self.state
@@ -121,14 +141,18 @@ class AeroEngineSimulator:
         self.state["timestamp"] = time.time()
         self.state["sequence_number"] += 1
         self.state["flight_time_seconds"] += 1
+        self.state["source"] = "SIMULATION"
+        self.state["is_simulated"] = True
+        self.state["device_id"] = "AERIS-DEMO-001"
 
-        # Baseline cruise targets
+        # Baseline nominal cruise targets
         target_rpm = 4215.0
         target_temp = 78.4
         target_oil = 4.30
         target_vib = 1.60
         target_fuel = 5.20
         target_load = 62.0
+        target_throttle = 68.0
 
         # Apply progressive active fault injections
         for inj in self.active_injections:
@@ -139,7 +163,7 @@ class AeroEngineSimulator:
             sev = inj["current_severity"]
             fault_type = inj["fault"]
             
-            if fault_type in ["BEARING_DEGRADATION", "vibration_bearing"]:
+            if fault_type in ["BEARING_DEGRADATION", "vibration_bearing", "high_vibration"]:
                 target_vib += sev * 4.2
                 target_oil -= sev * 0.4
                 target_temp += sev * 3.5
@@ -148,18 +172,30 @@ class AeroEngineSimulator:
                 target_temp += sev * 9.0
                 target_vib += sev * 1.5
             elif fault_type in ["COOLING_DEGRADATION", "thermal_overheat"]:
-                target_temp += sev * 24.0
+                target_temp += sev * 26.0
                 target_oil -= sev * 0.8
-                target_load += sev * 20.0
+                target_load += sev * 18.0
+            elif fault_type in ["HIGH_LOAD", "high_load"]:
+                target_load += sev * 28.0
+                target_throttle += sev * 22.0
+                target_temp += sev * 14.0
+                target_fuel += sev * 2.8
+                target_rpm += sev * 320.0
+                target_vib += sev * 0.9
+            elif fault_type in ["FAULT_MULTI_CHANNEL", "fault", "anomaly"]:
+                target_temp += sev * 20.0
+                target_vib += sev * 3.2
+                target_oil -= sev * 1.4
+                target_load += sev * 16.0
+                target_fuel += sev * 1.5
             elif fault_type in ["SPARK_PLUG_DEGRADATION", "spark_misfire"]:
                 target_fuel += sev * 2.5
                 target_rpm -= sev * 350.0 + self.rng.uniform(-100, 100)
                 target_vib += sev * 1.8
             elif fault_type == "SENSOR_DRIFT_VIBRATION":
-                # Only affects reported vibration sensor without changing physics load
                 self.state["vibration"] += 0.05
 
-        # Smooth relaxation towards targets with Gaussian perturbation
+        # Smooth relaxation towards targets with small Gaussian perturbation (realistic analog behavior)
         if not self.state["manualOverride"]:
             self.state["rpm"] += (target_rpm - self.state["rpm"]) * 0.12 + self.rng.uniform(-4.0, 4.0)
             self.state["temperature"] += (target_temp - self.state["temperature"]) * 0.08 + self.rng.uniform(-0.1, 0.1)
@@ -167,6 +203,7 @@ class AeroEngineSimulator:
             self.state["vibration"] += (target_vib - self.state["vibration"]) * 0.12 + self.rng.uniform(-0.03, 0.03)
             self.state["fuelFlow"] += (target_fuel - self.state["fuelFlow"]) * 0.08 + self.rng.uniform(-0.02, 0.02)
             self.state["engineLoad"] += (target_load - self.state["engineLoad"]) * 0.08 + self.rng.uniform(-0.15, 0.15)
+            self.state["throttle"] += (target_throttle - self.state["throttle"]) * 0.08 + self.rng.uniform(-0.10, 0.10)
         else:
             self.state["rpm"] += self.rng.uniform(-2.0, 2.0)
             self.state["temperature"] += self.rng.uniform(-0.05, 0.05)
@@ -175,11 +212,12 @@ class AeroEngineSimulator:
 
         # Physical clamping bounds
         self.state["rpm"] = max(800.0, min(6200.0, self.state["rpm"]))
-        self.state["temperature"] = max(15.0, min(125.0, self.state["temperature"]))
+        self.state["temperature"] = max(15.0, min(130.0, self.state["temperature"]))
         self.state["oilPressure"] = max(0.5, min(7.5, self.state["oilPressure"]))
         self.state["vibration"] = max(0.2, min(10.0, self.state["vibration"]))
         self.state["fuelFlow"] = max(0.0, min(15.0, self.state["fuelFlow"]))
         self.state["engineLoad"] = max(0.0, min(100.0, self.state["engineLoad"]))
+        self.state["throttle"] = max(0.0, min(100.0, self.state.get("throttle", 68.0)))
 
         self._push_history()
         return self.state

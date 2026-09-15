@@ -310,13 +310,13 @@
 
           <!-- Mode Switcher: LIVE MODE vs SIMULATION/TEST MODE -->
           <div class="mode-switch-container">
-            <button id="btn-mode-live" class="mode-btn active live" title="Continuous Real-Time Telemetry Evaluation Mode">
-              <span class="live-pulse-dot" style="width: 6px; height: 6px;"></span>
-              <span>LIVE</span>
+            <button id="btn-mode-sim" class="mode-btn active" title="Synthetic Telemetry &amp; Failure Injection Demo Mode">
+              <span class="material-symbols-outlined" style="font-size: 13px; color: var(--status-warning);">science</span>
+              <span>SIM / DEMO</span>
             </button>
-            <button id="btn-mode-sim" class="mode-btn" title="Synthetic Telemetry &amp; Failure Injection Test Mode">
-              <span class="material-symbols-outlined" style="font-size: 13px;">science</span>
-              <span>SIM / TEST</span>
+            <button id="btn-mode-live" class="mode-btn live" title="Continuous Real-Time Physical Hardware Telemetry Mode">
+              <span class="live-pulse-dot" style="width: 6px; height: 6px;"></span>
+              <span>LIVE HW</span>
             </button>
           </div>
         </div>
@@ -324,8 +324,8 @@
         <div class="header-center">
           <!-- Live Stream Real-Time Readout Pill -->
           <div class="telemetry-stream-pill" id="header-stream-pill">
-            <span class="live-pulse-dot" id="hdr-pulse-dot"></span>
-            <span id="hdr-mode-tag" style="font-weight: 700; color: var(--status-normal);">LIVE ●</span>
+            <span class="live-pulse-dot" id="hdr-pulse-dot" style="background: var(--status-warning);"></span>
+            <span id="hdr-mode-tag" style="font-weight: 700; color: var(--status-warning);">DEMO TELEMETRY ●</span>
             <span class="pill-divider">|</span>
             <span>Update: <strong id="hdr-last-update" style="color: #fff;">--:--:--</strong></span>
             <span class="pill-divider">|</span>
@@ -346,15 +346,16 @@
             <button class="rate-btn" data-rate="20">20Hz</button>
           </div>
 
-          <div class="scenario-picker-box" id="scenario-picker-container" style="display: none;">
+          <div class="scenario-picker-box" id="scenario-picker-container" style="display: flex;">
             <span class="material-symbols-outlined" style="font-size: 15px; color: var(--accent-cyan);">tune</span>
-            <select id="scenario-dropdown" class="scenario-select" title="Simulate flight condition / anomaly preset (Test Mode)">
-              <option value="cruise">[SIM] Normal Cruise (Nominal Power)</option>
-              <option value="lubrication_degradation">[SIM] Lubrication Pressure Loss</option>
-              <option value="vibration_bearing">[SIM] Crankshaft Bearing Wear</option>
-              <option value="thermal_overheat">[SIM] Cylinder Head Overheat</option>
-              <option value="spark_misfire">[SIM] Spark Plug Ignition Misfire</option>
-              <option value="high_altitude_climb">[SIM] Max Power Climb (High Altitude)</option>
+            <select id="scenario-dropdown" class="scenario-select" title="Simulate flight condition / anomaly preset (Demo Mode)">
+              <option value="cruise">[DEMO] Normal Cruise (Nominal Baseline)</option>
+              <option value="high_vibration">[DEMO] High Vibration (Bearing Wear)</option>
+              <option value="thermal_overheat">[DEMO] Thermal Overheat (CHT Rise)</option>
+              <option value="high_load">[DEMO] High Mechanical Load (Surge)</option>
+              <option value="fault">[DEMO] Multi-Channel Fault / Anomaly</option>
+              <option value="lubrication_degradation">[DEMO] Lubrication Pressure Loss</option>
+              <option value="spark_misfire">[DEMO] Spark Plug Ignition Misfire</option>
             </select>
           </div>
 
@@ -368,7 +369,7 @@
               <span class="material-symbols-outlined" id="audio-icon">volume_off</span>
               <span id="audio-text">Audio: Off</span>
             </button>
-            <button id="pause-sim-btn" class="hud-btn" title="Pause / Resume Live Telemetry Stream">
+            <button id="pause-sim-btn" class="hud-btn" title="Pause / Resume Telemetry Stream">
               <span class="material-symbols-outlined" id="sim-icon">play_arrow</span>
               <span id="sim-text">Running</span>
             </button>
@@ -404,7 +405,7 @@
             <li class="nav-item" data-view="hardware" title="Physical Hardware Gateway & Sensor Rig Bridge">
               <span class="material-symbols-outlined">developer_board</span>
               <span class="nav-label"><span style="color: var(--primary); font-family: var(--font-mono); font-size: 0.72rem; margin-right: 4px;">04 //</span> Hardware</span>
-              <span class="nav-badge" id="sidebar-hardware-badge" style="background: rgba(148, 163, 184, 0.15); color: var(--text-dim); font-size: 0.65rem; border: 1px solid var(--border-subtle); padding: 1px 5px; border-radius: 3px;">●</span>
+              <span class="nav-badge" id="sidebar-hardware-badge" style="background: rgba(148, 163, 184, 0.15); color: #94A3B8; font-size: 0.65rem; border: 1px solid var(--border-subtle); padding: 1px 5px; border-radius: 3px;">DISCONNECTED</span>
             </li>
             <li class="nav-item" data-view="ai-lab" title="AI &amp; Machine Learning Diagnostics Lab">
               <span class="material-symbols-outlined">psychology</span>
@@ -424,12 +425,34 @@
         <div class="sidebar-footer">
           <div class="status-indicator">
             <div class="status-dot" id="ws-status-dot"></div>
-            <span id="comm-link-status" class="nav-label">Live Backend</span>
+            <span id="comm-link-status" class="nav-label">Backend &amp; WS</span>
           </div>
-          <div class="sidebar-meta-info">
+
+          <!-- Explicit 4-State System Matrix -->
+          <div class="sidebar-system-matrix" id="sidebar-system-matrix" style="background: rgba(15, 23, 42, 0.65); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 6px 8px; margin-top: 6px; font-family: var(--font-mono); font-size: 0.68rem; line-height: 1.55;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="color: var(--text-dim);">BACKEND</span>
+              <span id="matrix-backend-val" style="color: var(--status-normal); font-weight:700;">ONLINE</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="color: var(--text-dim);">WEBSOCKET</span>
+              <span id="matrix-ws-val" style="color: var(--status-normal); font-weight:700;">CONNECTED</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="color: var(--text-dim);">TELEMETRY</span>
+              <span id="matrix-telem-val" style="color: var(--status-warning); font-weight:700;">SIMULATION</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="color: var(--text-dim);">HARDWARE</span>
+              <span id="matrix-hw-val" style="color: #94A3B8; font-weight:700;">DISCONNECTED</span>
+            </div>
+          </div>
+
+          <div class="sidebar-meta-info" style="margin-top: 6px;">
             <div>Target Rate: <span id="sb-target-rate" style="color: var(--accent-cyan);">10 Hz</span></div>
             <div>Backend: <span id="backend-status-text" style="color: var(--status-normal);">FastAPI / WS</span></div>
-            <div>Mode: <span id="sb-mode-badge" style="color: var(--status-normal); font-weight:700;">LIVE</span></div>
+            <div>Device: <span id="sb-device-id" style="color: var(--primary);">AERIS-DEMO-001</span></div>
+            <div>Mode: <span id="sb-mode-badge" style="color: var(--status-warning); font-weight:700;">SIMULATION</span></div>
           </div>
         </div>
       </aside>
@@ -444,21 +467,24 @@
           <div id="live-not-connected-banner" class="live-not-connected-banner" style="display: none;">
             <div style="display:flex; align-items:center; gap: 8px;">
               <span class="material-symbols-outlined" style="color: #EF4444; font-size: 20px;">wifi_off</span>
-              <span><strong>LIVE DATA: NOT CONNECTED</strong> — Waiting for incoming continuous telemetry stream on <code>/api/telemetry/live</code> or WebSocket...</span>
+              <span><strong>LIVE DATA: WAITING FOR HARDWARE</strong> — Awaiting physical Arduino Uno telemetry on <code>/api/telemetry/hardware</code>. Hardware is DISCONNECTED.</span>
             </div>
-            <button class="rate-btn" id="btn-switch-to-sim" style="background: rgba(245, 158, 11, 0.2); color: var(--status-warning); border-color: var(--status-warning);">Switch to Test Mode</button>
+            <button class="rate-btn" id="btn-switch-to-sim" style="background: rgba(245, 158, 11, 0.2); color: var(--status-warning); border-color: var(--status-warning);">Switch to Demo / Simulation Mode</button>
           </div>
 
           <!-- Simulation Test Mode Active Banner -->
-          <div id="sim-mode-banner" class="sim-mode-banner" style="display: none;">
+          <div id="sim-mode-banner" class="sim-mode-banner" style="display: flex;">
             <div style="display:flex; align-items:center; gap: 8px;">
               <span class="material-symbols-outlined" style="color: var(--status-warning); font-size: 18px;">science</span>
-              <span><strong>SIMULATION MODE ACTIVE</strong> — Evaluating synthetic engine dynamics and controlled fault injections. <strong style="color:#fff;">[SIMULATED DATA]</strong></span>
+              <span><strong>SIMULATION / DEMO MODE ACTIVE</strong> — Evaluating synthetic propulsion dynamics and controlled fault injections. <strong style="color:#fff; background: rgba(245,158,11,0.25); padding: 1px 6px; border-radius: 3px; border: 1px solid var(--status-warning);">[DEMO TELEMETRY &middot; HARDWARE DISCONNECTED]</strong></span>
             </div>
-            <div style="display:flex; gap:6px;">
-              <button class="rate-btn" id="btn-quick-inject-bearing" style="color: #F87171;">Bearing Fault</button>
+            <div style="display:flex; gap:6px; flex-wrap: wrap;">
+              <button class="rate-btn" id="btn-quick-inject-nominal" style="color: var(--status-normal); border-color: var(--status-normal);">Normal</button>
+              <button class="rate-btn" id="btn-quick-inject-bearing" style="color: #F87171;">High Vib</button>
               <button class="rate-btn" id="btn-quick-inject-thermal" style="color: #FBBF24;">Overheat</button>
-              <button class="rate-btn" id="btn-quick-reset-sim">Reset Sim</button>
+              <button class="rate-btn" id="btn-quick-inject-load" style="color: #38BDF8;">High Load</button>
+              <button class="rate-btn" id="btn-quick-inject-fault" style="color: #EC4899;">Fault</button>
+              <button class="rate-btn" id="btn-quick-reset-sim">Reset</button>
             </div>
           </div>
 
@@ -1191,7 +1217,7 @@
             <div class="ai-summary-card" id="card-ai-prognostics-rul">
               <div class="ai-card-head">
                 <span class="ai-card-title"><span class="material-symbols-outlined" style="color: var(--accent-cyan);">timer</span> PROGNOSTICS &amp; RUL</span>
-                <span class="ai-model-tag">Weibull-LSTM</span>
+                <span class="ai-model-tag" id="lab-rul-estimate-tag">Simulation Estimate</span>
               </div>
               <div class="ai-primary-val-row">
                 <span class="ai-big-value" id="lab-rul-val" style="font-size: 2.1rem; color: var(--accent-cyan); font-family: var(--font-tech);">1200.0 h</span>

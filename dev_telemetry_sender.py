@@ -27,29 +27,44 @@ def generate_frame(seq: int, scenario: str = "nominal", elapsed_s: float = 0.0, 
     now = time.time()
     custom_params = custom_params or {}
     profile = custom_params.get("profile", "MOTOR_PROTOTYPE")
+    is_demo = custom_params.get("is_demo", False)
+    source = custom_params.get("source", "SIMULATION" if is_demo else "PHYSICAL_SENSOR")
+    is_sim = custom_params.get("is_simulated", is_demo or source in ["SIMULATION", "SIMULATION_PRODUCER", "MOCK"])
+    device_id = custom_params.get("device_id", "AERIS-DEMO-001" if is_demo else "AERIS-ESP32-001")
+
+    # Clean scenario string
+    sc = scenario.lower().strip()
 
     if profile == "MOTOR_PROTOTYPE":
-        # Base nominal physical prototype (3x18650 Battery -> ACS712 -> L298N -> DC Geared Motor -> ESP32)
+        # Base nominal physical prototype (3x18650 Battery -> ACS712 -> L298N -> DC Geared Motor -> Arduino Uno / ESP32)
         voltage_v = 11.80 - min(1.8, elapsed_s * 0.005) + math.sin(elapsed_s * 0.2) * 0.05
         current_a = 2.65 + math.sin(elapsed_s * 0.5) * 0.15
         rpm = 1850.0 + math.sin(elapsed_s * 0.4) * 35.0
         temperature_c = 38.5 + min(12.0, elapsed_s * 0.02) + math.sin(elapsed_s * 0.1) * 0.4
         vibration = 0.85 + math.sin(elapsed_s * 0.3) * 0.08
         motor_load_pct = 45.0 + math.sin(elapsed_s * 0.2) * 5.0
+        throttle_pct = 50.0 + math.sin(elapsed_s * 0.2) * 4.0
 
         # Prototype Scenarios
-        if scenario == "bearing_wear":
+        if sc in ["bearing_wear", "high_vibration"]:
             prog = min(1.0, elapsed_s / 15.0)
             vibration += 1.8 * prog + (prog ** 2) * 2.5
             current_a += 1.2 * prog
-        elif scenario == "thermal_overheat":
+        elif sc in ["thermal_overheat", "cooling_degradation"]:
             prog = min(1.0, elapsed_s / 12.0)
             temperature_c += 25.0 * prog
-        elif scenario == "lubrication_loss" or scenario == "motor_stall":
+        elif sc in ["high_load", "load_surge"]:
+            prog = min(1.0, elapsed_s / 10.0)
+            motor_load_pct += 35.0 * prog
+            throttle_pct += 30.0 * prog
+            current_a += 2.2 * prog
+            temperature_c += 15.0 * prog
+        elif sc in ["fault", "anomaly", "lubrication_loss", "motor_stall"]:
             prog = min(1.0, elapsed_s / 10.0)
             current_a += 3.5 * prog
             rpm = max(0.0, rpm - 1400.0 * prog)
             voltage_v -= 1.2 * prog
+            vibration += 1.5 * prog
 
         # Apply overrides
         if custom_params.get("rpm") is not None:
@@ -70,7 +85,7 @@ def generate_frame(seq: int, scenario: str = "nominal", elapsed_s: float = 0.0, 
             power_w = round(voltage_v * current_a, 2)
 
         return {
-            "device_id": custom_params.get("device_id", "AERIS-ESP32-001"),
+            "device_id": device_id,
             "profile": "MOTOR_PROTOTYPE",
             "sequence_number": seq,
             "timestamp": now,
@@ -81,10 +96,11 @@ def generate_frame(seq: int, scenario: str = "nominal", elapsed_s: float = 0.0, 
             "temperature_c": round(temperature_c, 1) if temperature_c is not None else None,
             "vibration": round(vibration, 3) if vibration is not None else None,
             "motor_load_pct": round(motor_load_pct, 1) if motor_load_pct is not None else None,
-            "source": custom_params.get("source", "PHYSICAL_SENSOR"),
-            "wifi_rssi": -58,
-            "firmware_version": "v1.4.2-motor",
-            "is_simulated": False
+            "throttle_pct": round(throttle_pct, 1) if throttle_pct is not None else None,
+            "source": source,
+            "wifi_rssi": -58 if not is_demo else None,
+            "firmware_version": "v1.4.2-demo" if is_demo else "v1.4.2-motor",
+            "is_simulated": is_sim
         }
 
     # Base nominal frame (Rotax 914 Turbocharged Aero Piston Engine)
@@ -99,19 +115,30 @@ def generate_frame(seq: int, scenario: str = "nominal", elapsed_s: float = 0.0, 
     ambient_temp_c = -8.0
 
     # Scenarios
-    if scenario == "bearing_wear":
+    if sc in ["bearing_wear", "high_vibration"]:
         prog = min(1.0, elapsed_s / 15.0)
         vibration += 1.2 * prog + (prog ** 2) * 3.5
         temperature += 6.0 * prog
-    elif scenario == "thermal_overheat":
+    elif sc in ["thermal_overheat", "cooling_degradation"]:
         prog = min(1.0, elapsed_s / 12.0)
         temperature += 15.0 * prog + (prog ** 2) * 18.0
         oil_pressure -= 0.6 * prog
-    elif scenario == "lubrication_loss":
+    elif sc in ["high_load", "load_surge"]:
+        prog = min(1.0, elapsed_s / 10.0)
+        engine_load += 26.0 * prog
+        temperature += 12.0 * prog
+        fuel_flow += 2.5 * prog
+        rpm += 300.0 * prog
+    elif sc in ["fault", "anomaly"]:
+        prog = min(1.0, elapsed_s / 10.0)
+        vibration += 2.5 * prog
+        temperature += 16.0 * prog
+        oil_pressure = max(1.2, oil_pressure - 1.8 * prog)
+    elif sc in ["lubrication_loss", "lube_loss"]:
         prog = min(1.0, elapsed_s / 10.0)
         oil_pressure = max(1.2, oil_pressure - 2.2 * prog)
         temperature += 8.0 * prog
-    elif scenario == "spark_misfire":
+    elif sc in ["spark_misfire", "ignition_fault"]:
         fuel_flow += 1.6
         rpm -= 250.0 + (math.sin(elapsed_s * 10.0) * 120.0)
 
@@ -143,22 +170,36 @@ def generate_frame(seq: int, scenario: str = "nominal", elapsed_s: float = 0.0, 
         "egt_c": round(egt_c, 1),
         "altitude_ft": round(altitude_ft, 1),
         "ambient_temperature_c": round(ambient_temp_c, 1),
-        "source": custom_params.get("source", "LIVE_PRODUCER"),
-        "device_id": custom_params.get("device_id", "AERIS-PROTOTYPE-01"),
-        "is_simulated": False
+        "source": source,
+        "device_id": device_id,
+        "is_simulated": is_sim
     }
 
 
 def run_producer(args):
     endpoint = args.endpoint.lstrip('/')
     url = f"{args.host.rstrip('/')}/{endpoint}"
-    print(f"[*] AERIS-TWIN Telemetry Producer starting...")
+
+    is_demo = args.mode == "demo" or getattr(args, "demo", False)
+    source_tag = "SIMULATION" if is_demo else args.source
+    dev_id = "AERIS-DEMO-001" if is_demo else args.device_id
+
+    print(f"==================================================")
+    if is_demo:
+        print(f"[*] AERIS-TWIN DEMO TELEMETRY PRODUCER [SIMULATION]")
+        print(f"[*] NOTE: Synthetic Telemetry Mode for Presentation")
+        print(f"[*] Hardware Status: DISCONNECTED | Source Tag: {source_tag}")
+    else:
+        print(f"[*] AERIS-TWIN Telemetry Producer starting...")
     print(f"[*] Target Endpoint: {url}")
-    print(f"[*] Profile: {args.profile} | Device ID: {args.device_id} | Source: {args.source}")
+    print(f"[*] Profile: {args.profile} | Device ID: {dev_id} | Source: {source_tag}")
     print(f"[*] Mode: {'SINGLE-FRAME' if args.single else f'CONTINUOUS @ {args.rate} Hz'}")
-    print(f"[*] Scenario: {args.scenario}")
+    print(f"[*] Initial Scenario: {args.scenario}")
+    if getattr(args, "cycle", False):
+        print(f"[*] Scenario Auto-Cycling: ENABLED (transitions every 15s)")
     if args.api_key:
         print(f"[*] Device Authentication: API Key configured ({args.api_key[:4]}***)")
+    print(f"==================================================")
 
     custom_params = {
         "profile": args.profile,
@@ -171,8 +212,10 @@ def run_producer(args):
         "vibration": args.vibration,
         "fuel": args.fuel,
         "load": args.load,
-        "source": args.source,
-        "device_id": args.device_id
+        "source": source_tag,
+        "device_id": dev_id,
+        "is_demo": is_demo,
+        "is_simulated": is_demo or source_tag == "SIMULATION"
     }
 
     if getattr(args, "dry_run", False):
@@ -180,7 +223,6 @@ def run_producer(args):
         if args.api_key:
             packet["api_key"] = args.api_key
         print("[*] DRY RUN MODE: Generated sample telemetry payload:")
-        import json
         print(json.dumps(packet, indent=2))
         return
 
@@ -191,11 +233,37 @@ def run_producer(args):
     client = httpx.Client(timeout=4.0, headers=headers)
     seq = 1
     start_time = time.time()
+    
+    # Auto-cycle scenario progression:
+    scenarios_cycle = [
+        ("nominal", 15.0),
+        ("high_vibration", 15.0),
+        ("thermal_overheat", 15.0),
+        ("high_load", 15.0),
+        ("fault", 15.0)
+    ]
+    current_scenario = args.scenario
 
     try:
         while True:
-            elapsed = time.time() - start_time
-            packet = generate_frame(seq, args.scenario, elapsed, custom_params)
+            now = time.time()
+            elapsed = now - start_time
+            
+            if getattr(args, "cycle", False):
+                total_cycle_time = sum(d for _, d in scenarios_cycle)
+                t_in_cycle = elapsed % total_cycle_time
+                cum = 0.0
+                for sc_name, sc_dur in scenarios_cycle:
+                    cum += sc_dur
+                    if t_in_cycle < cum:
+                        if current_scenario != sc_name:
+                            current_scenario = sc_name
+                            print(f"\n[!] DEMO SCENARIO TRANSITION -> {current_scenario.upper()}\n")
+                        break
+            else:
+                current_scenario = args.scenario
+
+            packet = generate_frame(seq, current_scenario, elapsed, custom_params)
             if args.api_key:
                 packet["api_key"] = args.api_key
             
@@ -205,7 +273,9 @@ def run_producer(args):
 
             if resp.status_code == 200:
                 res_data = resp.json()
-                print(f"[+] Frame #{seq:04d} transmitted | Latency: {latency_ms:.1f}ms | Profile: {res_data.get('profile', args.profile)} | Source: {res_data.get('source', args.source)} | Health: {res_data.get('health_index', '--')}% | Fault: {res_data.get('fault_class', 'NOMINAL')}")
+                h_idx = res_data.get('health_index', res_data.get('twin_state', {}).get('health_state', {}).get('value', {}).get('health_index', '--'))
+                f_cls = res_data.get('fault_class', res_data.get('inference', {}).get('possibleIssue', 'NOMINAL'))
+                print(f"[+] Frame #{seq:04d} | Scenario: {current_scenario.upper():<16} | Source: {packet.get('source')} | Health: {h_idx}% | Fault: {f_cls} | Latency: {latency_ms:.1f}ms")
             else:
                 print(f"[-] Frame #{seq:04d} failed: HTTP {resp.status_code} - {resp.text}")
 
@@ -224,17 +294,20 @@ def run_producer(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="AERIS-TWIN Development & Hardware Telemetry Producer")
+    parser = argparse.ArgumentParser(description="AERIS-TWIN Development & Simulation Telemetry Producer")
+    parser.add_argument("--mode", default="demo", choices=["demo", "live", "hardware"], help="Operating mode (default: demo)")
+    parser.add_argument("--demo", action="store_true", help="Shorthand to force demo simulation telemetry stream")
     parser.add_argument("--host", default="http://127.0.0.1:8000", help="Backend base URL")
-    parser.add_argument("--endpoint", default="api/telemetry/hardware", choices=["api/telemetry/hardware", "api/telemetry/live", "api/telemetry"], help="Target REST endpoint")
-    parser.add_argument("--profile", default="MOTOR_PROTOTYPE", choices=["MOTOR_PROTOTYPE", "AERO_ENGINE"], help="Telemetry Profile")
+    parser.add_argument("--endpoint", default="api/telemetry", choices=["api/telemetry", "api/telemetry/live", "api/telemetry/hardware"], help="Target REST endpoint")
+    parser.add_argument("--profile", default="AERO_ENGINE", choices=["AERO_ENGINE", "MOTOR_PROTOTYPE"], help="Telemetry Profile (default: AERO_ENGINE)")
     parser.add_argument("--rate", type=float, default=10.0, help="Transmission rate in Hz (default: 10.0)")
-    parser.add_argument("--scenario", default="nominal", choices=["nominal", "bearing_wear", "thermal_overheat", "lubrication_loss", "spark_misfire", "motor_stall"], help="Fault trajectory scenario")
+    parser.add_argument("--scenario", default="nominal", choices=["nominal", "normal", "bearing_wear", "high_vibration", "thermal_overheat", "high_load", "fault", "anomaly", "lubrication_loss", "spark_misfire", "motor_stall"], help="Fault trajectory scenario")
+    parser.add_argument("--cycle", action="store_true", help="Auto-cycle through all demo scenarios sequentially")
     parser.add_argument("--single", action="store_true", help="Send exactly one frame and exit")
     parser.add_argument("--count", type=int, default=None, help="Stop after sending N frames")
     parser.add_argument("--dry-run", action="store_true", help="Print sample packet and exit without sending HTTP request")
-    parser.add_argument("--device-id", default="AERIS-ESP32-001", help="Hardware Device Identifier")
-    parser.add_argument("--source", default="PHYSICAL_SENSOR", help="Telemetry source tag (e.g. PHYSICAL_SENSOR, ESP32, LIVE_PRODUCER)")
+    parser.add_argument("--device-id", default="AERIS-DEMO-001", help="Hardware or Demo Device Identifier")
+    parser.add_argument("--source", default="SIMULATION", help="Telemetry source tag (e.g. SIMULATION, PHYSICAL_SENSOR)")
     parser.add_argument("--api-key", default=os.getenv("AERIS_DEVICE_API_KEY", None), help="Device API authentication key")
     
     # Motor Prototype Parameters
