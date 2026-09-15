@@ -74,6 +74,35 @@ class FlightTimeResetRequest(BaseModel):
 class StreamPauseRequest(BaseModel):
     is_paused: Optional[bool] = Field(None, description="Explicit boolean pause state or toggle if None")
 
+# Global in-memory storage for latest received telemetry data
+latest_telemetry: Dict[str, Any] = {}
+
+class TelemetryDataPayload(BaseModel):
+    """Pydantic model to validate incoming telemetry payload from Arduino / Serial Bridge / IoT Gateways."""
+    timestamp: Optional[float] = None
+    timestamp_ms: Optional[float] = None
+    device_id: Optional[str] = "AERIS-UNO-001"
+    profile: Optional[str] = "MOTOR_PROTOTYPE"
+    source: Optional[str] = "PHYSICAL_SENSOR"
+    sequence_number: Optional[int] = None
+    rpm: Optional[float] = None
+    rpm_throttle: Optional[float] = None
+    throttle_pct: Optional[float] = None
+    motor_load_pct: Optional[float] = None
+    vibration: Optional[float] = None
+    vibration_g: Optional[float] = None
+    temperature_c: Optional[float] = None
+    temp_c: Optional[float] = None
+    humidity: Optional[float] = None
+    current_a: Optional[float] = None
+    voltage_v: Optional[float] = None
+    power_w: Optional[float] = None
+    firmware_version: Optional[str] = None
+    is_simulated: Optional[bool] = False
+    api_key: Optional[str] = None
+
+    model_config = {"extra": "allow"}
+
 
 # Connected WebSocket clients manager
 class ConnectionManager:
@@ -433,7 +462,9 @@ def normalize_telemetry_packet(raw_packet: Dict[str, Any]) -> Dict[str, Any]:
 
     # Profile determination
     profile = packet.get("profile")
-    if profile == PROFILE_MOTOR_PROTOTYPE or "current_a" in packet or "voltage_v" in packet or (
+    if profile == PROFILE_AERO_ENGINE:
+        profile = PROFILE_AERO_ENGINE
+    elif profile == PROFILE_MOTOR_PROTOTYPE or "current_a" in packet or "voltage_v" in packet or (
         "oil_pressure" not in packet and "oilPressure" not in packet and "cht" not in packet and "fuel_flow" not in packet and "fuelFlow" not in packet
     ):
         profile = PROFILE_MOTOR_PROTOTYPE
@@ -444,18 +475,19 @@ def normalize_telemetry_packet(raw_packet: Dict[str, Any]) -> Dict[str, Any]:
 
     if profile == PROFILE_MOTOR_PROTOTYPE:
         # ─── MOTOR_PROTOTYPE NORMALIZATION ───
-        # RPM
-        if "rpm" in packet and packet["rpm"] is not None:
+        # RPM — Real physical transducer measurement only. Never map rpm_throttle to RPM!
+        rpm_val = packet.get("rpm", packet.get("motor_rpm"))
+        if rpm_val is not None:
             try:
-                rpm_val = float(packet["rpm"])
-                packet["rpm"] = max(0.0, rpm_val)
+                rpm_num = float(rpm_val)
+                packet["rpm"] = max(0.0, rpm_num)
             except (ValueError, TypeError):
                 packet["rpm"] = None
         else:
             packet["rpm"] = None
 
         # Current (A)
-        curr = packet.get("current_a", packet.get("current"))
+        curr = packet.get("current_a", packet.get("current", packet.get("amps", packet.get("current_amps"))))
         if curr is not None:
             try:
                 packet["current_a"] = max(0.0, float(curr))
@@ -465,7 +497,7 @@ def normalize_telemetry_packet(raw_packet: Dict[str, Any]) -> Dict[str, Any]:
             packet["current_a"] = None
 
         # Voltage (V)
-        volt = packet.get("voltage_v", packet.get("voltage"))
+        volt = packet.get("voltage_v", packet.get("voltage", packet.get("volts", packet.get("v_bat"))))
         if volt is not None:
             try:
                 packet["voltage_v"] = max(0.0, float(volt))
@@ -475,7 +507,7 @@ def normalize_telemetry_packet(raw_packet: Dict[str, Any]) -> Dict[str, Any]:
             packet["voltage_v"] = None
 
         # Power (W)
-        pwr = packet.get("power_w", packet.get("power"))
+        pwr = packet.get("power_w", packet.get("power", packet.get("watts")))
         if pwr is not None:
             try:
                 packet["power_w"] = max(0.0, float(pwr))
@@ -487,7 +519,7 @@ def normalize_telemetry_packet(raw_packet: Dict[str, Any]) -> Dict[str, Any]:
             packet["power_w"] = None
 
         # Temperature (°C)
-        temp = packet.get("temperature_c", packet.get("temperature", packet.get("temp")))
+        temp = packet.get("temperature_c", packet.get("temperature", packet.get("temp", packet.get("temp_c", packet.get("cht")))))
         if temp is not None:
             try:
                 packet["temperature_c"] = float(temp)
@@ -496,8 +528,8 @@ def normalize_telemetry_packet(raw_packet: Dict[str, Any]) -> Dict[str, Any]:
         else:
             packet["temperature_c"] = None
 
-        # Vibration (mm/s or RMS)
-        vib = packet.get("vibration", packet.get("vibration_mms"))
+        # Vibration (mm/s or g / RMS)
+        vib = packet.get("vibration", packet.get("vibration_mms", packet.get("vibration_g", packet.get("vib"))))
         if vib is not None:
             try:
                 packet["vibration"] = max(0.0, float(vib))
@@ -506,15 +538,26 @@ def normalize_telemetry_packet(raw_packet: Dict[str, Any]) -> Dict[str, Any]:
         else:
             packet["vibration"] = None
 
-        # Motor Load (%)
-        load = packet.get("motor_load_pct", packet.get("motor_load", packet.get("load")))
+        # Motor PWM Throttle / Load (%) — mapped from Arduino rpm_throttle (PWM 0-255 -> 0-100%)
+        load = packet.get("motor_load_pct", packet.get("throttle_pct", packet.get("rpm_throttle", packet.get("motor_load", packet.get("load", packet.get("engine_load", packet.get("throttle")))))))
         if load is not None:
             try:
-                packet["motor_load_pct"] = max(0.0, min(100.0, float(load)))
+                load_num = max(0.0, min(100.0, float(load)))
+                packet["motor_load_pct"] = load_num
+                packet["throttle_pct"] = load_num
             except (ValueError, TypeError):
                 packet["motor_load_pct"] = None
+                packet["throttle_pct"] = None
         else:
             packet["motor_load_pct"] = None
+            packet["throttle_pct"] = None
+
+        # Humidity (%)
+        if "humidity" in packet and packet["humidity"] is not None:
+            try:
+                packet["humidity"] = max(0.0, min(100.0, float(packet["humidity"])))
+            except (ValueError, TypeError):
+                packet["humidity"] = None
 
         # Metadata
         packet["device_id"] = packet.get("device_id", "AERIS-UNO-001")
@@ -576,7 +619,7 @@ def normalize_telemetry_packet(raw_packet: Dict[str, Any]) -> Dict[str, Any]:
 
 @app.post("/api/telemetry/live")
 @app.post("/telemetry/live")
-def ingest_live_telemetry(raw_packet: Dict[str, Any], request: Request = None):
+async def ingest_live_telemetry(raw_packet: Dict[str, Any], request: Request = None):
     """
     Direct ingestion endpoint for continuous external live telemetry streams (Arduino Uno / ESP32 / Gateway / Producers).
     """
@@ -584,6 +627,31 @@ def ingest_live_telemetry(raw_packet: Dict[str, Any], request: Request = None):
     normalized = normalize_telemetry_packet(raw_packet)
     pushed = live_source.push_frame(normalized)
     pipeline_out = twin_service.process_telemetry_frame(pushed)
+    status_info = live_source.get_status()
+    try:
+        await manager.broadcast({
+            "type": "TELEMETRY_UPDATE",
+            "mode": "LIVE",
+            "connected": True,
+            "status": status_info.get("status", "LIVE"),
+            "data": pipeline_out,
+            "state": pushed,
+            "history": simulator.history,
+            "inference": pipeline_out["inference"],
+            "twin_state": pipeline_out["twin_state"],
+            "dashboard_view": pipeline_out["dashboard_view"],
+            "residuals": pipeline_out["residuals"],
+            "expected_physics": pipeline_out["expected_physics"],
+            "sensor_trust": pipeline_out["sensor_trust"],
+            "alerts": pipeline_out.get("alerts", []),
+            "events": pipeline_out.get("events", []),
+            "primary_evidence": pipeline_out.get("primary_evidence", []),
+            "stream_metrics": status_info,
+            "target_rate_hz": system_state.target_rate_hz,
+            "is_paused": system_state.is_paused,
+        })
+    except Exception:
+        pass
     return {
         "status": "ingested",
         "mode": "LIVE",
@@ -601,7 +669,7 @@ def ingest_live_telemetry(raw_packet: Dict[str, Any], request: Request = None):
 
 @app.post("/api/telemetry/hardware")
 @app.post("/telemetry/hardware")
-def ingest_hardware_telemetry(raw_packet: Dict[str, Any], request: Request = None):
+async def ingest_hardware_telemetry(raw_packet: Dict[str, Any], request: Request = None):
     """
     Dedicated physical prototype telemetry gateway ingestion endpoint for Arduino Uno / ESP32.
     """
@@ -615,29 +683,27 @@ def ingest_hardware_telemetry(raw_packet: Dict[str, Any], request: Request = Non
 
     # Immediate broadcast to WebSocket clients so dashboard updates instantaneously
     try:
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            asyncio.create_task(manager.broadcast({
-                "type": "TELEMETRY_UPDATE",
-                "mode": "LIVE",
-                "connected": True,
-                "status": status_info.get("status", "LIVE"),
-                "data": pipeline_out,
-                "state": pushed,
-                "history": simulator.history,
-                "inference": pipeline_out["inference"],
-                "twin_state": pipeline_out["twin_state"],
-                "dashboard_view": pipeline_out["dashboard_view"],
-                "residuals": pipeline_out["residuals"],
-                "expected_physics": pipeline_out["expected_physics"],
-                "sensor_trust": pipeline_out["sensor_trust"],
-                "alerts": pipeline_out.get("alerts", []),
-                "events": pipeline_out.get("events", []),
-                "primary_evidence": pipeline_out.get("primary_evidence", []),
-                "stream_metrics": status_info,
-                "target_rate_hz": system_state.target_rate_hz,
-                "is_paused": system_state.is_paused,
-            }))
+        await manager.broadcast({
+            "type": "TELEMETRY_UPDATE",
+            "mode": "LIVE",
+            "connected": True,
+            "status": status_info.get("status", "LIVE"),
+            "data": pipeline_out,
+            "state": pushed,
+            "history": simulator.history,
+            "inference": pipeline_out["inference"],
+            "twin_state": pipeline_out["twin_state"],
+            "dashboard_view": pipeline_out["dashboard_view"],
+            "residuals": pipeline_out["residuals"],
+            "expected_physics": pipeline_out["expected_physics"],
+            "sensor_trust": pipeline_out["sensor_trust"],
+            "alerts": pipeline_out.get("alerts", []),
+            "events": pipeline_out.get("events", []),
+            "primary_evidence": pipeline_out.get("primary_evidence", []),
+            "stream_metrics": status_info,
+            "target_rate_hz": system_state.target_rate_hz,
+            "is_paused": system_state.is_paused,
+        })
     except Exception:
         pass
 
@@ -684,8 +750,15 @@ def get_engine_telemetry(engine_id: str):
     }
 
 @app.get("/api/telemetry")
-def get_current_telemetry_compat():
-    """Maintains backward compatibility with frontend."""
+def get_latest_telemetry_data():
+    """
+    GET /api/telemetry — Serves the latest telemetry data stored in memory.
+    If no telemetry has been posted yet, returns current system/simulator telemetry.
+    """
+    global latest_telemetry
+    if latest_telemetry:
+        return latest_telemetry
+    
     if not twin_service.last_dashboard_view:
         twin_service.process_telemetry_frame(simulator.state)
     return {
@@ -699,22 +772,60 @@ def get_current_telemetry_compat():
     }
 
 @app.post("/api/telemetry")
-def ingest_telemetry_standard(payload: Dict[str, Any]):
+async def ingest_telemetry_data(payload: TelemetryDataPayload, request: Request = None):
     """
-    Standard ingestion endpoint for continuous or discrete telemetry frames.
+    POST /api/telemetry — Receives incoming telemetry data (JSON) validated via Pydantic BaseModel,
+    stores it in the global latest_telemetry dictionary, and executes digital twin evaluation.
     """
+    global latest_telemetry
+    raw_dict = payload.model_dump(exclude_none=False)
+    
+    # Store in global dictionary
+    latest_telemetry = dict(raw_dict)
+    latest_telemetry["received_at"] = time.time()
+
     if system_state.mode == "LIVE":
-        payload["source"] = "LIVE"
-        payload["is_simulated"] = False
-        pushed = live_source.push_frame(payload)
+        raw_dict["source"] = raw_dict.get("source") or "LIVE"
+        raw_dict["is_simulated"] = False
+        normalized = normalize_telemetry_packet(raw_dict)
+        pushed = live_source.push_frame(normalized)
         pipeline_out = twin_service.process_telemetry_frame(pushed)
-    else:
-        payload["source"] = payload.get("source", "SIMULATION")
-        payload["is_simulated"] = True
-        pipeline_out = twin_service.process_telemetry_frame(payload)
+        status_info = live_source.get_status()
         
+        try:
+            await manager.broadcast({
+                "type": "TELEMETRY_UPDATE",
+                "mode": "LIVE",
+                "connected": True,
+                "status": status_info.get("status", "LIVE"),
+                "data": pipeline_out,
+                "state": pushed,
+                "history": simulator.history,
+                "inference": pipeline_out["inference"],
+                "twin_state": pipeline_out["twin_state"],
+                "dashboard_view": pipeline_out["dashboard_view"],
+                "residuals": pipeline_out["residuals"],
+                "expected_physics": pipeline_out["expected_physics"],
+                "sensor_trust": pipeline_out["sensor_trust"],
+                "alerts": pipeline_out.get("alerts", []),
+                "events": pipeline_out.get("events", []),
+                "primary_evidence": pipeline_out.get("primary_evidence", []),
+                "stream_metrics": status_info,
+                "target_rate_hz": system_state.target_rate_hz,
+                "is_paused": system_state.is_paused,
+            })
+        except Exception:
+            pass
+    else:
+        raw_dict["source"] = raw_dict.get("source") or "SIMULATION"
+        raw_dict["is_simulated"] = True
+        normalized = normalize_telemetry_packet(raw_dict)
+        pipeline_out = twin_service.process_telemetry_frame(normalized)
+
     return {
-        "status": "processed",
+        "status": "success",
+        "message": "Telemetry received and stored",
+        "data": latest_telemetry,
         "mode": system_state.mode,
         "latency_ms": pipeline_out["twin_state"].get("processing_latency_ms", 0.0),
         "health_index": pipeline_out["twin_state"].get("health_state", {}).get("value", {}).get("health_index", 100.0),

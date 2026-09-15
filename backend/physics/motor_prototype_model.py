@@ -33,9 +33,18 @@ class MotorPrototypePhysicsModel:
         """
         load_pct = telemetry.get("motor_load_pct")
         if load_pct is None:
-            load_pct = telemetry.get("motor_load", telemetry.get("load", 45.0))
-        load_pct = max(0.0, min(100.0, float(load_pct)))
-        load_frac = load_pct / 100.0
+            load_pct = telemetry.get("motor_load", telemetry.get("load"))
+        if load_pct is None:
+            meas_i = telemetry.get("current_a")
+            if meas_i is not None:
+                load_frac = max(0.0, min(1.0, (float(meas_i) - self.i_no_load_a) / max(0.01, 2.80 - self.i_no_load_a)))
+                load_pct = load_frac * 100.0
+            else:
+                load_pct = 0.0
+                load_frac = 0.0
+        else:
+            load_pct = max(0.0, min(100.0, float(load_pct)))
+            load_frac = load_pct / 100.0
 
         # 1. Expected Shaft Speed (RPM)
         # Higher load leads to armature speed reduction along linear DC torque-speed curve

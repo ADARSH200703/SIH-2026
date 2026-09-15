@@ -28,6 +28,8 @@ class MotorPrototypePacket(BaseModel):
     temperature_c: Optional[float] = Field(default=None, description="Motor casing / driver temperature in °C")
     vibration: Optional[float] = Field(default=None, description="Vibration metric (e.g. mm/s or raw accelerometer RMS)")
     motor_load_pct: Optional[float] = Field(default=None, description="Motor mechanical load percentage (0-100%)")
+    throttle_pct: Optional[float] = Field(default=None, description="PWM / Throttle percentage command (0-100%)")
+    humidity: Optional[float] = Field(default=None, description="DHT22 ambient relative humidity percentage (0-100%)")
     
     # Metadata & connectivity
     wifi_rssi: Optional[int] = Field(default=None, description="Received Signal Strength Indication (dBm, null for USB Serial)")

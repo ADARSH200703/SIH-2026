@@ -75,18 +75,30 @@ class LiveStreamSource(TelemetrySource):
         self.total_received += 1
         self._rate_timestamps.append(now)
 
-        seq = raw_frame.get("sequence_number", raw_frame.get("seq", self.last_sequence_num + 1))
+        raw_seq = raw_frame.get("sequence_number")
+        if raw_seq is None:
+            raw_seq = raw_frame.get("seq")
+        
+        last_seq_val = self.last_sequence_num if isinstance(self.last_sequence_num, int) else -1
+        if raw_seq is not None:
+            try:
+                seq = int(raw_seq)
+            except (ValueError, TypeError):
+                seq = last_seq_val + 1
+        else:
+            seq = last_seq_val + 1
         
         # Sequence Health Tracking: Duplicates, Out-of-Order, and Drops
-        if self.last_sequence_num >= 0:
-            if seq == self.last_sequence_num:
+        if last_seq_val >= 0:
+            if seq == last_seq_val:
                 self.total_duplicates += 1
-            elif seq < self.last_sequence_num:
+            elif seq < last_seq_val:
                 self.total_out_of_order += 1
-            elif seq > (self.last_sequence_num + 1):
-                dropped = seq - (self.last_sequence_num + 1)
+            elif seq > (last_seq_val + 1):
+                dropped = seq - (last_seq_val + 1)
                 self.total_dropped += dropped
         self.last_sequence_num = seq
+        raw_frame["sequence_number"] = seq
 
         ts = raw_frame.get("timestamp", now)
         self.last_packet_timestamp = ts

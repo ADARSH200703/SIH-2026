@@ -92,7 +92,7 @@ class TwinUpdateService:
 
         temperature_c = float(raw_frame["temperature_c"]) if raw_frame.get("temperature_c") is not None else (float(raw_frame["temperature"]) if raw_frame.get("temperature") is not None else (float(raw_frame["temp"]) if raw_frame.get("temp") is not None else None))
         vibration = float(raw_frame["vibration"]) if raw_frame.get("vibration") is not None else (float(raw_frame["vibration_mms"]) if raw_frame.get("vibration_mms") is not None else None)
-        motor_load_pct = float(raw_frame["motor_load_pct"]) if raw_frame.get("motor_load_pct") is not None else (float(raw_frame["motor_load"]) if raw_frame.get("motor_load") is not None else (float(raw_frame["load"]) if raw_frame.get("load") is not None else 45.0))
+        motor_load_pct = float(raw_frame["motor_load_pct"]) if raw_frame.get("motor_load_pct") is not None else (float(raw_frame["motor_load"]) if raw_frame.get("motor_load") is not None else (float(raw_frame["load"]) if raw_frame.get("load") is not None else None))
 
         # 1. Physics Model & Residuals for DC Motor Testbed
         expected_physics = self.motor_physics_model.compute_expected_state(raw_frame)
@@ -233,6 +233,8 @@ class TwinUpdateService:
             "temperature": temperature_c,
             "vibration": vibration,
             "motor_load_pct": motor_load_pct,
+            "throttle_pct": raw_frame.get("throttle_pct", motor_load_pct),
+            "humidity": raw_frame.get("humidity"),
             "engine_load": motor_load_pct,
             "flight_time_str": "PROTOTYPE-ACTIVE",
             "flight_time_seconds": int(timestamp),
