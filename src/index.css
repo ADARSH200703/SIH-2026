@@ -562,9 +562,7 @@ body {
   background: var(--background);
 }
 
-.sidebar {
-  display: none; /* Removed for flattened engineering view */
-}
+
 
 .main-view-container {
   flex: 1;
