@@ -751,36 +751,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ─── Client-Side URL Router ────────────────────────────────────────────────
   function handleRoute(path = window.location.pathname, pushState = true) {
-    const cleanPath = path.toLowerCase().replace(/\/+$/, '') || '/';
+    // We are now a single-page engineering layout. Always show dashboard-root.
+    $('dashboard-root')?.style.setProperty('display', 'block');
+    switchView('dashboard', false);
     
-    if (cleanPath === '/' || cleanPath === '/home' || cleanPath === '/landing') {
-      $('landing-page-root')?.style.setProperty('display', 'flex');
-      $('dashboard-root')?.style.setProperty('display', 'none');
-      window.scrollTo(0, 0);
-      initLandingAnimations();
-      if (pushState && window.location.pathname !== '/') {
-        history.pushState({ route: '/' }, '', '/');
-      }
-    } else {
-      pauseLandingAnimations();
-      $('landing-page-root')?.style.setProperty('display', 'none');
-      $('dashboard-root')?.style.setProperty('display', 'block');
-      
-      if (cleanPath === '/twin' || cleanPath === '/3d' || cleanPath === '/engine') {
-        switchView('threed', false);
-      } else if (cleanPath === '/realtime' || cleanPath === '/telemetry' || cleanPath === '/diagnostics') {
-        switchView('realtime', false);
-      } else if (cleanPath === '/hardware' || cleanPath === '/device' || cleanPath === '/esp32' || cleanPath === '/arduino' || cleanPath === '/hw') {
-        switchView('hardware', false);
-      } else if (cleanPath === '/ai' || cleanPath === '/ai-lab' || cleanPath === '/prognostics' || cleanPath === '/experiments') {
-        switchView('ai-lab', false);
-      } else if (cleanPath === '/pipeline' || cleanPath === '/architecture' || cleanPath === '/integrity' || cleanPath === '/system') {
-        switchView('pipeline', false);
-      } else if (cleanPath === '/history' || cleanPath === '/logs' || cleanPath === '/mission' || cleanPath === '/fleet' || cleanPath === '/maintenance' || cleanPath === '/replay') {
-        switchView('history', false);
-      } else {
-        switchView('dashboard', false);
-      }
+    if (pushState && window.location.pathname !== '/overview') {
+      history.pushState({ route: '/overview' }, '', '/overview');
     }
   }
 
