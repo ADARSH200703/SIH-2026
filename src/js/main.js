@@ -831,17 +831,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (isLive) {
       sim.stop();
-      if (bannerLive) bannerLive.style.display = liveStreamConnected ? 'none' : 'flex';
+      if (bannerLive) bannerLive.style.display = 'none';
       if (bannerSim) bannerSim.style.display = 'none';
       if (scenarioPicker) scenarioPicker.style.display = 'none';
       
-      setText('hdr-mode-tag', 'LIVE ●');
+      setText('hdr-mode-tag', 'DEMO DATA');
       setCss('hdr-mode-tag', 'color', 'var(--status-normal)');
-      setText('sb-mode-badge', 'LIVE STREAM');
+      setText('sb-mode-badge', 'DEMO DATA');
       setCss('sb-mode-badge', 'color', 'var(--status-normal)');
       
       if (!liveStreamConnected) {
-        renderDisconnectedLiveState({ status: 'NO LIVE DATA', source: 'DISCONNECTED' });
+        // renderDisconnectedLiveState omitted
       }
 
       wsCmd({ action: 'SET_MODE', mode: 'LIVE' });
