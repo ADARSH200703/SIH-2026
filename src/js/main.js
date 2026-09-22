@@ -141,9 +141,9 @@ document.addEventListener('DOMContentLoaded', () => {
       type: 'POWERPLANT',
       desc: '4-cylinder horizontally opposed 4-stroke engine with liquid/air hybrid cooling, integrated turbocharger, and dual electronic ignition.',
       health: s => `${(s.engineHealth || 92).toFixed(1)}%`,
-      temp:   s => `${(s.temperature || 78.4).toFixed(1)} °C`,
-      rul:    s => `${Math.round((s.engineHealth || 92) * 12.5)} h`,
-      stress: s => `${(s.vibration || 1.6).toFixed(2)} mm/s`,
+      temp:   s => `${(s.temperature || 78.4).toFixed(1)} °C (Est.)`,
+      rul:    s => `${Math.round((s.engineHealth || 92) * 12.5)} h (Est.)`,
+      stress: s => `${(s.vibration || 1.6).toFixed(2)} mm/s (Est.)`,
       status: s => (s.engineHealth || 92) >= 80 ? 'HEALTHY' : ((s.engineHealth || 92) >= 55 ? 'WARNING' : 'FAULT'),
       whyEvidence: (s, inf) => [
         `Mean-Value Physics Model: Nominal indicated brake torque and thermal balance`,
@@ -156,9 +156,9 @@ document.addEventListener('DOMContentLoaded', () => {
       type: 'COMBUSTION',
       desc: 'High-silicon aluminum alloy cylinder with ribbed cooling fins and sodium-filled exhaust valve.',
       health: s => `${(Math.min(99, (s.engineHealth || 92) * 1.02)).toFixed(1)}%`,
-      temp:   s => `${(s.temperature || 78.4).toFixed(1)} °C`,
-      rul:    s => `${Math.round((s.engineHealth || 92) * 12.8)} h`,
-      stress: s => `${(s.vibration * 0.85).toFixed(2)} mm/s`,
+      temp:   s => `${(s.temperature || 78.4).toFixed(1)} °C (Est.)`,
+      rul:    s => `${Math.round((s.engineHealth || 92) * 12.8)} h (Est.)`,
+      stress: s => `${(s.vibration * 0.85).toFixed(2)} mm/s (Est.)`,
       status: s => s.temperature > 90 ? 'WARNING' : 'HEALTHY',
       whyEvidence: (s, inf) => [
         `CHT Thermocouple: ${s.temperature.toFixed(1)}°C (Thermal model expectation: 78.4°C)`,
@@ -170,9 +170,9 @@ document.addEventListener('DOMContentLoaded', () => {
       type: 'COMBUSTION',
       desc: 'Opposed cylinder head with dual spark plug ignition and multi-port electronic fuel injection.',
       health: s => `${(Math.min(99, (s.engineHealth || 92) * 1.01)).toFixed(1)}%`,
-      temp:   s => `${((s.temperature || 78.4) - 0.5).toFixed(1)} °C`,
-      rul:    s => `${Math.round((s.engineHealth || 92) * 12.6)} h`,
-      stress: s => `${(s.vibration * 0.82).toFixed(2)} mm/s`,
+      temp:   s => `${((s.temperature || 78.4) - 0.5).toFixed(1)} °C (Est.)`,
+      rul:    s => `${Math.round((s.engineHealth || 92) * 12.6)} h (Est.)`,
+      stress: s => `${(s.vibration * 0.82).toFixed(2)} mm/s (Est.)`,
       status: s => s.temperature > 90 ? 'WARNING' : 'HEALTHY',
       whyEvidence: (s, inf) => [
         `Thermal Gradient: Balanced with Cylinder #1 within 0.8°C margin`,
@@ -184,13 +184,13 @@ document.addEventListener('DOMContentLoaded', () => {
       type: 'COMBUSTION',
       desc: 'Rear cylinder assembly subjected to ram-air cooling ducting and turbocharger exhaust backpressure.',
       health: s => `${(Math.min(99, (s.engineHealth || 92) * 0.98)).toFixed(1)}%`,
-      temp:   s => `${((s.temperature || 78.4) + 0.8).toFixed(1)} °C`,
-      rul:    s => `${Math.round((s.engineHealth || 92) * 12.2)} h`,
-      stress: s => `${(s.vibration * 0.92).toFixed(2)} mm/s`,
+      temp:   s => `${((s.temperature || 78.4) + 0.8).toFixed(1)} °C (Est.)`,
+      rul:    s => `${Math.round((s.engineHealth || 92) * 12.2)} h (Est.)`,
+      stress: s => `${(s.vibration * 0.92).toFixed(2)} mm/s (Est.)`,
       status: s => s.temperature > 92 ? 'FAULT' : (s.temperature > 85 ? 'WARNING' : 'HEALTHY'),
       whyEvidence: (s, inf) => [
         `Thermal Dissipation: Secondary ram-air heat flux operational`,
-        `Exhaust Gas Temperature: In-bounds at 645°C`
+        `Exhaust Gas Temperature: In-bounds at 645°C (Est.)`
       ]
     },
     cylinder_4: {
@@ -198,9 +198,9 @@ document.addEventListener('DOMContentLoaded', () => {
       type: 'COMBUSTION',
       desc: 'Rear combustion chamber with dual aviation spark ignition and exhaust valve guides.',
       health: s => `${(Math.min(99, (s.engineHealth || 92) * 0.99)).toFixed(1)}%`,
-      temp:   s => `${((s.temperature || 78.4) + 0.3).toFixed(1)} °C`,
-      rul:    s => `${Math.round((s.engineHealth || 92) * 12.4)} h`,
-      stress: s => `${(s.vibration * 0.88).toFixed(2)} mm/s`,
+      temp:   s => `${((s.temperature || 78.4) + 0.3).toFixed(1)} °C (Est.)`,
+      rul:    s => `${Math.round((s.engineHealth || 92) * 12.4)} h (Est.)`,
+      stress: s => `${(s.vibration * 0.88).toFixed(2)} mm/s (Est.)`,
       status: s => s.temperature > 90 ? 'WARNING' : 'HEALTHY',
       whyEvidence: (s, inf) => [
         `Ignition Consistency: Dual spark advance at 24° BTDC`,
@@ -212,14 +212,14 @@ document.addEventListener('DOMContentLoaded', () => {
       type: 'MECHANICAL',
       desc: 'Forged 4-throw crankshaft with counterweights, dynamic balancing, and hardened main journals.',
       health: s => `${(Math.min(99, (s.engineHealth || 92) * 1.02 - (s.vibration > 2.5 ? 15 : 0))).toFixed(1)}%`,
-      temp:   s => `${((s.temperature || 78.4) * 0.85).toFixed(1)} °C`,
-      rul:    s => `${Math.max(10, Math.round(1200 - s.vibration * 180))} h`,
-      stress: s => `${(s.vibration || 1.6).toFixed(2)} mm/s`,
+      temp:   s => `${((s.temperature || 78.4) * 0.85).toFixed(1)} °C (Est.)`,
+      rul:    s => `${Math.max(10, Math.round(1200 - s.vibration * 180))} h (Est.)`,
+      stress: s => `${(s.vibration || 1.6).toFixed(2)} mm/s (Est.)`,
       status: s => s.vibration > 3.8 ? 'FAULT' : (s.vibration > 2.4 ? 'WARNING' : 'HEALTHY'),
       whyEvidence: (s, inf) => [
-        `Torsional Vibration: Harmonic RMS casing acceleration ${s.vibration.toFixed(2)} mm/s`,
+        `Torsional Vibration: Harmonic RMS casing acceleration ${s.vibration.toFixed(2)} mm/s (Est.)`,
         `Rotational Speed: ${Math.round(s.rpm)} RPM matching telemetry stream`,
-        `Physics Model Residual: ${(s.vibration - 1.5).toFixed(2)} mm/s`
+        `Physics Model Residual: ${(s.vibration - 1.5).toFixed(2)} mm/s (Est.)`
       ]
     },
     bearings: {
@@ -227,14 +227,14 @@ document.addEventListener('DOMContentLoaded', () => {
       type: 'MECHANICAL',
       desc: 'Tri-metal babbit-lined hydrodynamic journal bearings with pressurized lubrication oil wedge.',
       health: s => `${(Math.max(15, (s.engineHealth || 92) - (s.vibration > 3.0 ? 25 : 0))).toFixed(1)}%`,
-      temp:   s => `${((s.temperature || 78.4) * 0.95).toFixed(1)} °C`,
-      rul:    s => `${Math.max(12, Math.round(950 - s.vibration * 220))} h`,
-      stress: s => `${(s.vibration * 1.35).toFixed(2)} mm/s`,
+      temp:   s => `${((s.temperature || 78.4) * 0.95).toFixed(1)} °C (Est.)`,
+      rul:    s => `${Math.max(12, Math.round(950 - s.vibration * 220))} h (Est.)`,
+      stress: s => `${(s.vibration * 1.35).toFixed(2)} mm/s (Est.)`,
       status: s => s.vibration > 3.5 || s.activeScenario === 'vibration_bearing' ? 'FAULT' : (s.vibration > 2.2 ? 'WARNING' : 'HEALTHY'),
       whyEvidence: (s, inf) => [
         `Vibration Residual: ${((s.vibration - 1.6) / 0.25).toFixed(1)}σ above baseline expectation`,
         `Trend Slope: Positive residual rate d(res)/dt indicates progressive bearing race spalling`,
-        `Hydrodynamic Film: Oil pressure ${s.oilPressure.toFixed(1)} Bar`
+        `Hydrodynamic Film: Oil pressure ${s.oilPressure.toFixed(1)} Bar (Est.)`
       ]
     },
     cooling_system: {
@@ -242,8 +242,8 @@ document.addEventListener('DOMContentLoaded', () => {
       type: 'COOLING',
       desc: 'Dual cooling circuit with ram-air cowl ducting and ethylene-glycol radiator matrix.',
       health: s => `${(Math.max(20, 98 - (s.temperature > 85 ? (s.temperature - 85) * 4 : 0))).toFixed(1)}%`,
-      temp:   s => `${((s.temperature || 78.4) * 0.72).toFixed(1)} °C`,
-      rul:    s => '1400 h',
+      temp:   s => `${((s.temperature || 78.4) * 0.72).toFixed(1)} °C (Est.)`,
+      rul:    s => '1400 h (Est.)',
       stress: s => s.temperature > 90 ? 'HIGH THERMAL' : 'NOMINAL',
       status: s => s.temperature > 92 ? 'FAULT' : (s.temperature > 84 ? 'WARNING' : 'HEALTHY'),
       whyEvidence: (s, inf) => [
@@ -256,9 +256,9 @@ document.addEventListener('DOMContentLoaded', () => {
       type: 'FUEL_IGNITION',
       desc: 'Dual electric fuel boost pumps, high-pressure common rail injectors, and dual aviation magnetos.',
       health: s => `${(Math.max(30, 96 - (s.activeScenario === 'spark_misfire' ? 35 : 0))).toFixed(1)}%`,
-      temp:   s => `${((s.temperature || 78.4) * 0.55).toFixed(1)} °C`,
-      rul:    s => '1100 h',
-      stress: s => `${(s.fuelFlow || 5.2).toFixed(1)} L/h`,
+      temp:   s => `${((s.temperature || 78.4) * 0.55).toFixed(1)} °C (Est.)`,
+      rul:    s => '1100 h (Est.)',
+      stress: s => `${(s.fuelFlow || 5.2).toFixed(1)} L/h (Est.)`,
       status: s => s.activeScenario === 'spark_misfire' ? 'FAULT' : 'HEALTHY',
       whyEvidence: (s, inf) => [
         `Fuel Mass Flow Rate: ${s.fuelFlow.toFixed(1)} L/h vs 5.2 L/h BSFC expectation`,
@@ -270,9 +270,9 @@ document.addEventListener('DOMContentLoaded', () => {
       type: 'LUBRICATION',
       desc: 'Integrated trochoid oil pump, external dry sump oil reservoir, and full-flow micronic filter.',
       health: s => `${(Math.max(18, 98 - (s.oilPressure < 3.5 ? (3.8 - s.oilPressure) * 35 : 0))).toFixed(1)}%`,
-      temp:   s => `${((s.temperature || 78.4) * 0.88).toFixed(1)} °C`,
-      rul:    s => `${Math.max(15, Math.round(s.oilPressure * 250))} h`,
-      stress: s => `${(s.oilPressure || 4.3).toFixed(1)} Bar`,
+      temp:   s => `${((s.temperature || 78.4) * 0.88).toFixed(1)} °C (Est.)`,
+      rul:    s => `${Math.max(15, Math.round(s.oilPressure * 250))} h (Est.)`,
+      stress: s => `${(s.oilPressure || 4.3).toFixed(1)} Bar (Est.)`,
       status: s => s.oilPressure < 2.8 ? 'FAULT' : (s.oilPressure < 3.6 ? 'WARNING' : 'HEALTHY'),
       whyEvidence: (s, inf) => [
         `Lubrication Pressure: ${s.oilPressure.toFixed(1)} Bar (Nominal operating reference: 4.3 Bar)`,
@@ -284,8 +284,8 @@ document.addEventListener('DOMContentLoaded', () => {
       type: 'PROPULSION',
       desc: 'Ground-adjustable carbon composite pusher propeller with hydraulic governor spinner.',
       health: s => `${(s.missionReliability || 92).toFixed(1)}%`,
-      temp:   s => `${((s.temperature || 78.4) * 0.40).toFixed(1)} °C`,
-      rul:    s => '1800 h',
+      temp:   s => `${((s.temperature || 78.4) * 0.40).toFixed(1)} °C (Est.)`,
+      rul:    s => '1800 h (Est.)',
       stress: s => `${(s.rpm || 4215).toFixed(0)} RPM`,
       status: s => (s.missionReliability || 92) >= 80 ? 'HEALTHY' : 'WARNING',
       whyEvidence: (s, inf) => [
@@ -299,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
       desc: 'High-aspect-ratio carbon composite wingspan (20.6m), payload nose dome, and V-tail empennage.',
       health: s => '98.8%',
       temp:   s => '-14.5 °C (ISA)',
-      rul:    s => '3500 h',
+      rul:    s => '3500 h (Est.)',
       stress: s => `${((s.vibration || 1.6) * 0.25).toFixed(2)} g`,
       status: s => 'HEALTHY',
       whyEvidence: (s, inf) => [
@@ -313,7 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
       desc: 'Dual microcontroller avionics unit executing 50Hz fuel-injection mapping and sensor validation.',
       health: s => '99.4%',
       temp:   s => '32.1 °C',
-      rul:    s => '5000 h',
+      rul:    s => '5000 h (Est.)',
       stress: s => '28.2 V Bus',
       status: s => 'HEALTHY',
       whyEvidence: (s, inf) => [
@@ -327,7 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
       desc: 'Edge-native telemetry gateway with sequence ordering, packet-loss tracking, and AES-256 encryption.',
       health: s => '98.9%',
       temp:   s => '29.5 °C',
-      rul:    s => '5000 h',
+      rul:    s => '5000 h (Est.)',
       stress: s => '10 Hz Rate',
       status: s => 'HEALTHY',
       whyEvidence: (s, inf) => [
@@ -340,9 +340,9 @@ document.addEventListener('DOMContentLoaded', () => {
       type: 'SENSOR',
       desc: 'Piezoelectric tri-axial transducer mounted directly on crankcase main bearing support.',
       health: s => '99.0%',
-      temp:   s => `${s.temperature.toFixed(1)} °C`,
+      temp:   s => `${s.temperature.toFixed(1)} °C (Est.)`,
       rul:    s => '4000 h',
-      stress: s => `${s.vibration.toFixed(2)} mm/s`,
+      stress: s => `${s.vibration.toFixed(2)} mm/s (Est.)`,
       status: s => 'HEALTHY',
       whyEvidence: (s, inf) => [
         `Sensor Trust Score: 98% (Signal within valid dynamic range 0.2 - 10.0 mm/s)`,
@@ -354,9 +354,9 @@ document.addEventListener('DOMContentLoaded', () => {
       type: 'SENSOR',
       desc: 'Type-K bayonet thermocouple embedded in Cylinder #1 combustion dome.',
       health: s => '98.5%',
-      temp:   s => `${s.temperature.toFixed(1)} °C`,
+      temp:   s => `${s.temperature.toFixed(1)} °C (Est.)`,
       rul:    s => '4000 h',
-      stress: s => `${s.temperature.toFixed(1)} °C`,
+      stress: s => `${s.temperature.toFixed(1)} °C (Est.)`,
       status: s => 'HEALTHY',
       whyEvidence: (s, inf) => [
         `Sensor Trust Score: 96% (No frozen variance or jump discontinuity detected)`,
@@ -657,7 +657,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // ─── Landing Page Motion & Interaction Engine ──────────────────────────────
   let landingObserver = null;
   let sectionObserver = null;
-  let ambientGlowRaf = null;
   let scrollParallaxAttached = false;
 
   function initLandingAnimations() {
@@ -700,51 +699,10 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    // Ambient Cursor Glow
-    const cursorGlow = $('landing-cursor-glow');
-    if (cursorGlow && !isReducedMotion && !isTouchDevice) {
-      let currentX = window.innerWidth / 2;
-      let currentY = window.innerHeight / 2;
-      let targetX = currentX;
-      let targetY = currentY;
 
-      if (!window._ambientGlowBound) {
-        window._ambientGlowBound = true;
-        window.addEventListener('mousemove', (e) => {
-          targetX = e.clientX;
-          targetY = e.clientY;
-          if (cursorGlow && !cursorGlow.classList.contains('visible')) {
-            cursorGlow.classList.add('visible');
-          }
-        }, { passive: true });
-
-        window.addEventListener('mouseleave', () => {
-          if (cursorGlow) cursorGlow.classList.remove('visible');
-        });
-      }
-
-      if (ambientGlowRaf) cancelAnimationFrame(ambientGlowRaf);
-      function animateGlow() {
-        if ($('landing-page-root')?.style.display === 'none' || document.hidden) {
-          ambientGlowRaf = null;
-          return;
-        }
-        currentX += (targetX - currentX) * 0.12;
-        currentY += (targetY - currentY) * 0.12;
-        if (cursorGlow) {
-          cursorGlow.style.transform = `translate3d(${currentX.toFixed(1)}px, ${currentY.toFixed(1)}px, 0) translate(-50%, -50%)`;
-        }
-        ambientGlowRaf = requestAnimationFrame(animateGlow);
-      }
-      ambientGlowRaf = requestAnimationFrame(animateGlow);
-    }
   }
 
   function pauseLandingAnimations() {
-    if (ambientGlowRaf) {
-      cancelAnimationFrame(ambientGlowRaf);
-      ambientGlowRaf = null;
-    }
     const cursorGlow = $('landing-cursor-glow');
     if (cursorGlow) cursorGlow.classList.remove('visible');
   }

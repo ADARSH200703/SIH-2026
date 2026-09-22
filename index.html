@@ -93,19 +93,7 @@
                 <img src="./src/assets/aeris_digital_twin_hero.jpg" alt="AERIS-TWIN Aero Propulsion Engine Digital Twin Visual Cutaway" class="hero-engine-img" loading="eager">
                 <div class="hero-engine-scanline" aria-hidden="true"></div>
                 
-                <!-- Floating Real-Time Aerospace Telemetry Overlays -->
-                <div class="hero-overlay-tag hero-overlay-tr">
-                  <span class="live-pulse-dot" style="width: 6px; height: 6px;"></span>
-                  <span>HEALTH INDEX 98.4%</span>
-                </div>
-                <div class="hero-overlay-tag hero-overlay-bl">
-                  <span class="material-symbols-outlined" style="font-size: 13px; color: var(--primary);">tune</span>
-                  <span>PHYSICS RESIDUAL Δ · σ-NORMALIZED</span>
-                </div>
-                <div class="hero-overlay-tag hero-overlay-br">
-                  <span class="material-symbols-outlined" style="font-size: 13px; color: var(--secondary);">verified_user</span>
-                  <span>SENSOR TRUST 0.99</span>
-                </div>
+
               </div>
             </div>
           </div>
@@ -332,11 +320,7 @@
 
           <div class="header-quick-controls">
             <button id="audio-toggle-btn" class="hud-btn" title="Toggle Synthetic Audio Avionics">
-              <div class="audio-equalizer" id="audio-eq-bars">
-                <span class="eq-bar"></span>
-                <span class="eq-bar"></span>
-                <span class="eq-bar"></span>
-              </div>
+
               <span class="material-symbols-outlined" id="audio-icon">volume_off</span>
               <span id="audio-text">Audio: Off</span>
             </button>
@@ -483,7 +467,7 @@
             <!-- RPM -->
             <div class="telemetry-table-row" id="param-rpm-card" data-sensor="rpm" title="Click to inspect Engine RPM channel details">
               <div class="tro-header">
-                <span class="tro-label"><span class="material-symbols-outlined" style="font-size:14px; color:#2DD4BF;">speed</span> RPM</span>
+                <span class="tro-label"><span class="material-symbols-outlined" style="font-size:14px; color:#2DD4BF;">speed</span> EST. RPM</span>
                 <span class="tro-ref">Nom: 4,215</span>
               </div>
               <div class="tro-body">
@@ -495,7 +479,7 @@
             <!-- CHT -->
             <div class="telemetry-table-row" id="param-temp-card" data-sensor="temperature" title="Click to inspect Cylinder Head Temp channel details">
               <div class="tro-header">
-                <span class="tro-label"><span class="material-symbols-outlined" style="font-size:14px; color:#EF4444;">thermostat</span> CHT</span>
+                <span class="tro-label"><span class="material-symbols-outlined" style="font-size:14px; color:#EF4444;">thermostat</span> CHT (Measured)</span>
                 <span class="tro-ref">Nom: 78.4°C</span>
               </div>
               <div class="tro-body">
@@ -507,7 +491,7 @@
             <!-- Oil Pressure -->
             <div class="telemetry-table-row" id="param-oil-card" data-sensor="oilPressure" title="Click to inspect Oil Pressure channel details">
               <div class="tro-header">
-                <span class="tro-label"><span class="material-symbols-outlined" style="font-size:14px; color:#38BDF8;">water_drop</span> OIL PRESS</span>
+                <span class="tro-label"><span class="material-symbols-outlined" style="font-size:14px; color:#38BDF8;">water_drop</span> EST. OIL PRESS</span>
                 <span class="tro-ref">Nom: 4.30 Bar</span>
               </div>
               <div class="tro-body">
@@ -519,7 +503,7 @@
             <!-- Vibration -->
             <div class="telemetry-table-row" id="param-vib-card" data-sensor="vibration" title="Click to inspect Casing Vibration channel details">
               <div class="tro-header">
-                <span class="tro-label"><span class="material-symbols-outlined" style="font-size:14px; color:#F59E0B;">vibration</span> VIBRATION</span>
+                <span class="tro-label"><span class="material-symbols-outlined" style="font-size:14px; color:#F59E0B;">vibration</span> VIBRATION (Measured)</span>
                 <span class="tro-ref">Nom: 1.60 mm/s</span>
               </div>
               <div class="tro-body">
@@ -531,7 +515,7 @@
             <!-- Fuel Flow -->
             <div class="telemetry-table-row" id="param-fuel-card" data-sensor="fuelFlow" title="Click to inspect Fuel Flow Rate channel details">
               <div class="tro-header">
-                <span class="tro-label"><span class="material-symbols-outlined" style="font-size:14px; color:#38BDF8;">local_gas_station</span> FUEL FLOW</span>
+                <span class="tro-label"><span class="material-symbols-outlined" style="font-size:14px; color:#38BDF8;">local_gas_station</span> EST. FUEL FLOW</span>
                 <span class="tro-ref">Nom: 5.20 L/h</span>
               </div>
               <div class="tro-body">
@@ -543,7 +527,7 @@
             <!-- Engine Load -->
             <div class="telemetry-table-row" id="param-load-card" data-sensor="engineLoad" title="Click to inspect Engine Load Demand channel details">
               <div class="tro-header">
-                <span class="tro-label"><span class="material-symbols-outlined" style="font-size:14px; color:#2DD4BF;">bolt</span> LOAD</span>
+                <span class="tro-label"><span class="material-symbols-outlined" style="font-size:14px; color:#2DD4BF;">bolt</span> EST. LOAD</span>
                 <span class="tro-ref">Nom: 62%</span>
               </div>
               <div class="tro-body">
