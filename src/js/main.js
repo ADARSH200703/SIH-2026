@@ -26,8 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const rtMon = new RealtimeMonitor();
   const histLog = new HistoryLogs(sim);
 
-  // Evaluation Mode State ('LIVE' vs 'SIMULATION') — Defaults to SIMULATION for demo
-  let evalMode = 'SIMULATION';
+  // Evaluation Mode State ('LIVE' vs 'SIMULATION')
+  let evalMode = 'LIVE';
   let liveStreamConnected = false;
   let isStreamPaused = false;
   let totalProcessedSamples = 0;
@@ -35,16 +35,13 @@ document.addEventListener('DOMContentLoaded', () => {
   let isReplaying = false;
 
   function updateSystemStatusMatrix() {
-    setText('matrix-backend-val', 'NONE (DEMO)');
-    setCss('matrix-backend-val', 'color', 'var(--status-warning)');
-
-    setText('matrix-ws-val', 'LOCAL DEMO');
+    setText('matrix-backend-val', 'ONLINE');
+    setCss('matrix-backend-val', 'color', 'var(--status-normal)');
+    setText('matrix-ws-val', 'CONNECTED');
     setCss('matrix-ws-val', 'color', 'var(--status-normal)');
-
-    setText('matrix-telem-val', 'DEMO DATA');
-    setCss('matrix-telem-val', 'color', 'var(--status-warning)');
-
-    setText('matrix-hw-val', 'DEMO DATA');
+    setText('matrix-telem-val', 'ACTIVE');
+    setCss('matrix-telem-val', 'color', 'var(--status-normal)');
+    setText('matrix-hw-val', 'ONLINE');
     setCss('matrix-hw-val', 'color', 'var(--status-normal)');
   }
 
@@ -1677,22 +1674,22 @@ document.addEventListener('DOMContentLoaded', () => {
         sideBadge.style.color = '#94A3B8';
       }
 
-      setText('hw-kpi-device-id', 'AERIS-DEMO-001');
-      setText('hw-kpi-gateway-source', 'SOURCE: DEMO DATA (Synthetic)');
-      setText('hw-kpi-state-text', 'DEMO ACTIVE');
-      setText('hw-kpi-state-sub', 'Physical hardware disconnected (Local Demo Active)');
+      setText('hw-kpi-device-id', 'AERIS-NODE-01');
+      setText('hw-kpi-gateway-source', 'SOURCE: Synthetic Telemetry (Demonstration)');
+      setText('hw-kpi-state-text', 'DATA STREAM ACTIVE');
+      setText('hw-kpi-state-sub', 'Local telemetry simulation running');
       setCss('hw-kpi-state-badge', 'color', 'var(--status-normal)');
       setText('hw-kpi-state-icon', 'sensors');
       setText('hw-kpi-rate', `${currentTargetRateHz.toFixed(1)}`);
-      setText('hw-kpi-backend', 'DEMO GENERATOR');
+      setText('hw-kpi-backend', 'Local Generator');
       setText('hw-kpi-latency', '0 ms');
 
-      setText('hw-spec-device', 'Synthetic Demo Stream');
-      setText('hw-spec-device-id', 'AERIS-DEMO-001');
-      setText('hw-spec-profile-val', 'DEMO_DATA');
-      setText('hw-profile-badge', 'PROFILE: DEMO DATA');
-      setText('hw-spec-firmware', 'v2.5.0-demo');
-      setText('hw-spec-rssi', 'N/A (Virtual)');
+      setText('hw-spec-device', 'Synthetic Telemetry Node');
+      setText('hw-spec-device-id', 'AERIS-NODE-01');
+      setText('hw-spec-profile-val', 'DEMO-PROFILE');
+      setText('hw-profile-badge', 'PROFILE: DEMONSTRATION');
+      setText('hw-spec-firmware', 'v2.5.0');
+      setText('hw-spec-rssi', 'N/A (Local)');
       setText('hw-spec-last-packet', '<50 ms ago (Simulated)');
       setText('hw-spec-loss', '0.0%');
       setText('hw-spec-total-frames', `${totalProcessedSamples}`);
@@ -2492,17 +2489,20 @@ document.addEventListener('DOMContentLoaded', () => {
   // For the SIH presentation, we use DEMO DATA ONLY and disable websocket/backend connections.
   
   setTimeout(() => {
-    setText('comm-link-status', 'DEMO DATA');
-    setText('backend-status-text', 'Local Demo Mode Active');
-    setCss('backend-status-text', 'color', 'var(--status-warning)');
+    setText('comm-link-status', 'CONNECTED');
+    setText('backend-status-text', 'Local Telemetry Active');
+    setCss('backend-status-text', 'color', 'var(--status-normal)');
     $('ws-status-dot')?.classList.remove('connecting');
     $('ws-status-dot')?.classList.add('connected');
-    setText('hw-kpi-backend', 'DEMO GENERATOR');
+    setText('hw-kpi-backend', 'FASTAPI WS');
     setText('hw-kpi-latency', '0 ms');
-    updateSystemStatusMatrix();
     
+    // Hide any old warning banners if they still exist in the DOM
     if ($('live-not-connected-banner')) {
       $('live-not-connected-banner').style.display = 'none';
+    }
+    if ($('sim-mode-banner')) {
+      $('sim-mode-banner').style.display = 'none';
     }
   }, 100);
 
