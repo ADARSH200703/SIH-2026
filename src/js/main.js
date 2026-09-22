@@ -5,6 +5,7 @@ import { AudioManager }     from './audioManager.js';
 import { ThreeDigitalTwin } from './threeDigitalTwin.js';
 import { RealtimeMonitor }  from './realtimeMonitor.js';
 import { HistoryLogs }      from './historyLogs.js';
+import { startDemoData }    from './demoData.js';
 
 // ─── DOM helpers ──────────────────────────────────────────────────────────────
 const $    = id   => document.getElementById(id);
@@ -34,22 +35,17 @@ document.addEventListener('DOMContentLoaded', () => {
   let isReplaying = false;
 
   function updateSystemStatusMatrix() {
-    const isOnline = backendHttpOnline || wsConnected;
-    const isWs = wsConnected;
-    const isSim = evalMode === 'SIMULATION';
-    const isHw = evalMode === 'LIVE' && liveStreamConnected;
+    setText('matrix-backend-val', 'NONE (DEMO)');
+    setCss('matrix-backend-val', 'color', 'var(--status-warning)');
 
-    setText('matrix-backend-val', isOnline ? 'ONLINE' : 'OFFLINE');
-    setCss('matrix-backend-val', 'color', isOnline ? 'var(--status-normal)' : 'var(--status-critical)');
+    setText('matrix-ws-val', 'LOCAL DEMO');
+    setCss('matrix-ws-val', 'color', 'var(--status-normal)');
 
-    setText('matrix-ws-val', isWs ? 'CONNECTED' : (backendHttpOnline ? 'CONNECTING' : 'DISCONNECTED'));
-    setCss('matrix-ws-val', 'color', isWs ? 'var(--status-normal)' : (backendHttpOnline ? 'var(--status-warning)' : 'var(--status-critical)'));
+    setText('matrix-telem-val', 'DEMO DATA');
+    setCss('matrix-telem-val', 'color', 'var(--status-warning)');
 
-    setText('matrix-telem-val', isSim ? 'SIMULATION' : (isHw ? 'PHYSICAL SENSOR' : 'STANDBY'));
-    setCss('matrix-telem-val', 'color', isSim ? 'var(--status-warning)' : (isHw ? 'var(--status-normal)' : 'var(--text-dim)'));
-
-    setText('matrix-hw-val', isHw ? 'CONNECTED' : 'DISCONNECTED');
-    setCss('matrix-hw-val', 'color', isHw ? 'var(--status-normal)' : '#94A3B8');
+    setText('matrix-hw-val', 'DEMO DATA');
+    setCss('matrix-hw-val', 'color', 'var(--status-normal)');
   }
 
   // Expose history filter to inline onclick handlers in HTML
@@ -1682,19 +1678,19 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       setText('hw-kpi-device-id', 'AERIS-DEMO-001');
-      setText('hw-kpi-gateway-source', 'SOURCE: SIMULATION (Demo Stream)');
-      setText('hw-kpi-state-text', 'DISCONNECTED');
-      setText('hw-kpi-state-sub', 'Physical hardware disconnected (Demo simulation active)');
-      setCss('hw-kpi-state-badge', 'color', '#94A3B8');
-      setText('hw-kpi-state-icon', 'sensors_off');
+      setText('hw-kpi-gateway-source', 'SOURCE: DEMO DATA (Synthetic)');
+      setText('hw-kpi-state-text', 'DEMO ACTIVE');
+      setText('hw-kpi-state-sub', 'Physical hardware disconnected (Local Demo Active)');
+      setCss('hw-kpi-state-badge', 'color', 'var(--status-normal)');
+      setText('hw-kpi-state-icon', 'sensors');
       setText('hw-kpi-rate', `${currentTargetRateHz.toFixed(1)}`);
-      setText('hw-kpi-backend', (backendHttpOnline || wsConnected) ? '● Online' : 'Offline');
-      setText('hw-kpi-latency', (backendHttpOnline || wsConnected) ? (backendLatencyMs ? `${backendLatencyMs} ms` : '<1.5 ms') : '-- ms');
+      setText('hw-kpi-backend', 'DEMO GENERATOR');
+      setText('hw-kpi-latency', '0 ms');
 
       setText('hw-spec-device', 'Synthetic Demo Stream');
       setText('hw-spec-device-id', 'AERIS-DEMO-001');
-      setText('hw-spec-profile-val', 'SIMULATION_DEMO');
-      setText('hw-profile-badge', 'PROFILE: SIMULATION');
+      setText('hw-spec-profile-val', 'DEMO_DATA');
+      setText('hw-profile-badge', 'PROFILE: DEMO DATA');
       setText('hw-spec-firmware', 'v2.5.0-demo');
       setText('hw-spec-rssi', 'N/A (Virtual)');
       setText('hw-spec-last-packet', '<50 ms ago (Simulated)');
@@ -2493,8 +2489,23 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Initial state on page load: clean disconnected live state & poll backend health
-  renderDisconnectedLiveState();
-  checkBackendHealth();
-  setInterval(checkBackendHealth, 10000);
-  initWebSocket();
+  // For the SIH presentation, we use DEMO DATA ONLY and disable websocket/backend connections.
+  
+  setTimeout(() => {
+    setText('comm-link-status', 'DEMO DATA');
+    setText('backend-status-text', 'Local Demo Mode Active');
+    setCss('backend-status-text', 'color', 'var(--status-warning)');
+    $('ws-status-dot')?.classList.remove('connecting');
+    $('ws-status-dot')?.classList.add('connected');
+    setText('hw-kpi-backend', 'DEMO GENERATOR');
+    setText('hw-kpi-latency', '0 ms');
+    updateSystemStatusMatrix();
+    
+    if ($('live-not-connected-banner')) {
+      $('live-not-connected-banner').style.display = 'none';
+    }
+  }, 100);
+
+  // Start the local demo data generator
+  startDemoData(processTelemetryUpdate);
 });
