@@ -32,8 +32,8 @@
   --bg-secondary: var(--background-secondary);
   --bg-card: var(--surface);
   --bg-card-hover: var(--surface-hover);
-  --bg-glass: rgba(25, 28, 33, 0.85);
-  --bg-glass-heavy: rgba(17, 20, 25, 0.95);
+  --bg-glass: #191C21;
+  --bg-glass-heavy: #111419;
 
   /* Semantic Borders & Dividers */
   --border: #1D2025;
@@ -69,13 +69,13 @@
   --unknown: #869397;
 
   --status-normal: #4EDEA3;
-  --status-normal-glow: rgba(78, 222, 163, 0.25);
+  --status-normal-glow: transparent;
   --status-warning: #EE9800;
-  --status-warning-glow: rgba(238, 152, 0, 0.25);
+  --status-warning-glow: transparent;
   --status-critical: #FF5449;
-  --status-critical-glow: rgba(255, 84, 73, 0.25);
+  --status-critical-glow: transparent;
   --status-offline: #869397;
-  --status-offline-glow: rgba(134, 147, 151, 0.25);
+  --status-offline-glow: transparent;
 
   /* Typography Fonts */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -84,23 +84,23 @@
   --font-display: 'Space Grotesk', 'Orbitron', sans-serif;
 
   /* Geometry & Physics */
-  --radius-xs: 4px;
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
   --radius-full: 9999px;
 
   /* Clean Engineering Shadows */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.65);
-  --shadow-hud: 0 12px 36px rgba(0, 0, 0, 0.85);
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-hud: 0 4px 12px rgba(0, 0, 0, 0.4);
   --shadow-glow: none;
-  --glow-cyan: 0 0 12px rgba(76, 215, 246, 0.25);
-  --glow-green: 0 0 12px rgba(78, 222, 163, 0.25);
-  --glow-amber: 0 0 12px rgba(238, 152, 0, 0.25);
-  --glow-red: 0 0 12px rgba(255, 84, 73, 0.25);
+  --glow-cyan: none;
+  --glow-green: none;
+  --glow-amber: none;
+  --glow-red: none;
 }
 
 /* ==========================================================================
@@ -257,13 +257,6 @@ body {
   height: 7px;
   background: var(--success);
   border-radius: 50%;
-  box-shadow: 0 0 6px var(--success);
-  animation: studioPulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
-}
-
-@keyframes studioPulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.2); opacity: 0.6; }
 }
 
 .pill-divider {
@@ -554,25 +547,15 @@ body {
   height: 8px;
   border-radius: 50%;
   background: var(--status-critical, #EF4444);
-  box-shadow: 0 0 6px rgba(239, 68, 68, 0.4);
-  transition: background 0.3s ease, box-shadow 0.3s ease;
+  transition: background 0.3s ease;
 }
 
 .status-dot.connected {
   background: var(--success, #22C55E);
-  box-shadow: 0 0 6px var(--success, #22C55E);
-  animation: dotPulse 2s ease-in-out infinite;
 }
 
 .status-dot.connecting {
   background: var(--warning, #F59E0B);
-  box-shadow: 0 0 6px var(--warning, #F59E0B);
-  animation: dotPulse 1s ease-in-out infinite;
-}
-
-@keyframes dotPulse {
-  0%, 100% { box-shadow: 0 0 4px var(--success); }
-  50%       { box-shadow: 0 0 10px var(--success); }
 }
 
 .sidebar-meta-info {
@@ -748,28 +731,32 @@ body {
 .cockpit-sensor-strip {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  gap: 0.85rem;
-}
-
-.telemetry-readout-card {
+  gap: 0;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.telemetry-readout-card {
+  background: transparent;
+  border-right: 1px solid var(--border);
   padding: 0.85rem 1rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
-  box-shadow: var(--shadow-sm);
+  transition: background-color 0.15s ease;
   position: relative;
   overflow: hidden;
 }
 
 .telemetry-readout-card:hover {
   background: var(--surface-hover);
-  border-color: var(--primary);
-  transform: translateY(-2px);
+}
+
+.telemetry-readout-card:last-child {
+  border-right: none;
 }
 
 .telemetry-readout-card.warning {
@@ -1503,8 +1490,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(11, 17, 32, 0.85);
-  backdrop-filter: blur(8px);
+  background: rgba(11, 17, 32, 0.95);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2791,9 +2777,7 @@ body {
   position: sticky;
   top: 0;
   z-index: 1000;
-  background: rgba(17, 24, 39, 0.88);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(17, 24, 39, 0.98);
   border-bottom: 1px solid var(--border);
   padding: 0.85rem 0;
   animation: heroFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
@@ -2928,7 +2912,6 @@ body {
 .landing-btn-primary:hover {
   background: #7DD3FC;
   border-color: #7DD3FC;
-  box-shadow: 0 4px 16px rgba(56, 189, 248, 0.35);
 }
 
 .landing-btn-primary:hover .material-symbols-outlined {
@@ -2945,11 +2928,10 @@ body {
   background: var(--surface-hover);
   border-color: var(--primary);
   color: var(--primary);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
 }
 
 .landing-btn-secondary:hover .material-symbols-outlined {
-  transform: translateY(-2px) scale(1.1);
+  /* removed bounce */
 }
 
 .landing-btn-lg {
@@ -3045,13 +3027,12 @@ body {
   border: 1px solid rgba(56, 189, 248, 0.28);
   background: #0B1120;
   overflow: hidden;
-  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.65), 0 0 30px rgba(56, 189, 248, 0.12);
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+  transition: border-color 0.3s ease;
 }
 
 .hero-engine-frame:hover {
   border-color: rgba(56, 189, 248, 0.5);
-  box-shadow: 0 24px 55px rgba(0, 0, 0, 0.75), 0 0 35px rgba(56, 189, 248, 0.22);
 }
 
 .hero-engine-img {
@@ -3075,7 +3056,7 @@ body {
   opacity: 0.65;
   pointer-events: none;
   animation: scanRadar 5s ease-in-out infinite;
-  box-shadow: 0 0 12px rgba(56, 189, 248, 0.6);
+  box-shadow: none;
   z-index: 5;
 }
 
@@ -3086,9 +3067,7 @@ body {
   align-items: center;
   gap: 0.45rem;
   padding: 0.35rem 0.75rem;
-  background: rgba(11, 17, 32, 0.88);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(11, 17, 32, 0.98);
   border: 1px solid rgba(56, 189, 248, 0.35);
   border-radius: var(--radius-full);
   font-family: var(--font-mono);
@@ -3379,17 +3358,16 @@ body {
 }
 
 .landing-cta-banner {
-  background: linear-gradient(135deg, rgba(23, 32, 51, 0.95), rgba(17, 24, 39, 0.95));
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  border-radius: var(--radius-xl);
+  background: var(--background-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
   padding: 4rem 2rem;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: var(--shadow-sm);
 }
 
 .landing-cta-banner:hover {
