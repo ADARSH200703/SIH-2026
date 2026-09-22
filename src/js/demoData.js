@@ -1,72 +1,129 @@
 export function startDemoData(updateFn) {
-  console.log("Starting AERIS-TWIN Demo Data Generator");
+  console.log("Starting AERIS-TWIN Realistic Demonstration Telemetry");
 
-  let baseRpm = 4150;
-  let baseTemp = 78.0;
-  let baseVibration = 1.2;
-  let baseHealth = 94.0;
-  let baseOilPressure = 4.2;
-  let baseLoad = 62;
-  let baseFuelFlow = 21.4;
+  // Physical State Variables
+  let state = {
+    rpm: 4200,
+    load: 65,
+    cht: 78.0,
+    oilPress: 4.3,
+    vib: 1.5,
+    health: 96.0,
+    fuel: 100.0,
+  };
 
-  let tick = 0;
-  let inAlertPhase = false;
-  let alertTimer = 0;
+  // Base Targets for Nominal
+  const nominal = {
+    rpm: 4200,
+    load: 65,
+    cht: 78.0,
+    oilPress: 4.3,
+    vib: 1.5
+  };
+
+  // Scenarios
+  const SCENARIOS = ['NORMAL', 'HIGH_LOAD', 'NORMAL', 'THERMAL_EVENT', 'NORMAL', 'VIB_EVENT', 'NORMAL'];
+  let currentScenarioIdx = 0;
+  let scenarioTicks = 0;
+  
+  // A "tick" is 100ms. 
+  // NORMAL: 450 - 900 ticks (45-90s)
+  // EVENT: 150 - 250 ticks (15-25s)
+  let targetTicksForScenario = 600;
+
+  function getNextScenario() {
+    currentScenarioIdx = (currentScenarioIdx + 1) % SCENARIOS.length;
+    scenarioTicks = 0;
+    const s = SCENARIOS[currentScenarioIdx];
+    if (s === 'NORMAL') {
+      targetTicksForScenario = 450 + Math.floor(Math.random() * 450);
+    } else {
+      targetTicksForScenario = 150 + Math.floor(Math.random() * 100);
+    }
+    console.log(`[DemoData] Transitioned to ${s} for ${targetTicksForScenario / 10} seconds`);
+  }
 
   setInterval(() => {
-    tick += 0.05;
-    alertTimer++;
-
-    // Occasional Demo Alert every ~45 seconds (450 ticks at 100ms)
-    if (alertTimer > 450 && !inAlertPhase) {
-      inAlertPhase = true;
-      alertTimer = 0;
-    } else if (inAlertPhase && alertTimer > 150) {
-      // Recover after 15 seconds
-      inAlertPhase = false;
-      alertTimer = 0;
+    scenarioTicks++;
+    if (scenarioTicks > targetTicksForScenario) {
+      getNextScenario();
     }
 
-    if (inAlertPhase) {
-      // Simulate degrading conditions
-      baseTemp = Math.min(baseTemp + 0.1, 88.0);
-      baseVibration = Math.min(baseVibration + 0.02, 2.4);
-      baseHealth = Math.max(baseHealth - 0.1, 82.0);
-    } else {
-      // Recover baseline
-      baseTemp = Math.max(baseTemp - 0.05, 78.0);
-      baseVibration = Math.max(baseVibration - 0.01, 1.2);
-      baseHealth = Math.min(baseHealth + 0.05, 94.0);
+    const currentScenario = SCENARIOS[currentScenarioIdx];
+
+    // Determine target values based on scenario
+    let targetRpm = nominal.rpm;
+    let targetLoad = nominal.load;
+    let targetCht = nominal.cht;
+    let targetVib = nominal.vib;
+    let targetOil = nominal.oilPress;
+    let targetHealth = 96.0;
+    let alertStatus = 'NORMAL';
+
+    // Fuel always decreases slowly
+    state.fuel = Math.max(0, state.fuel - 0.005);
+
+    // Apply Scenario Targets
+    if (currentScenario === 'HIGH_LOAD') {
+      targetLoad = 92;
+      targetRpm = 5800;
+      targetCht = 86.0; 
+      targetVib = 2.0; // Higher RPM means slightly more vib naturally
+      targetHealth = 92.0; // Health is still OK, just stressed
+    } else if (currentScenario === 'THERMAL_EVENT') {
+      targetCht = 105.0; // Overheat
+      targetOil = 3.6;   // Oil pressure drops due to heat/viscosity loss
+      targetHealth = 78.0; 
+      alertStatus = 'WARNING';
+    } else if (currentScenario === 'VIB_EVENT') {
+      targetVib = 3.8;   // Heavy bearing wear vibration
+      targetHealth = 74.0;
+      alertStatus = 'CRITICAL';
     }
 
-    // Add some sine wave + small random noise
-    const rpm = Math.floor(baseRpm + Math.sin(tick * 2) * 150 + (Math.random() * 40 - 20));
-    const temperature = baseTemp + Math.sin(tick * 0.5) * 2 + (Math.random() * 1 - 0.5);
-    const vibration = baseVibration + Math.sin(tick * 0.8) * 0.2 + (Math.random() * 0.1);
-    const engineHealth = baseHealth + Math.sin(tick * 0.2) * 1 + (Math.random() * 0.5);
-    const fuelFlow = baseFuelFlow + Math.sin(tick * 0.3) * 1.5 + (Math.random() * 0.5);
-    const engineLoad = baseLoad + Math.sin(tick * 0.4) * 5 + (Math.random() * 3);
-    const oilPressure = baseOilPressure + Math.sin(tick * 0.6) * 0.2 + (Math.random() * 0.05);
+    // Add noise and physical correlation
+    // RPM hunts slightly
+    const rpmNoise = Math.sin(scenarioTicks * 0.1) * 20 + (Math.random() * 10 - 5);
+    // Smooth transition towards targets (Inertia)
+    state.rpm += (targetRpm - state.rpm) * 0.05; 
+    state.load += (targetLoad - state.load) * 0.1;
+    state.cht += (targetCht - state.cht) * 0.02; // Temperature changes slowly
+    state.vib += (targetVib - state.vib) * 0.1;
+    state.oilPress += (targetOil - state.oilPress) * 0.05;
+    state.health += (targetHealth - state.health) * 0.05;
 
-    // Create a realistic telemetry frame matching what the frontend expects
+    // Construct final frame with sensor noise
+    const finalRpm = state.rpm + rpmNoise;
+    // Load correlates to RPM
+    const finalLoad = state.load + (Math.random() * 2 - 1);
+    const finalCht = state.cht + Math.sin(scenarioTicks * 0.05) * 0.5 + (Math.random() * 0.2 - 0.1);
+    // Vibration correlates to RPM slightly
+    const vibRpmFactor = (finalRpm - 4000) / 2000 * 0.2; 
+    const finalVib = state.vib + vibRpmFactor + Math.sin(scenarioTicks * 0.2) * 0.1 + (Math.random() * 0.05);
+    const finalOil = state.oilPress + (Math.random() * 0.02 - 0.01);
+    const finalHealth = state.health + (Math.random() * 0.4 - 0.2);
+    
+    // RUL decreases linearly but takes a hit on health drops
+    const baseRul = 1200 - (100 - state.fuel) * 2; // Simple baseline
+    const healthPenalty = (100 - finalHealth) * 5;
+    const currentRul = Math.max(0, baseRul - healthPenalty);
+
     const frame = {
-      rpm: rpm,
-      temperature: Number(temperature.toFixed(1)),
-      vibration: Number(vibration.toFixed(2)),
-      engine_health: Number(engineHealth.toFixed(1)),
-      fuel_flow: Number(fuelFlow.toFixed(1)),
-      engine_load: Math.floor(engineLoad),
-      oil_pressure: Number(oilPressure.toFixed(2)),
-      status: inAlertPhase ? 'WARNING' : 'NORMAL'
+      rpm: Math.floor(finalRpm),
+      temperature: Number(finalCht.toFixed(1)),
+      vibration: Number(finalVib.toFixed(2)),
+      engine_health: Number(finalHealth.toFixed(1)),
+      fuel_flow: Number((12.4 + (finalLoad / 100) * 8).toFixed(1)), // Fuel flow correlates to load
+      engine_load: Math.floor(finalLoad),
+      oil_pressure: Number(finalOil.toFixed(2)),
+      rul_estimate: Number(currentRul.toFixed(1)),
+      status: alertStatus,
+      scenario: currentScenario // Expose scenario for potential frontend logic
     };
 
-    // Trigger demo alert popup via synthetic packet if needed
-    // (the frontend will pick this up automatically via the health value and vibration)
-
-    // Feed it to the dashboard
     if (typeof updateFn === 'function') {
-      // Pass as SIMULATION/LIVE based on existing architecture expecting LIVE to show graphs normally
-      updateFn(frame, 'SIMULATION', inAlertPhase ? 'WARNING' : 'LIVE');
+      // Feed data as if it were LIVE to trigger normal UI rendering
+      updateFn(frame, 'LIVE', alertStatus);
     }
-  }, 100); // update every 100ms
+  }, 100);
 }
