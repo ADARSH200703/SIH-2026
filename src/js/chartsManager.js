@@ -34,9 +34,9 @@ export class ChartsManager {
           label: d.label,
           data: [],
           borderColor: d.color,
-          backgroundColor: makeGradient(ctx, d.color),
-          borderWidth: 2,
-          tension: 0.35,
+          backgroundColor: "transparent",
+          borderWidth: 1,
+          tension: 0.1,
           pointRadius: 0,
           pointHoverRadius: 4,
           yAxisID: d.yAxis,
@@ -50,10 +50,10 @@ export class ChartsManager {
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: 'rgba(25, 28, 33, 0.96)',
+            backgroundColor: "rgba(30, 41, 59, 0.95)",
             titleColor: '#4cd7f6',
             bodyColor: '#bcc9cd',
-            borderColor: '#1d2025',
+            borderColor: "#475569",
             borderWidth: 1,
             padding: 10,
             cornerRadius: 6,
@@ -70,7 +70,7 @@ export class ChartsManager {
         },
         scales: {
           x: {
-            grid:  { color: 'rgba(255, 255, 255, 0.06)' },
+            grid: { color: "rgba(255, 255, 255, 0.1)" },
             ticks: { color: '#869397', font: { family: 'JetBrains Mono', size: 10 }, maxTicksLimit: 6 },
             title: { display: true, text: 'Mission Flight Time (min)', color: '#869397', font: { family: 'Inter', size: 11 } },
           },
@@ -130,9 +130,9 @@ export class AITrendChartManager {
           label: d.label,
           data: [],
           borderColor: d.color,
-          backgroundColor: makeGradient(ctx, d.color),
-          borderWidth: 2,
-          tension: 0.35,
+          backgroundColor: "transparent",
+          borderWidth: 1,
+          tension: 0.1,
           pointRadius: 0,
           pointHoverRadius: 4,
           yAxisID: d.yAxis,
@@ -146,10 +146,10 @@ export class AITrendChartManager {
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: 'rgba(25, 28, 33, 0.96)',
+            backgroundColor: "rgba(30, 41, 59, 0.95)",
             titleColor: '#4cd7f6',
             bodyColor: '#bcc9cd',
-            borderColor: '#1d2025',
+            borderColor: "#475569",
             borderWidth: 1,
             padding: 8,
             cornerRadius: 6,
@@ -166,7 +166,7 @@ export class AITrendChartManager {
         },
         scales: {
           x: {
-            grid:  { color: 'rgba(255, 255, 255, 0.06)' },
+            grid: { color: "rgba(255, 255, 255, 0.1)" },
             ticks: { color: '#869397', font: { family: 'JetBrains Mono', size: 9 }, maxTicksLimit: 6 },
             title: { display: true, text: 'Mission Timeline', color: '#869397', font: { family: 'Inter', size: 10 } },
           },

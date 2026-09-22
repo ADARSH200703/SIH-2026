@@ -18,84 +18,72 @@
      - Muted Text:             #869397
    ========================================================================== */
 :root {
-  /* Semantic Core Surfaces */
-  --background: #0B0E13;
-  --background-secondary: #111419;
-  --surface: #191C21;
-  --surface-hover: #22262C;
-  --surface-elevated: #1D2025;
-  --surface-sunken: #0B0E13;
-  --surface-high: #32353B;
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --surface-raised: #334155;
+  --border: #475569;
+  --text: #f8fafc;
+  --text-muted: #94a3b8;
+  --accent: #38bdf8;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
 
-  /* Backward Compatibility Aliases */
-  --bg-primary: var(--background);
-  --bg-secondary: var(--background-secondary);
-  --bg-card: var(--surface);
-  --bg-card-hover: var(--surface-hover);
-  --bg-glass: #191C21;
-  --bg-glass-heavy: #111419;
+  /* Aliases to map old variables to new tokens */
+  --background: var(--bg);
+  --background-secondary: var(--surface);
+  --surface-hover: var(--surface-raised);
+  --surface-elevated: var(--surface-raised);
+  --surface-sunken: var(--bg);
+  --surface-high: var(--surface-raised);
 
-  /* Semantic Borders & Dividers */
-  --border: #1D2025;
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-medium: #272A30;
-  --border-bright: #4CD7F6;
-  --border-glow: rgba(76, 215, 246, 0.25);
+  --border-subtle: var(--border);
+  --border-medium: var(--border);
+  --border-bright: var(--accent);
+  --border-glow: transparent;
 
-  /* Primary Accents */
-  --primary: #4CD7F6;
-  --secondary: #4EDEA3;
-  --accent-cyan: #4CD7F6;
-  --accent-teal: #4EDEA3;
-  --accent-amber: #EE9800;
-  --accent-coral: #FF5449;
-  --accent-blue: #4CD7F6;
-  --accent-indigo: #1D2025;
+  --primary: var(--accent);
+  --secondary: var(--text-muted);
+  --accent-cyan: var(--accent);
+  --accent-teal: var(--success);
+  --accent-amber: var(--warning);
+  --accent-coral: var(--danger);
+  --accent-blue: var(--accent);
+  --accent-indigo: var(--border);
 
-  /* Semantic Typography */
-  --text-primary: #E1E2E8;
-  --text-secondary: #BCC9CD;
-  --text-main: #E1E2E8;
-  --text-muted: #869397;
-  --text-dim: #5A6468;
-  --text-cyan: #4CD7F6;
-  --text-teal: #4EDEA3;
-  --text-disabled: #475569;
+  --text-primary: var(--text);
+  --text-secondary: var(--text-muted);
+  --text-main: var(--text);
+  --text-dim: var(--text-muted);
+  --text-cyan: var(--accent);
+  --text-teal: var(--success);
+  --text-disabled: var(--border);
 
-  /* Strict Semantic System States */
-  --success: #4EDEA3;
-  --warning: #EE9800;
-  --danger: #FF5449;
-  --unknown: #869397;
-
-  --status-normal: #4EDEA3;
+  --status-normal: var(--success);
   --status-normal-glow: transparent;
-  --status-warning: #EE9800;
+  --status-warning: var(--warning);
   --status-warning-glow: transparent;
-  --status-critical: #FF5449;
+  --status-critical: var(--danger);
   --status-critical-glow: transparent;
-  --status-offline: #869397;
+  --status-offline: var(--text-muted);
   --status-offline-glow: transparent;
 
-  /* Typography Fonts */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-tech: 'Space Grotesk', 'Orbitron', sans-serif;
+  --font-sans: 'Inter', sans-serif;
+  --font-tech: 'Inter', sans-serif; /* Replaced Orbitron/Space Grotesk */
   --font-mono: 'JetBrains Mono', monospace;
-  --font-display: 'Space Grotesk', 'Orbitron', sans-serif;
+  --font-display: 'Inter', sans-serif; /* Replaced Orbitron/Space Grotesk */
 
-  /* Geometry & Physics */
   --radius-xs: 2px;
   --radius-sm: 4px;
   --radius-md: 4px;
-  --radius-lg: 6px;
-  --radius-xl: 8px;
+  --radius-lg: 4px; /* Flattened roundness */
+  --radius-xl: 4px;
   --radius-full: 9999px;
 
-  /* Clean Engineering Shadows */
   --shadow-sm: none;
   --shadow-md: none;
-  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.4);
-  --shadow-hud: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: none;
+  --shadow-hud: none;
   --shadow-glow: none;
   --glow-cyan: none;
   --glow-green: none;
@@ -160,7 +148,7 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: var(--shadow-sm);
+  /* removed box-shadow */
 }
 
 .header-top {
@@ -605,7 +593,7 @@ body {
   position: relative;
   overflow: hidden;
   transition: border-color 0.15s ease, background-color 0.15s ease;
-  box-shadow: var(--shadow-sm);
+  /* removed box-shadow */
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -854,7 +842,7 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 1.25rem 1.4rem;
-  box-shadow: var(--shadow-sm);
+  /* removed box-shadow */
   position: relative;
 }
 
@@ -924,7 +912,7 @@ body {
   flex-direction: column;
   gap: 0.55rem;
   transition: all 0.15s ease;
-  box-shadow: var(--shadow-sm);
+  /* removed box-shadow */
 }
 
 .param-item:hover {
@@ -1043,7 +1031,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  box-shadow: var(--shadow-sm);
+  /* removed box-shadow */
   position: relative;
 }
 
@@ -1222,7 +1210,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
-  box-shadow: var(--shadow-sm);
+  /* removed box-shadow */
 }
 
 .alert-stream {
@@ -1279,7 +1267,7 @@ body {
   border-radius: var(--radius-md);
   position: relative;
   overflow: hidden;
-  box-shadow: var(--shadow-sm);
+  /* removed box-shadow */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1325,7 +1313,7 @@ body {
   padding: 0.4rem 0.6rem;
   border-radius: var(--radius-full);
   border: 1px solid var(--border);
-  box-shadow: var(--shadow-md);
+  /* removed box-shadow */
 }
 
 .hierarchy-button-group {
@@ -1383,7 +1371,7 @@ body {
   border-radius: var(--radius-full);
   padding: 0.35rem 0.65rem;
   pointer-events: auto;
-  box-shadow: var(--shadow-sm);
+  /* removed box-shadow */
 }
 
 .toolbar-label {
@@ -1503,7 +1491,7 @@ body {
   border-radius: var(--radius-lg);
   padding: 1.5rem;
   width: 90%;
-  box-shadow: var(--shadow-hud);
+  /* removed box-shadow */
   animation: modalScaleIn 0.15s ease;
 }
 
@@ -1521,7 +1509,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  box-shadow: var(--shadow-sm);
+  /* removed box-shadow */
   overflow-y: auto;
 }
 
@@ -1614,7 +1602,7 @@ body {
   padding: 0.4rem 0.75rem;
   pointer-events: none;
   z-index: 50;
-  box-shadow: var(--shadow-md);
+  /* removed box-shadow */
   transform: translate(-50%, -120%);
 }
 
@@ -1754,7 +1742,7 @@ body {
   flex-direction: column;
   overflow: hidden;
   position: relative;
-  box-shadow: var(--shadow-sm);
+  /* removed box-shadow */
   transition: border-color 0.15s ease;
 }
 
@@ -1874,7 +1862,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+  /* removed box-shadow */
   position: relative;
   transition: border-color 0.2s ease, transform 0.2s ease;
 }
@@ -2057,7 +2045,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6);
+  /* removed box-shadow */
 }
 
 .cluster-toolbar-strip {
@@ -2144,7 +2132,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
-  box-shadow: var(--shadow-sm);
+  /* removed box-shadow */
 }
 
 .ai-lab-card-title {
@@ -2330,7 +2318,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
-  box-shadow: var(--shadow-sm);
+  /* removed box-shadow */
 }
 
 .hist-panel-title {
@@ -2390,7 +2378,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
-  box-shadow: var(--shadow-sm);
+  /* removed box-shadow */
 }
 
 .info-card h3 {
@@ -2462,7 +2450,7 @@ body {
   padding: 0.65rem 1rem;
   font-size: 0.82rem;
   color: var(--text-primary);
-  box-shadow: var(--shadow-lg);
+  /* removed box-shadow */
   max-width: 360px;
   animation: toastIn 0.2s ease;
   pointer-events: auto;
@@ -2481,7 +2469,7 @@ body {
   width: 100vw;
   height: 100vh;
   background: rgba(11, 17, 32, 0.85);
-  backdrop-filter: blur(8px);
+  /* removed backdrop-filter */
   z-index: 2000;
   display: flex;
   align-items: center;
@@ -2496,7 +2484,7 @@ body {
   padding: 1.75rem;
   max-width: 600px;
   width: 100%;
-  box-shadow: var(--shadow-lg);
+  /* removed box-shadow */
   animation: modalScale 0.15s ease;
 }
 
@@ -2678,12 +2666,12 @@ body {
   0%, 100% {
     opacity: 0.85;
     transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(45, 212, 191, 0.4);
+    /* removed box-shadow */
   }
   50% {
     opacity: 1;
     transform: scale(1.18);
-    box-shadow: 0 0 0 5px rgba(45, 212, 191, 0);
+    /* removed box-shadow */
   }
 }
 
@@ -2707,16 +2695,16 @@ body {
 @keyframes pipelineSignal {
   0% {
     border-color: var(--border);
-    box-shadow: none;
+    /* removed box-shadow */
   }
   20%, 35% {
     border-color: var(--primary);
-    box-shadow: 0 0 16px rgba(56, 189, 248, 0.3);
+    /* removed box-shadow */
     background: var(--surface-hover);
   }
   55%, 100% {
     border-color: var(--border);
-    box-shadow: none;
+    /* removed box-shadow */
   }
 }
 
@@ -2853,7 +2841,7 @@ body {
   width: 0%;
   height: 2px;
   background: var(--primary);
-  box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+  /* removed box-shadow */
   transition: width 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   border-radius: var(--radius-full);
 }
@@ -2906,7 +2894,7 @@ body {
   background: var(--primary);
   color: #0B1120;
   border-color: var(--primary);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  /* removed box-shadow */
 }
 
 .landing-btn-primary:hover {
@@ -3027,7 +3015,7 @@ body {
   border: 1px solid rgba(56, 189, 248, 0.28);
   background: #0B1120;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+  /* removed box-shadow */
   transition: border-color 0.3s ease;
 }
 
@@ -3056,7 +3044,7 @@ body {
   opacity: 0.65;
   pointer-events: none;
   animation: scanRadar 5s ease-in-out infinite;
-  box-shadow: none;
+  /* removed box-shadow */
   z-index: 5;
 }
 
@@ -3076,7 +3064,7 @@ body {
   color: #FFFFFF;
   letter-spacing: 0.5px;
   z-index: 6;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  /* removed box-shadow */
   pointer-events: none;
 }
 
@@ -3163,7 +3151,7 @@ body {
 .pipeline-flow-card:hover {
   border-color: var(--primary);
   transform: translateY(-3px);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45), 0 0 12px rgba(56, 189, 248, 0.2);
+  /* removed box-shadow */
   background: var(--surface-hover);
 }
 
@@ -3228,7 +3216,7 @@ body {
   flex-direction: column;
   gap: 0.85rem;
   transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease, box-shadow 0.22s ease, background-color 0.22s ease;
-  box-shadow: var(--shadow-sm);
+  /* removed box-shadow */
   position: relative;
   outline: none;
   cursor: pointer;
@@ -3237,14 +3225,14 @@ body {
 
 .capability-card:focus-visible {
   border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.4);
+  /* removed box-shadow */
 }
 
 .capability-card:hover,
 .capability-card:focus-within {
   border-color: rgba(56, 189, 248, 0.6);
   background: var(--surface-hover);
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.55), 0 0 16px rgba(56, 189, 248, 0.18);
+  /* removed box-shadow */
   transform: translateY(-4px);
 }
 
@@ -3312,7 +3300,7 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 2rem;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  /* removed box-shadow */
 }
 
 .landing-impact-quote {
@@ -3367,12 +3355,12 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-  box-shadow: var(--shadow-sm);
+  /* removed box-shadow */
 }
 
 .landing-cta-banner:hover {
   border-color: rgba(56, 189, 248, 0.5);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 24px rgba(56, 189, 248, 0.2);
+  /* removed box-shadow */
 }
 
 .landing-cta-title {
@@ -3561,14 +3549,14 @@ body {
   background: rgba(34, 197, 94, 0.15);
   color: var(--status-normal);
   border: 1px solid rgba(34, 197, 94, 0.4);
-  box-shadow: 0 0 12px rgba(34, 197, 94, 0.2);
+  /* removed box-shadow */
 }
 
 .mode-btn.active.sim {
   background: rgba(245, 158, 11, 0.15);
   color: var(--status-warning);
   border: 1px solid rgba(245, 158, 11, 0.4);
-  box-shadow: 0 0 12px rgba(245, 158, 11, 0.2);
+  /* removed box-shadow */
 }
 
 .live-not-connected-banner {
@@ -3663,7 +3651,7 @@ body {
   background: rgba(56, 189, 248, 0.15);
   border-color: var(--accent-cyan);
   color: var(--accent-cyan);
-  box-shadow: 0 0 8px rgba(56, 189, 248, 0.2);
+  /* removed box-shadow */
 }
 
 /* Stream Metrics Grid */
@@ -4075,13 +4063,13 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  box-shadow: 0 0 14px rgba(56, 189, 248, 0.12);
+  /* removed box-shadow */
   min-width: 340px;
 }
 
 .lp-arch-output-box {
   border-color: var(--secondary);
-  box-shadow: 0 0 14px rgba(45, 212, 191, 0.12);
+  /* removed box-shadow */
 }
 
 .lp-arch-box-label {
@@ -4375,7 +4363,7 @@ body {
   background: rgba(76, 215, 246, 0.18);
   border-color: var(--primary);
   color: var(--primary);
-  box-shadow: 0 0 8px rgba(76, 215, 246, 0.2);
+  /* removed box-shadow */
 }
 
 .hw-status-pill.stale {
@@ -4403,3 +4391,81 @@ body {
 }
 
 
+
+/* ==========================================================================
+   ENGINEERING FLATTENED UI ADDITIONS
+   ========================================================================== */
+
+/* Replace .kpi-card with flat metrics */
+.flat-metric-cell {
+  background: transparent;
+  border-left: 2px solid var(--border);
+  padding: 0.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.kpi-row {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* Replace .cockpit-sensor-strip with a table-like layout */
+.engineering-table-layout {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+}
+
+.telemetry-table-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+}
+.telemetry-table-row:last-child {
+  border-bottom: none;
+}
+.telemetry-table-row:hover {
+  background: var(--surface-raised);
+}
+
+/* Replace .evidence-card, .ai-prediction-panel, .alerts-panel with flat sections */
+.flat-section {
+  background: transparent;
+  border-top: 1px solid var(--border);
+  padding: 1rem 0;
+}
+
+.flat-section .panel-header {
+  margin-bottom: 0.75rem;
+  border-bottom: none;
+}
+
+/* Ensure navigation active state is restrained */
+.nav-item.active {
+  background: var(--surface-raised);
+  border-left: 3px solid var(--accent);
+  color: var(--text);
+  box-shadow: none;
+}
+
+/* Remove glow from pulse dots */
+.live-pulse-dot, .status-dot {
+  box-shadow: none !important;
+}
+
+/* Override existing cards to be flat if they weren't caught */
+.kpi-card, .info-card, .trends-panel, .evidence-card, .ai-prediction-panel, .alerts-panel {
+  box-shadow: none !important;
+  border: 1px solid var(--border) !important;
+  background: var(--surface) !important;
+  border-radius: var(--radius-sm) !important;
+}
