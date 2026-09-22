@@ -606,9 +606,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // ─── Unified View Navigation Switcher ───────────────────────────────────────
   const VIEW_DISPLAY = {
     dashboard: 'flex', realtime: 'flex', threed: 'grid', hardware: 'flex',
-    'ai-lab:': 'flex', pipeline: 'flex', history: 'flex', mission: 'flex'
+    'ai-lab': 'flex', pipeline: 'flex', history: 'flex', mission: 'flex'
   };
-  const VIEW_IDS = ['dashboard', 'realtime', 'hardware', 'ai-lab', 'pipeline'];
+  const VIEW_IDS = ['dashboard', 'realtime', 'threed', 'hardware', 'ai-lab', 'pipeline', 'history'];
 
   function switchView(viewKey, updateUrl = true) {
     if (viewKey === 'mission') viewKey = 'history';
